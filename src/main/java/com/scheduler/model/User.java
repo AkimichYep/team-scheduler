@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Data // Generates Getters, Setters, ToString, Equals, and HashCode
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -23,13 +23,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role; // Admin, Manager, L1, L2, L3
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     private String project;
 
-    private boolean active = true; // Default to active
+    @Builder.Default
+    private boolean active = true;
 
     private String email;
 

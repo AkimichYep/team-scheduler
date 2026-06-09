@@ -1,16 +1,36 @@
-<form action="/proxy/add" method="POST">
-    <input type="text" name="username" placeholder="Username" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
+<html>
+<head>
+    <title>Add User</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { max-width: 500px; margin: 0 auto; }
+        input, select, button, a { padding: 8px; margin: 5px 0; display: block; width: 100%; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        a { text-align: center; background-color: #999; color: white; text-decoration: none; }
+        a:hover { background-color: #888; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Add New User</h2>
+        <form action="/proxy/add" method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
 
-    <select name="role">
-        <option value="ADMIN">Admin</option>
-        <option value="MANAGER">Manager</option>
-        <option value="L1_SUPPORT">L1 Support</option>
-        <option value="L3_DEVELOPERS">L3 Developer</option>
-    </select><br>
+            <label for="role">Role:</label>
+            <select name="roleId" id="role" required>
+                <option value="">Select a role</option>
+                <% roles.forEach(role => { %>
+                    <option value="<%= role.id %>"><%= role.name %></option>
+                <% }) %>
+            </select>
 
-    <input type="text" name="project" placeholder="Project Name"><br>
+            <input type="text" name="project" placeholder="Project Name">
 
-    <button type="submit">Create User</button>
-    <a href="/">Cancel</a>
-</form>
+            <button type="submit">Create User</button>
+            <a href="/">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

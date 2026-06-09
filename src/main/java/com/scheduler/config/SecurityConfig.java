@@ -63,7 +63,7 @@ public class SecurityConfig {
             User user = repo.findByUsername(username).orElseThrow();
             return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
                     .password(user.getPassword())
-                    .authorities(user.getRole().name()) // Matches ADMIN, MANAGER, etc.
+                    .authorities(user.getRole().getName()) // Use role name from Role entity
                     .build();
         };
     }

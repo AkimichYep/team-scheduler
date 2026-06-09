@@ -1,9 +1,25 @@
 package com.scheduler.model;
 
-public enum Role {
-    ADMIN,
-    MANAGER,
-    L1_SUPPORT,
-    L2_SUPPORT,
-    L3_DEVELOPERS
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "roles")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Role {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String name;
+
+    private String description;
+
+    @Builder.Default
+    private boolean active = true;
 }

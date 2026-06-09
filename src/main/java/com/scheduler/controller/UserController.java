@@ -16,6 +16,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -27,21 +28,22 @@ public class UserController {
 
     // Create a new user (Admin/Manager only)
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
+    public ResponseEntity<User> createUser(@RequestBody UserRequest userRequest) {
         User createdUser = userService.createUser(
-                user.getUsername(),
-                user.getPassword(),
-                user.getRole(),
-                user.getProject()
+                userRequest.getUsername(),
+                userRequest.getPassword(),
+                userRequest.getRoleId(),
+                userRequest.getProject()
         );
-        return ResponseEntity.ok(createdUser);
+        return ResponseEntity.status(201).body(createdUser);
     }
 
     // Only Admin can delete
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id); // You will need to add this method in Service
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -57,4 +59,44 @@ public class UserController {
         return ResponseEntity.ok(userRepository.findById(id).orElseThrow());
     }
 
+    // DTO for user requests
+    public static class UserRequest {
+        private String username;
+        private String password;
+        private Long roleId;
+        private String project;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public Long getRoleId() {
+            return roleId;
+        }
+
+        public void setRoleId(Long roleId) {
+            this.roleId = roleId;
+        }
+
+        public String getProject() {
+            return project;
+        }
+
+        public void setProject(String project) {
+            this.project = project;
+        }
+    }
 }
+

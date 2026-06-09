@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Role</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { max-width: 500px; margin: 0 auto; }
+        h2 { color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea, button, a { padding: 10px; margin: 5px 0; display: block; width: 100%; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; box-sizing: border-box; }
+        button:hover { background-color: #45a049; }
+        a { text-align: center; background-color: #999; color: white; text-decoration: none; box-sizing: border-box; }
+        a:hover { background-color: #888; }
+        textarea { resize: vertical; min-height: 100px; font-family: Arial, sans-serif; }
+        .checkbox-container { margin-top: 15px; }
+        .checkbox-container input { width: auto; display: inline; }
+        .checkbox-container label { display: inline; margin-left: 5px; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Edit Role</h2>
+        <form action="/proxy/roles/edit/<%= role.id %>" method="POST">
+            <label for="name">Role Name (required):</label>
+            <input type="text" name="name" id="name" value="<%= role.name %>" required>
+
+            <label for="description">Description (optional):</label>
+            <textarea name="description" id="description"><%= role.description || '' %></textarea>
+
+            <div class="checkbox-container">
+                <input type="checkbox" name="active" id="active" <%= role.active ? 'checked' : '' %>>
+                <label for="active">Active</label>
+            </div>
+
+            <button type="submit">Save Changes</button>
+            <a href="/roles">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
+
