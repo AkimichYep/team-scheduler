@@ -28,4 +28,17 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    public User updateUser(Long id, User details) {
+        User user = userRepository.findById(id).orElseThrow();
+        user.setUsername(details.getUsername());
+        user.setRole(details.getRole());
+        user.setActive(details.isActive());
+        user.setProject(details.getProject());
+        return userRepository.save(user);
+    }
 }
