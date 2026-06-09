@@ -1,6 +1,7 @@
 package com.scheduler.controller;
 
 import com.scheduler.model.User;
+import com.scheduler.repository.UserRepository;
 import com.scheduler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     // Get all users
     @GetMapping
@@ -49,5 +52,9 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, userDetails));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userRepository.findById(id).orElseThrow());
+    }
 
 }

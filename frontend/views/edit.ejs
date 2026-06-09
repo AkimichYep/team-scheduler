@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Edit User</h2>
+    <form action="/proxy/edit/<%= user.id %>" method="POST">
+        <input type="text" name="username" value="<%= user.username %>" required><br>
+
+        <select name="role">
+            <option value="ADMIN" <%= user.role === 'ADMIN' ? 'selected' : '' %>>Admin</option>
+            <option value="MANAGER" <%= user.role === 'MANAGER' ? 'selected' : '' %>>Manager</option>
+            <option value="L1_SUPPORT" <%= user.role === 'L1_SUPPORT' ? 'selected' : '' %>>L1 Support</option>
+            </select><br>
+
+        <input type="text" name="project" value="<%= user.project %>"><br>
+
+        <label>
+            <input type="checkbox" name="active" <%= user.active ? 'checked' : '' %>> Active
+        </label><br>
+
+        <button type="submit">Save Changes</button>
+        <a href="/">Cancel</a>
+    </form>
+</body>
+</html>

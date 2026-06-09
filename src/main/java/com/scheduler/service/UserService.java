@@ -4,6 +4,7 @@ import com.scheduler.model.Role;
 import com.scheduler.model.User;
 import com.scheduler.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +15,13 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public User createUser(String username, String password, Role role, String project) {
         User user = User.builder()
                 .username(username)
-                .password(password) // Note: In production, encode this with BCrypt!
+                .password(passwordEncoder.encode(password)) // Automatically hashes using BCrypt
                 .role(role)
                 .project(project)
                 .active(true)

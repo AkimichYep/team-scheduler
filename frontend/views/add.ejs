@@ -1,0 +1,16 @@
+<form action="/proxy/add" method="POST">
+    <input type="text" name="username" placeholder="Username" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+
+    <select name="role">
+        <option value="ADMIN">Admin</option>
+        <option value="MANAGER">Manager</option>
+        <option value="L1_SUPPORT">L1 Support</option>
+        <option value="L3_DEVELOPERS">L3 Developer</option>
+    </select><br>
+
+    <input type="text" name="project" placeholder="Project Name"><br>
+
+    <button type="submit">Create User</button>
+    <a href="/">Cancel</a>
+</form>
