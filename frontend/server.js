@@ -237,4 +237,68 @@ app.post('/proxy/roles/edit/:id', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- Scheduler Routes ---
+
+app.get('/scheduler', isAuthenticated, (req, res) => {
+    res.render('scheduler', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req),
+        userId: req.session.currentUser.id
+    });
+});
+
+app.get('/api/proxy/schedule/month/:userId/:year/:month', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/month/${req.params.userId}/${req.params.year}/${req.params.month}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/week/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/week/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/day/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/day/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/year/:userId/:year', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/year/${req.params.userId}/${req.params.year}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+});
+
+app.post('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.post(`${SPRING_API}/schedule/${req.params.userId}`, req.body, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update schedule" });
+    }
+});
+
+app.delete('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
+    try {
+        await axios.delete(`${SPRING_API}/schedule/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete schedule" });
+    }
+});
+
 app.listen(3000, () => console.log('Frontend running on http://localhost:3000'));
