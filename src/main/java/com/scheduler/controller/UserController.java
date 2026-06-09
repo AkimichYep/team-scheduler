@@ -59,6 +59,12 @@ public class UserController {
         return ResponseEntity.ok(userRepository.findById(id).orElseThrow());
     }
 
+    @PutMapping("/{username}/update-access-time")
+    public ResponseEntity<Void> updateAccessTime(@PathVariable String username) {
+        userService.updateLastAccessTime(username);
+        return ResponseEntity.ok().build();
+    }
+
     // DTO for user requests
     public static class UserRequest {
         private String username;

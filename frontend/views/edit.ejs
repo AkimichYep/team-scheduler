@@ -3,8 +3,8 @@
 <head>
     <title>Edit User</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-container { max-width: 500px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .form-container { max-width: 500px; margin: 30px auto; padding: 20px; }
         input, select, button, a { padding: 8px; margin: 5px 0; display: block; width: 100%; }
         button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
@@ -14,6 +14,8 @@
     </style>
 </head>
 <body>
+    <%- include('header') %>
+
     <div class="form-container">
         <h2>Edit User</h2>
         <form action="/proxy/edit/<%= user.id %>" method="POST">

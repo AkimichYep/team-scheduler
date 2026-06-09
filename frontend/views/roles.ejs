@@ -3,15 +3,15 @@
 <head>
     <title>Role Management</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #333; }
-        .action-buttons { margin-bottom: 20px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        h1 { color: #333; margin: 20px 20px 0 20px; }
+        .action-buttons { margin: 20px; }
         .action-buttons button { padding: 10px 15px; margin-right: 10px; cursor: pointer; border: none; }
         .add-btn { background-color: #4CAF50; color: white; }
         .add-btn:hover { background-color: #45a049; }
         .back-btn { background-color: #999; color: white; }
         .back-btn:hover { background-color: #888; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: calc(100% - 40px); border-collapse: collapse; margin: 20px 20px 40px 20px; }
         table, th, td { border: 1px solid #ddd; }
         th { background-color: #2196F3; color: white; text-align: left; padding: 12px; }
         td { padding: 12px; }
@@ -26,6 +26,8 @@
     </style>
 </head>
 <body>
+    <%- include('header') %>
+
     <h1>Role Management</h1>
 
     <div class="action-buttons">

@@ -15,18 +15,61 @@ app.use(session({
 
 const SPRING_API = 'http://localhost:8080/api';
 
-// Middleware to check auth
-const isAuthenticated = (req, res, next) => {
-    if (req.session.user) next();
-    else res.redirect('/login');
+// Middleware to check auth and fetch current user info
+const isAuthenticated = async (req, res, next) => {
+    if (req.session.user) {
+        try {
+            // Fetch current user info from API
+            const response = await axios.get(`${SPRING_API}/users`, { auth: req.session.user });
+            // Find the current logged-in user
+            const currentUser = response.data.find(u => u.username === req.session.user.username);
+            if (currentUser) {
+                req.session.currentUser = currentUser;
+            }
+            next();
+        } catch (error) {
+            res.redirect('/login');
+        }
+    } else {
+        res.redirect('/login');
+    }
+};
+
+// Helper function to format last access time
+const formatLastAccessTime = (lastAccessTime) => {
+    if (!lastAccessTime) return 'Never';
+    const date = new Date(lastAccessTime);
+    return date.toLocaleString();
+};
+
+// Helper function to get the access time to display
+const getDisplayAccessTime = (req) => {
+    // Show the access time stored at login (the previous login time)
+    return formatLastAccessTime(req.session.displayLastAccessTime);
 };
 
 app.get('/login', (req, res) => res.render('login'));
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    req.session.user = { username, password };
-    res.redirect('/');
+    try {
+        // Verify credentials and get user info
+        const response = await axios.get(`${SPRING_API}/users`, { auth: { username, password } });
+        const user = response.data.find(u => u.username === username);
+        if (user) {
+            req.session.user = { username, password };
+            req.session.currentUser = user;
+            // Store the OLD last access time to display in header throughout this session
+            req.session.displayLastAccessTime = user.lastAccessTime || null;
+            // Update the database with current time immediately (don't wait for page load)
+            await axios.put(`${SPRING_API}/users/${username}/update-access-time`, {}, { auth: { username, password } }).catch(() => {});
+            res.redirect('/');
+        } else {
+            res.status(401).send("Invalid credentials");
+        }
+    } catch (error) {
+        res.status(401).send("Invalid credentials");
+    }
 });
 
 app.get('/logout', (req, res) => {
@@ -39,7 +82,11 @@ app.get('/logout', (req, res) => {
 app.get('/', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/users`, { auth: req.session.user });
-        res.render('users', { users: response.data });
+        res.render('users', {
+            users: response.data,
+            currentUser: req.session.currentUser,
+            lastAccessTime: getDisplayAccessTime(req)
+        });
     } catch (error) {
         res.status(500).send("Error fetching users");
     }
@@ -48,7 +95,11 @@ app.get('/', isAuthenticated, async (req, res) => {
 app.get('/add', isAuthenticated, async (req, res) => {
     try {
         const rolesResponse = await axios.get(`${SPRING_API}/roles/active`, { auth: req.session.user });
-        res.render('add', { roles: rolesResponse.data });
+        res.render('add', {
+            roles: rolesResponse.data,
+            currentUser: req.session.currentUser,
+            lastAccessTime: getDisplayAccessTime(req)
+        });
     } catch (error) {
         res.status(500).send("Error fetching roles");
     }
@@ -58,7 +109,12 @@ app.get('/edit/:id', isAuthenticated, async (req, res) => {
     try {
         const userResponse = await axios.get(`${SPRING_API}/users/${req.params.id}`, { auth: req.session.user });
         const rolesResponse = await axios.get(`${SPRING_API}/roles/active`, { auth: req.session.user });
-        res.render('edit', { user: userResponse.data, roles: rolesResponse.data });
+        res.render('edit', {
+            user: userResponse.data,
+            roles: rolesResponse.data,
+            currentUser: req.session.currentUser,
+            lastAccessTime: getDisplayAccessTime(req)
+        });
     } catch (error) {
         res.status(500).send("Error fetching data");
     }
@@ -110,20 +166,31 @@ app.post('/proxy/edit/:id', isAuthenticated, async (req, res) => {
 app.get('/roles', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/roles`, { auth: req.session.user });
-        res.render('roles', { roles: response.data });
+        res.render('roles', {
+            roles: response.data,
+            currentUser: req.session.currentUser,
+            lastAccessTime: getDisplayAccessTime(req)
+        });
     } catch (error) {
         res.status(500).send("Error fetching roles");
     }
 });
 
 app.get('/roles/add', isAuthenticated, (req, res) => {
-    res.render('roles-add');
+    res.render('roles-add', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req)
+    });
 });
 
 app.get('/roles/edit/:id', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/roles/${req.params.id}`, { auth: req.session.user });
-        res.render('roles-edit', { role: response.data });
+        res.render('roles-edit', {
+            role: response.data,
+            currentUser: req.session.currentUser,
+            lastAccessTime: getDisplayAccessTime(req)
+        });
     } catch (error) {
         res.status(500).send("Error fetching role");
     }

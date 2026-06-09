@@ -3,19 +3,21 @@
 <head>
     <title>Add Role</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-container { max-width: 500px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .form-container { max-width: 500px; margin: 30px auto; padding: 20px; }
         h2 { color: #333; }
         label { display: block; margin-top: 15px; font-weight: bold; }
-        input, textarea, button, a { padding: 10px; margin: 5px 0; display: block; width: 100%; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; box-sizing: border-box; }
+        input, textarea, button, a { padding: 10px; margin: 5px 0; display: block; width: 100%; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
-        a { text-align: center; background-color: #999; color: white; text-decoration: none; box-sizing: border-box; }
+        a { text-align: center; background-color: #999; color: white; text-decoration: none; }
         a:hover { background-color: #888; }
         textarea { resize: vertical; min-height: 100px; font-family: Arial, sans-serif; }
     </style>
 </head>
 <body>
+    <%- include('header') %>
+
     <div class="form-container">
         <h2>Add New Role</h2>
         <form action="/proxy/roles/add" method="POST">

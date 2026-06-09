@@ -36,4 +36,6 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private LocalDateTime lastAccessTime;
 }
