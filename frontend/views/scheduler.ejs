@@ -181,13 +181,37 @@
             font-weight: bold;
         }
 
-        .week-table tr:hover, .day-table tr:hover {
-            background-color: #f5f5f5;
-        }
+        .week-table tbody tr:hover, .day-table tbody tr:hover {
+             opacity: 0.8;
+         }
 
-        .week-table .weekend, .day-table .weekend {
-            background-color: #f0f0f0;
-        }
+         .week-table tbody tr.d, .day-table tbody tr.d {
+             background-color: #c8e6c9;
+         }
+
+         .week-table tbody tr.s, .day-table tbody tr.s {
+             background-color: #bbdefb;
+         }
+
+         .week-table tbody tr.o, .day-table tbody tr.o {
+             background-color: #ffe0b2;
+         }
+
+         .week-table tbody tr.v, .day-table tbody tr.v {
+             background-color: #f8bbd0;
+         }
+
+         .week-table tbody tr.h, .day-table tbody tr.h {
+             background-color: #ce93d8;
+         }
+
+         .week-table tbody tr.off, .day-table tbody tr.off {
+             background-color: #d0d0d0;
+         }
+
+         .week-table tbody tr.weekend, .day-table tbody tr.weekend {
+             border-left: 4px solid #999;
+         }
 
         .activity-select {
             width: 100%;
@@ -771,62 +795,65 @@
         }
 
          function renderWeek() {
-             const weekStart = new Date(currentDate);
-             weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1);
-             const weekEnd = new Date(weekStart);
-             weekEnd.setDate(weekStart.getDate() + 6);
+              const weekStart = new Date(currentDate);
+              weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 6);
 
-             const dateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
-             document.getElementById('currentWeek').textContent =
-                 `Week of ${dateFormat.format(weekStart)} - ${dateFormat.format(weekEnd)}`;
+              const dateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+              document.getElementById('currentWeek').textContent =
+                  `Week of ${dateFormat.format(weekStart)} - ${dateFormat.format(weekEnd)}`;
 
-             const tbody = document.getElementById('weekTableBody');
-             tbody.innerHTML = '';
+              const tbody = document.getElementById('weekTableBody');
+              tbody.innerHTML = '';
 
-             for (let i = 0; i < 7; i++) {
-                 const date = new Date(weekStart);
-                 date.setDate(weekStart.getDate() + i);
-                 const dateStr = formatDate(date);
-                 const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
+              for (let i = 0; i < 7; i++) {
+                  const date = new Date(weekStart);
+                  date.setDate(weekStart.getDate() + i);
+                  const dateStr = formatDate(date);
+                  const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
 
-                 const tr = document.createElement('tr');
-                 const dayOfWeek = date.getDay();
-                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                  const tr = document.createElement('tr');
+                  const dayOfWeek = date.getDay();
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-                 tr.className = isWeekend ? 'weekend' : '';
-                 tr.innerHTML = `
-                     <td>${date.toDateString()}</td>
-                     <td>
-                         <select class="activity-select" data-date="${dateStr}">
-                             <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                             <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                             <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
-                             <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
-                             <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
-                             <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
-                         </select>
-                     </td>
-                     <td>
-                         <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                     </td>
-                 `;
-                 tbody.appendChild(tr);
+                  const activityClass = entry.activity.toLowerCase();
+                  tr.className = isWeekend ? `${activityClass} weekend` : activityClass;
+                  tr.innerHTML = `
+                      <td>${date.toDateString()}</td>
+                      <td>
+                          <select class="activity-select" data-date="${dateStr}">
+                              <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
+                              <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
+                              <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
+                              <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
+                              <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
+                              <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
+                          </select>
+                      </td>
+                      <td>
+                          <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
+                      </td>
+                  `;
+                  tbody.appendChild(tr);
 
-                 // Add event listeners for immediate save
-                 const activitySelect = tr.querySelector('.activity-select');
-                 const notesInput = tr.querySelector('.notes-input');
+                  // Add event listeners for immediate save
+                  const activitySelect = tr.querySelector('.activity-select');
+                  const notesInput = tr.querySelector('.notes-input');
 
-                 activitySelect.addEventListener('change', function() {
-                     const newActivity = this.value;
-                     saveActivityEntry(dateStr, newActivity, notesInput.value);
-                 });
+                  activitySelect.addEventListener('change', function() {
+                      const newActivity = this.value;
+                      const newActivityClass = newActivity.toLowerCase();
+                      tr.className = isWeekend ? `${newActivityClass} weekend` : newActivityClass;
+                      saveActivityEntry(dateStr, newActivity, notesInput.value);
+                  });
 
-                 notesInput.addEventListener('blur', function() {
-                     const currentSelect = tr.querySelector('.activity-select');
-                     saveActivityEntry(dateStr, currentSelect.value, this.value);
-                 });
-             }
-         }
+                  notesInput.addEventListener('blur', function() {
+                      const currentSelect = tr.querySelector('.activity-select');
+                      saveActivityEntry(dateStr, currentSelect.value, this.value);
+                  });
+              }
+          }
 
         function loadDay() {
             const dateInput = document.getElementById('dayInput');
@@ -844,46 +871,50 @@
         }
 
          function renderDay() {
-             const dateInput = document.getElementById('dayInput');
-             const dateStr = dateInput.value;
-             const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
+              const dateInput = document.getElementById('dayInput');
+              const dateStr = dateInput.value;
+              const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
 
-             const tbody = document.getElementById('dayTableBody');
-             tbody.innerHTML = '';
+              const tbody = document.getElementById('dayTableBody');
+              tbody.innerHTML = '';
 
-             const tr = document.createElement('tr');
-             tr.innerHTML = `
-                 <td>${dateStr}</td>
-                 <td>
-                     <select class="activity-select" data-date="${dateStr}">
-                         <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                         <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                         <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
-                         <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
-                         <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
-                         <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
-                     </select>
-                 </td>
-                 <td>
-                     <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                 </td>
-             `;
-             tbody.appendChild(tr);
+              const tr = document.createElement('tr');
+              const activityClass = entry.activity.toLowerCase();
+              tr.className = activityClass;
+              tr.innerHTML = `
+                  <td>${dateStr}</td>
+                  <td>
+                      <select class="activity-select" data-date="${dateStr}">
+                          <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
+                          <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
+                          <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
+                          <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
+                          <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
+                          <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
+                      </select>
+                  </td>
+                  <td>
+                      <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
+                  </td>
+              `;
+              tbody.appendChild(tr);
 
-             // Add event listeners for immediate save
-             const activitySelect = tr.querySelector('.activity-select');
-             const notesInput = tr.querySelector('.notes-input');
+              // Add event listeners for immediate save
+              const activitySelect = tr.querySelector('.activity-select');
+              const notesInput = tr.querySelector('.notes-input');
 
-             activitySelect.addEventListener('change', function() {
-                 const newActivity = this.value;
-                 saveActivityEntry(dateStr, newActivity, notesInput.value);
-             });
+              activitySelect.addEventListener('change', function() {
+                  const newActivity = this.value;
+                  const newActivityClass = newActivity.toLowerCase();
+                  tr.className = newActivityClass;
+                  saveActivityEntry(dateStr, newActivity, notesInput.value);
+              });
 
-             notesInput.addEventListener('blur', function() {
-                 const currentSelect = tr.querySelector('.activity-select');
-                 saveActivityEntry(dateStr, currentSelect.value, this.value);
-             });
-         }
+              notesInput.addEventListener('blur', function() {
+                  const currentSelect = tr.querySelector('.activity-select');
+                  saveActivityEntry(dateStr, currentSelect.value, this.value);
+              });
+          }
 
         function loadYear() {
             const year = currentDate.getFullYear();
@@ -901,54 +932,64 @@
         }
 
         function renderYear() {
-            const year = currentDate.getFullYear();
-            document.getElementById('currentYear').textContent = `${year}`;
+             const year = currentDate.getFullYear();
+             document.getElementById('currentYear').textContent = `${year}`;
 
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                              'July', 'August', 'September', 'October', 'November', 'December'];
+             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
 
-            const yearGrid = document.getElementById('yearGrid');
-            yearGrid.innerHTML = '';
+             const yearGrid = document.getElementById('yearGrid');
+             yearGrid.innerHTML = '';
 
-            for (let month = 0; month < 12; month++) {
-                const monthCard = document.createElement('div');
-                monthCard.className = 'month-card';
-                monthCard.onclick = () => goToMonth(month);
+             for (let month = 0; month < 12; month++) {
+                 const monthCard = document.createElement('div');
+                 monthCard.className = 'month-card';
 
-                const monthTitle = document.createElement('div');
-                monthTitle.className = 'month-card-title';
-                monthTitle.textContent = monthNames[month];
-                monthCard.appendChild(monthTitle);
+                 const monthTitle = document.createElement('div');
+                 monthTitle.className = 'month-card-title';
+                 monthTitle.textContent = monthNames[month];
+                 monthCard.appendChild(monthTitle);
 
-                const daysGrid = document.createElement('div');
-                daysGrid.className = 'month-card-days';
+                 const daysGrid = document.createElement('div');
+                 daysGrid.className = 'month-card-days';
 
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-                const startDate = firstDay.getDay();
+                 const firstDay = new Date(year, month, 1);
+                 const lastDay = new Date(year, month + 1, 0);
+                 const startDate = firstDay.getDay();
 
-                // Add empty cells for days before month starts
-                for (let i = 0; i < startDate; i++) {
-                    const emptyDay = document.createElement('div');
-                    daysGrid.appendChild(emptyDay);
-                }
+                 // Add empty cells for days before month starts
+                 for (let i = 0; i < startDate; i++) {
+                     const emptyDay = document.createElement('div');
+                     daysGrid.appendChild(emptyDay);
+                 }
 
-                // Add days of month
-                for (let day = 1; day <= lastDay.getDate(); day++) {
-                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const entry = scheduleData[dateStr];
-                    const activity = entry ? entry.activity.toLowerCase() : 'd';
+                 // Add days of month
+                 for (let day = 1; day <= lastDay.getDate(); day++) {
+                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                     const entry = scheduleData[dateStr];
+                     const activity = entry ? entry.activity.toLowerCase() : 'd';
 
-                    const dayCell = document.createElement('div');
-                    dayCell.className = `month-card-day ${activity}`;
-                    dayCell.textContent = day;
-                    daysGrid.appendChild(dayCell);
-                }
+                     const dayCell = document.createElement('div');
+                     dayCell.className = `month-card-day ${activity}`;
+                     dayCell.textContent = day;
+                     dayCell.style.cursor = 'pointer';
+                     dayCell.style.transition = 'all 0.2s';
+                     dayCell.onclick = () => openModal(dateStr, entry ? entry.activity : 'D', entry ? (entry.notes || '') : '');
+                     dayCell.onmouseover = function() {
+                         this.style.opacity = '0.8';
+                         this.style.transform = 'scale(1.05)';
+                     };
+                     dayCell.onmouseout = function() {
+                         this.style.opacity = '1';
+                         this.style.transform = 'scale(1)';
+                     };
+                     daysGrid.appendChild(dayCell);
+                 }
 
-                monthCard.appendChild(daysGrid);
-                yearGrid.appendChild(monthCard);
-            }
-        }
+                 monthCard.appendChild(daysGrid);
+                 yearGrid.appendChild(monthCard);
+             }
+         }
 
         function goToMonth(month) {
             currentDate = new Date(currentDate.getFullYear(), month, 1);
