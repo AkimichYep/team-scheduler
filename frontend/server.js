@@ -247,6 +247,13 @@ app.get('/scheduler', isAuthenticated, (req, res) => {
     });
 });
 
+app.get('/summary', isAuthenticated, (req, res) => {
+    res.render('summary', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req)
+    });
+});
+
 app.get('/api/proxy/schedule/month/:userId/:year/:month', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/schedule/month/${req.params.userId}/${req.params.year}/${req.params.month}`, { auth: req.session.user });
@@ -298,6 +305,29 @@ app.delete('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: "Failed to delete schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/team/month/:year/:month', isAuthenticated, async (req, res) => {
+    try {
+        const query = new URLSearchParams();
+        if (req.query.userIds) {
+            const userIds = Array.isArray(req.query.userIds) ? req.query.userIds : [req.query.userIds];
+            userIds.forEach(id => query.append('userIds', id));
+        }
+        const response = await axios.get(`${SPRING_API}/schedule/team/month/${req.params.year}/${req.params.month}?${query.toString()}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch team schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/all-users', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/all-users`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch users" });
     }
 });
 

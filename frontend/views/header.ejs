@@ -1,16 +1,27 @@
 <!-- User Info Header -->
-<div style="background-color: #f0f0f0; border-bottom: 2px solid #333; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div style="flex: 1;">
-        <strong>Logged in as:</strong> <span style="color: #2196F3; font-size: 16px;"><%= currentUser.username %></span>
-        <div style="margin-top: 5px; font-size: 14px; color: #666;">
-            <strong>Role:</strong> <span style="background-color: #4CAF50; color: white; padding: 2px 8px; border-radius: 3px;"><%= currentUser.role.name %></span>
+<div style="background-color: #f0f0f0; border-bottom: 2px solid #333; padding: 15px; margin-bottom: 20px;">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1;">
+            <strong>Logged in as:</strong> <span style="color: #2196F3; font-size: 16px;"><%= currentUser.username %></span>
+            <div style="margin-top: 5px; font-size: 14px; color: #666;">
+                <strong>Role:</strong> <span style="background-color: #4CAF50; color: white; padding: 2px 8px; border-radius: 3px;"><%= currentUser.role.name %></span>
+            </div>
+            <div style="margin-top: 5px; font-size: 14px; color: #666;">
+                <strong>Last Access:</strong> <span style="color: #ff9800;"><%= lastAccessTime %></span>
+            </div>
         </div>
-        <div style="margin-top: 5px; font-size: 14px; color: #666;">
-            <strong>Last Access:</strong> <span style="color: #ff9800;"><%= lastAccessTime %></span>
+        <div style="text-align: right;">
+            <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+                <a href="/" style="background-color: #2196F3; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Team Members</a>
+                <a href="/scheduler" style="background-color: #4CAF50; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">My Scheduler</a>
+                <a href="/summary" style="background-color: #ff9800; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Team Summary</a>
+            </div>
+            <div>
+                <a href="/logout" style="background-color: #f44336; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Logout</a>
+            </div>
         </div>
-    </div>
-    <div style="text-align: right;">
-        <a href="/logout" style="background-color: #f44336; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Logout</a>
     </div>
 </div>
+
+
 
