@@ -214,14 +214,116 @@
          }
 
         .activity-select {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+             width: 100%;
+             padding: 6px;
+             border: 1px solid #ddd;
+             border-radius: 4px;
+             cursor: pointer;
+         }
 
-        .notes-input {
+         .activity-buttons-container {
+             display: grid;
+             grid-template-columns: repeat(3, 1fr);
+             gap: 8px;
+             margin-bottom: 15px;
+         }
+
+         .activity-btn {
+             padding: 12px 10px;
+             border: 2px solid #ddd;
+             border-radius: 4px;
+             cursor: pointer;
+             font-weight: bold;
+             font-size: 14px;
+             transition: all 0.2s;
+             background-color: white;
+             text-align: center;
+         }
+
+         .activity-btn:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+         }
+
+         .activity-btn.d {
+             background-color: #c8e6c9;
+             color: #333;
+             border-color: #81c784;
+         }
+
+         .activity-btn.d.active {
+             background-color: #66bb6a;
+             color: white;
+             border-color: #388e3c;
+             box-shadow: 0 4px 12px rgba(104, 187, 106, 0.4);
+         }
+
+         .activity-btn.s {
+             background-color: #bbdefb;
+             color: #333;
+             border-color: #64b5f6;
+         }
+
+         .activity-btn.s.active {
+             background-color: #42a5f5;
+             color: white;
+             border-color: #1976d2;
+             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+         }
+
+         .activity-btn.o {
+             background-color: #ffe0b2;
+             color: #333;
+             border-color: #ffca28;
+         }
+
+         .activity-btn.o.active {
+             background-color: #ffa726;
+             color: white;
+             border-color: #f57c00;
+             box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+         }
+
+         .activity-btn.v {
+             background-color: #f8bbd0;
+             color: #333;
+             border-color: #f48fb1;
+         }
+
+         .activity-btn.v.active {
+             background-color: #ec407a;
+             color: white;
+             border-color: #c2185b;
+             box-shadow: 0 4px 12px rgba(236, 64, 122, 0.4);
+         }
+
+         .activity-btn.h {
+             background-color: #ce93d8;
+             color: white;
+             border-color: #b39ddb;
+         }
+
+         .activity-btn.h.active {
+             background-color: #ab47bc;
+             color: white;
+             border-color: #6a1b9a;
+             box-shadow: 0 4px 12px rgba(171, 71, 188, 0.4);
+         }
+
+         .activity-btn.off {
+             background-color: #d0d0d0;
+             color: #333;
+             border-color: #999;
+         }
+
+         .activity-btn.off.active {
+             background-color: #757575;
+             color: white;
+             border-color: #424242;
+             box-shadow: 0 4px 12px rgba(117, 117, 117, 0.4);
+         }
+
+         .notes-input {
             width: 100%;
             padding: 6px;
             border: 1px solid #ddd;
@@ -349,10 +451,19 @@
         }
 
         .modal-save-btn:hover {
-            background-color: #45a049;
-        }
+             background-color: #45a049;
+         }
 
-        .modal-cancel-btn {
+         .modal-fill-btn {
+             background-color: #2196F3;
+             color: white;
+         }
+
+         .modal-fill-btn:hover {
+             background-color: #0b7dda;
+         }
+
+         .modal-cancel-btn {
             background-color: #f44336;
             color: white;
         }
@@ -624,9 +735,8 @@
         </div>
 
         <div class="buttons-container">
-            <button class="save-btn" onclick="saveSchedule()">Save Changes</button>
-            <button class="back-btn" onclick="location.href='/'">Back</button>
-        </div>
+             <button class="back-btn" onclick="location.href='/'">Back</button>
+         </div>
     </div>
 
     <!-- Modal for editing day activity -->
@@ -635,37 +745,46 @@
             <div class="modal-header">Edit Activity</div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Date:</label>
-                    <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-                <div class="form-group">
-                    <label>Activity:</label>
-                    <select id="modalActivity" class="activity-select">
-                        <option value="D">D - Development</option>
-                        <option value="S">S - Support</option>
-                        <option value="O">O - OnCall</option>
-                        <option value="V">V - Vacation</option>
-                        <option value="H">H - Holiday</option>
-                        <option value="Off">Off - Day Off</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Notes (optional):</label>
-                    <textarea id="modalNotes" class="notes-input" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
-                <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
-            </div>
+                     <label>Date:</label>
+                     <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                 </div>
+                 <div class="form-group">
+                     <label>Activity:</label>
+                     <div class="activity-buttons-container">
+                         <button type="button" class="activity-btn d active" onclick="selectActivityType('D')" title="Development">D</button>
+                         <button type="button" class="activity-btn s" onclick="selectActivityType('S')" title="Support">S</button>
+                         <button type="button" class="activity-btn o" onclick="selectActivityType('O')" title="OnCall">O</button>
+                         <button type="button" class="activity-btn v" onclick="selectActivityType('V')" title="Vacation">V</button>
+                         <button type="button" class="activity-btn h" onclick="selectActivityType('H')" title="Holiday">H</button>
+                         <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Day Off">Off</button>
+                     </div>
+                     <input type="hidden" id="modalActivity" value="D">
+                 </div>
+                 <div class="form-group">
+                     <label>Notes (optional):</label>
+                     <textarea id="modalNotes" class="notes-input" rows="3"></textarea>
+                 </div>
+             </div>
+             <div class="modal-buttons">
+                 <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()">Fill Next 5 Days</button>
+                 <div style="flex-grow: 1;"></div>
+                 <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
+                 <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
+             </div>
         </div>
     </div>
 
     <script>
-        const CURRENT_USER_ID = '<%= userId %>';
-        let scheduleData = {};
-        let currentDate = new Date(2026, 0, 1);
-        let selectedDateForModal = null;
+         const CURRENT_USER_ID = '<%= userId %>';
+         let scheduleData = {};
+         let currentDate = new Date(2026, 0, 1);
+         let selectedDateForModal = null;
+
+         // Toast aggregation system
+         let pendingSaves = 0;
+         let toastTimeout = null;
+         const TOAST_DEBOUNCE_DELAY = 5000; // Wait 5 seconds to aggregate multiple saves
+         const TOAST_DISPLAY_DELAY = 7000; // Display toast for 7 seconds
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -1043,142 +1162,262 @@
         }
 
         function openModal(dateStr, activity, notes) {
-            selectedDateForModal = dateStr;
-            document.getElementById('modalDate').value = dateStr;
-            document.getElementById('modalActivity').value = activity;
-            document.getElementById('modalNotes').value = notes || '';
-            document.getElementById('editModal').style.display = 'block';
-        }
+             selectedDateForModal = dateStr;
+             document.getElementById('modalDate').value = dateStr;
+             document.getElementById('modalActivity').value = activity;
+             document.getElementById('modalNotes').value = notes || '';
 
-        function closeModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
+             // Update active button
+             const buttons = document.querySelectorAll('.activity-btn');
+             buttons.forEach(btn => btn.classList.remove('active'));
 
-        function saveModalChanges() {
-            const activity = document.getElementById('modalActivity').value;
-            const notes = document.getElementById('modalNotes').value;
+             const activityClass = activity.toLowerCase();
+             const activeBtn = document.querySelector(`.activity-btn.${activityClass}`);
+             if (activeBtn) {
+                 activeBtn.classList.add('active');
+             }
 
-            // Immediately save to backend
-            fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    date: selectedDateForModal,
-                    activity: activity,
-                    notes: notes
-                })
-            })
-            .then(res => res.json())
-            .then(savedEntry => {
-                // Update local scheduleData with the saved entry from backend
-                scheduleData[selectedDateForModal] = savedEntry;
-                closeModal();
+             document.getElementById('editModal').style.display = 'block';
+         }
 
-                // Reload current view to show changes
-                const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                if (activeView) {
-                    activeView.click();
-                }
-            })
-            .catch(err => {
-                console.error('Error saving schedule:', err);
-                alert('Error saving schedule entry');
-            });
-        }
+         function selectActivityType(type) {
+             document.getElementById('modalActivity').value = type;
 
-        function saveSchedule() {
-            const promises = [];
+             // Update button styles
+             const buttons = document.querySelectorAll('.activity-btn');
+             buttons.forEach(btn => btn.classList.remove('active'));
 
-            for (const dateStr in scheduleData) {
-                const entry = scheduleData[dateStr];
-                const promise = fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        date: entry.date,
-                        activity: entry.activity,
-                        notes: entry.notes
-                    })
-                });
-                promises.push(promise);
-            }
+             const typeClass = type.toLowerCase();
+             const activeBtn = document.querySelector(`.activity-btn.${typeClass}`);
+             if (activeBtn) {
+                 activeBtn.classList.add('active');
+             }
+         }
 
-            Promise.all(promises)
-                .then(() => {
-                    alert('Schedule saved successfully!');
-                })
-                .catch(err => {
-                    console.error('Error saving schedule:', err);
-                    alert('Error saving schedule');
-                });
-        }
+          function closeModal() {
+              document.getElementById('editModal').style.display = 'none';
+          }
 
-        function saveActivityEntry(dateStr, activity, notes) {
-            fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    date: dateStr,
-                    activity: activity,
-                    notes: notes
-                })
-            })
-            .then(res => res.json())
-            .then(savedEntry => {
-                // Update local scheduleData with the saved entry
-                scheduleData[dateStr] = savedEntry;
-                showToast('Data saved successfully!');
+         function fillNext5Days() {
+             const activity = document.getElementById('modalActivity').value;
+             const notes = document.getElementById('modalNotes').value;
+             const startDate = new Date(selectedDateForModal);
 
-                // Refresh current view to ensure consistency
-                const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                if (activeView) {
-                    const viewName = activeView.textContent.toLowerCase();
-                    if (viewName.includes('month')) {
-                        loadMonth();
-                    } else if (viewName.includes('week')) {
-                        loadWeek();
-                    } else if (viewName.includes('day')) {
-                        loadDay();
-                    } else if (viewName.includes('year')) {
-                        loadYear();
-                    }
-                }
-            })
-            .catch(err => {
-                console.error('Error saving activity:', err);
-                showToast('Error saving data!', 'error');
-            });
-        }
+             // Save current day first
+             saveActivityToBackend(selectedDateForModal, activity, notes);
 
-        function showToast(message, type = 'success') {
-            // Remove any existing toast
-            const existingToast = document.querySelector('.toast-notification');
-            if (existingToast) {
-                existingToast.classList.add('hide');
-                setTimeout(() => existingToast.remove(), 300);
-            }
+             // Save next 4 days (5 days total including today)
+             for (let i = 1; i < 5; i++) {
+                 const nextDate = new Date(startDate);
+                 nextDate.setDate(nextDate.getDate() + i);
+                 const nextDateStr = formatDate(nextDate);
+                 saveActivityToBackend(nextDateStr, activity, notes);
+             }
 
-            // Create new toast
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.textContent = message;
-            if (type === 'error') {
-                toast.style.backgroundColor = '#f44336';
-            }
-            document.body.appendChild(toast);
+             closeModal();
+             showToast('Filling next 5 days with selected activity...');
+         }
 
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                toast.classList.add('hide');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
+         function saveActivityToBackend(dateStr, activity, notes) {
+             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json'
+                 },
+                 body: JSON.stringify({
+                     date: dateStr,
+                     activity: activity,
+                     notes: notes
+                 })
+             })
+             .then(res => res.json())
+             .then(savedEntry => {
+                 scheduleData[dateStr] = savedEntry;
+                 pendingSaves++;
+
+                 if (toastTimeout) {
+                     clearTimeout(toastTimeout);
+                 }
+
+                 toastTimeout = setTimeout(() => {
+                     if (pendingSaves > 0) {
+                         const message = pendingSaves === 1
+                             ? '1 entry saved'
+                             : `${pendingSaves} entries saved`;
+                         showToast(message);
+                         pendingSaves = 0;
+                     }
+                 }, TOAST_DEBOUNCE_DELAY);
+
+                 // Refresh current view
+                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                 if (activeView) {
+                     const viewName = activeView.textContent.toLowerCase();
+                     if (viewName.includes('month')) {
+                         loadMonth();
+                     } else if (viewName.includes('week')) {
+                         loadWeek();
+                     } else if (viewName.includes('day')) {
+                         loadDay();
+                     } else if (viewName.includes('year')) {
+                         loadYear();
+                     }
+                 }
+             })
+             .catch(err => {
+                 console.error('Error saving activity:', err);
+                 showToast('Error saving data!', 'error');
+             });
+         }
+
+         function saveModalChanges() {
+             const activity = document.getElementById('modalActivity').value;
+             const notes = document.getElementById('modalNotes').value;
+
+             // Immediately save to backend
+             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json'
+                 },
+                 body: JSON.stringify({
+                     date: selectedDateForModal,
+                     activity: activity,
+                     notes: notes
+                 })
+             })
+             .then(res => res.json())
+             .then(savedEntry => {
+                 // Update local scheduleData with the saved entry from backend
+                 scheduleData[selectedDateForModal] = savedEntry;
+                 closeModal();
+
+                 // Increment pending saves
+                 pendingSaves++;
+
+                 // Clear previous timeout
+                 if (toastTimeout) {
+                     clearTimeout(toastTimeout);
+                 }
+
+                 // Set new debounced toast
+                 toastTimeout = setTimeout(() => {
+                     if (pendingSaves > 0) {
+                         const message = pendingSaves === 1
+                             ? '1 entry saved'
+                             : `${pendingSaves} entries saved`;
+                         showToast(message);
+                         pendingSaves = 0;
+                     }
+                 }, TOAST_DEBOUNCE_DELAY);
+
+                 // Reload current view to show changes
+                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                 if (activeView) {
+                     activeView.click();
+                 }
+             })
+             .catch(err => {
+                 console.error('Error saving schedule:', err);
+                 alert('Error saving schedule entry');
+             });
+         }
+
+         function saveSchedule() {
+             // This function is deprecated - saving now happens automatically when changes are made
+             // Optionally show a toast if there are pending saves
+             if (toastTimeout) {
+                 clearTimeout(toastTimeout);
+                 if (pendingSaves > 0) {
+                     const message = pendingSaves === 1
+                         ? '1 entry saved'
+                         : `${pendingSaves} entries saved`;
+                     showToast(message);
+                     pendingSaves = 0;
+                 }
+             }
+         }
+
+         function saveActivityEntry(dateStr, activity, notes) {
+             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json'
+                 },
+                 body: JSON.stringify({
+                     date: dateStr,
+                     activity: activity,
+                     notes: notes
+                 })
+             })
+             .then(res => res.json())
+             .then(savedEntry => {
+                 // Update local scheduleData with the saved entry
+                 scheduleData[dateStr] = savedEntry;
+
+                 // Increment pending saves
+                 pendingSaves++;
+
+                 // Clear previous timeout
+                 if (toastTimeout) {
+                     clearTimeout(toastTimeout);
+                 }
+
+                 // Set new debounced toast
+                 toastTimeout = setTimeout(() => {
+                     if (pendingSaves > 0) {
+                         const message = pendingSaves === 1
+                             ? '1 entry saved'
+                             : `${pendingSaves} entries saved`;
+                         showToast(message);
+                         pendingSaves = 0;
+                     }
+                 }, TOAST_DEBOUNCE_DELAY);
+
+                 // Refresh current view to ensure consistency
+                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                 if (activeView) {
+                     const viewName = activeView.textContent.toLowerCase();
+                     if (viewName.includes('month')) {
+                         loadMonth();
+                     } else if (viewName.includes('week')) {
+                         loadWeek();
+                     } else if (viewName.includes('day')) {
+                         loadDay();
+                     } else if (viewName.includes('year')) {
+                         loadYear();
+                     }
+                 }
+             })
+             .catch(err => {
+                 console.error('Error saving activity:', err);
+                 showToast('Error saving data!', 'error');
+             });
+         }
+
+         function showToast(message, type = 'success') {
+             // Remove any existing toast
+             const existingToast = document.querySelector('.toast-notification');
+             if (existingToast) {
+                 existingToast.classList.add('hide');
+                 setTimeout(() => existingToast.remove(), 300);
+             }
+
+             // Create new toast
+             const toast = document.createElement('div');
+             toast.className = 'toast-notification';
+             toast.textContent = message;
+             if (type === 'error') {
+                 toast.style.backgroundColor = '#f44336';
+             }
+             document.body.appendChild(toast);
+
+             // Auto remove after 7 seconds
+             setTimeout(() => {
+                 toast.classList.add('hide');
+                 setTimeout(() => toast.remove(), 300);
+             }, TOAST_DISPLAY_DELAY);
+         }
 
         function formatDate(date) {
             const year = date.getFullYear();
