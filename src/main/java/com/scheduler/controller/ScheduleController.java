@@ -51,6 +51,15 @@ public class ScheduleController {
         return ResponseEntity.ok(schedule);
     }
 
+    @GetMapping("/day/{userId}/hours")
+    public ResponseEntity<List<ScheduleEntry>> getDayScheduleAllHours(
+            @PathVariable Long userId,
+            @RequestParam String date) {
+        LocalDate localDate = LocalDate.parse(date);
+        List<ScheduleEntry> schedule = scheduleService.getScheduleForDayAllHours(userId, localDate);
+        return ResponseEntity.ok(schedule);
+    }
+
     @GetMapping("/year/{userId}/{year}")
     public ResponseEntity<List<ScheduleEntry>> getYearSchedule(
             @PathVariable Long userId,
@@ -63,21 +72,50 @@ public class ScheduleController {
     public ResponseEntity<ScheduleEntry> updateScheduleEntry(
             @PathVariable Long userId,
             @RequestBody ScheduleEntryRequest request) {
-        ScheduleEntry entry = scheduleService.updateScheduleEntry(
-                userId,
-                LocalDate.parse(request.getDate()),
-                request.getActivity(),
-                request.getNotes()
-        );
+
+        ScheduleEntry entry;
+        if (request.getHour() != null) {
+            // Hourly view: update specific hour only
+            entry = scheduleService.updateScheduleEntry(
+                    userId,
+                    LocalDate.parse(request.getDate()),
+                    request.getHour(),
+                    request.getActivity(),
+                    request.getNotes()
+            );
+        } else {
+            // Day view: update all 24 hours for the day
+            entry = scheduleService.updateScheduleEntry(
+                    userId,
+                    LocalDate.parse(request.getDate()),
+                    request.getActivity(),
+                    request.getNotes()
+            );
+        }
         return ResponseEntity.ok(entry);
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteScheduleEntry(
             @PathVariable Long userId,
-            @RequestParam String date) {
-        scheduleService.deleteScheduleEntry(userId, LocalDate.parse(date));
+            @RequestParam String date,
+            @RequestParam(required = false) Integer hour) {
+        LocalDate localDate = LocalDate.parse(date);
+        if (hour != null) {
+            scheduleService.deleteScheduleEntry(userId, localDate, hour);
+        } else {
+            scheduleService.deleteScheduleEntry(userId, localDate);
+        }
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/daily-summary/{userId}")
+    public ResponseEntity<Map<String, List<ScheduleEntry>>> getDailySummary(
+            @PathVariable Long userId,
+            @RequestParam String date) {
+        LocalDate referenceDate = LocalDate.parse(date);
+        Map<String, List<ScheduleEntry>> summary = scheduleService.getDailySummary(userId, referenceDate);
+        return ResponseEntity.ok(summary);
     }
 
     @GetMapping("/team/month/{year}/{month}")
@@ -110,6 +148,7 @@ public class ScheduleController {
     // DTO for schedule entry requests
     public static class ScheduleEntryRequest {
         private String date;
+        private Integer hour;
         private String activity;
         private String notes;
 
@@ -119,6 +158,14 @@ public class ScheduleController {
 
         public void setDate(String date) {
             this.date = date;
+        }
+
+        public Integer getHour() {
+            return hour;
+        }
+
+        public void setHour(Integer hour) {
+            this.hour = hour;
         }
 
         public String getActivity() {

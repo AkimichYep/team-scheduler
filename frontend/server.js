@@ -254,6 +254,21 @@ app.get('/summary', isAuthenticated, (req, res) => {
     });
 });
 
+app.get('/daily-summary', isAuthenticated, (req, res) => {
+    res.render('daily-summary', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req),
+        userId: req.session.currentUser.id
+    });
+});
+
+app.get('/summary-by-day', isAuthenticated, (req, res) => {
+    res.render('summary-by-day', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req)
+    });
+});
+
 app.get('/api/proxy/schedule/month/:userId/:year/:month', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/schedule/month/${req.params.userId}/${req.params.year}/${req.params.month}`, { auth: req.session.user });
@@ -275,6 +290,15 @@ app.get('/api/proxy/schedule/week/:userId', isAuthenticated, async (req, res) =>
 app.get('/api/proxy/schedule/day/:userId', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/schedule/day/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+});
+
+app.get('/api/proxy/schedule/day/:userId/hours', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/schedule/day/${req.params.userId}/hours?date=${req.query.date}`, { auth: req.session.user });
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -328,6 +352,16 @@ app.get('/api/proxy/schedule/all-users', isAuthenticated, async (req, res) => {
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch users" });
+    }
+});
+
+app.get('/api/proxy/schedule/daily-summary/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const date = req.query.date;
+        const response = await axios.get(`${SPRING_API}/schedule/daily-summary/${req.params.userId}?date=${date}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch daily summary" });
     }
 });
 

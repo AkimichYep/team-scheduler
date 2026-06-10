@@ -661,7 +661,10 @@
             <button class="view-btn active" onclick="switchView('month')">Month View</button>
             <button class="view-btn" onclick="switchView('week')">Week View</button>
             <button class="view-btn" onclick="switchView('day')">Day View</button>
+            <button class="view-btn" onclick="switchView('hourly')">24-Hour View</button>
             <button class="view-btn" onclick="switchView('year')">Year View</button>
+            <button class="view-btn" onclick="location.href='/daily-summary'">Daily Summary</button>
+            <button class="view-btn" onclick="location.href='/summary-by-day'">Team by Day</button>
         </div>
 
         <!-- Month View -->
@@ -718,6 +721,21 @@
                         </tr>
                     </thead>
                     <tbody id="dayTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 24-Hour View -->
+        <div id="hourlyView" class="view-content" style="display: none;">
+            <div class="nav-controls">
+                <button class="nav-btn" onclick="previousHourlyDay()">← Previous</button>
+                <input type="date" id="hourlyInput" class="date-input" onchange="loadHourly()">
+                <button class="nav-btn" onclick="nextHourlyDay()">Next →</button>
+            </div>
+            <div class="calendar-container">
+                <table class="week-table" id="hourlyTable">
+                    <thead id="hourlyTableHead"></thead>
+                    <tbody id="hourlyTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -779,6 +797,7 @@
          let scheduleData = {};
          let currentDate = new Date(2026, 0, 1);
          let selectedDateForModal = null;
+         let selectedHourForModal = null; // Initialize for hourly view
 
          // Toast aggregation system
          let pendingSaves = 0;
@@ -791,6 +810,7 @@
             const today = new Date('2026-06-09');
             currentDate = new Date(today);
             document.getElementById('dayInput').valueAsDate = today;
+            document.getElementById('hourlyInput').valueAsDate = today;
             loadMonth();
         });
 
@@ -818,6 +838,8 @@
                 loadWeek();
             } else if (viewName === 'day') {
                 loadDay();
+            } else if (viewName === 'hourly') {
+                loadHourly();
             } else if (viewName === 'year') {
                 loadYear();
             }
@@ -1196,6 +1218,7 @@
 
           function closeModal() {
               document.getElementById('editModal').style.display = 'none';
+              selectedHourForModal = null;  // Reset hour when closing modal
           }
 
          function fillNext5Days() {
@@ -1433,6 +1456,187 @@
                 closeModal();
             }
         }
+
+        // 24-Hour Hourly View Functions
+        function loadHourly() {
+            const dateInput = document.getElementById('hourlyInput');
+            const dateStr = dateInput.value;
+
+            if (!dateStr) return;
+
+            fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
+                .then(res => res.json())
+                .then(data => {
+                    scheduleData = {};
+                    data.forEach(entry => {
+                        const key = `${entry.date}-${entry.hourOfDay}`;
+                        scheduleData[key] = entry;
+                    });
+                    renderHourly(dateStr);
+                })
+                .catch(err => console.error('Error fetching hourly schedule:', err));
+        }
+
+        function renderHourly(dateStr) {
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+            // Build header with 24 hour slots (all columns)
+            const thead = document.getElementById('hourlyTableHead');
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `<th style="width: 150px; min-width: 150px;">Date / User</th>`;
+
+            for (let hour = 0; hour < 24; hour++) {
+                const startHour = String(hour).padStart(2, '0');
+                const endHour = String(hour + 1).padStart(2, '0');
+                headerRow.innerHTML += `<th style="min-width: 40px; padding: 8px 4px; font-size: 11px;">${startHour}-${endHour}</th>`;
+            }
+            thead.appendChild(headerRow);
+
+            // Build single body row with all 24 hours as columns
+            const tbody = document.getElementById('hourlyTableBody');
+            tbody.innerHTML = '';
+
+            const tr = document.createElement('tr');
+
+            // First cell: Date and day name
+            const dateCell = document.createElement('td');
+            dateCell.style.backgroundColor = '#f5f5f5';
+            dateCell.style.fontWeight = 'bold';
+            dateCell.style.textAlign = 'left';
+            dateCell.style.minWidth = '150px';
+            dateCell.innerHTML = `${dateStr}<br>${dayName}`;
+            tr.appendChild(dateCell);
+
+            // Add all 24 hours as cells in the same row
+            for (let hour = 0; hour < 24; hour++) {
+                const key = `${dateStr}-${hour}`;
+                const entry = scheduleData[key] || { activity: 'D', notes: '' };
+                const activityClass = entry.activity.toLowerCase();
+
+                const td = document.createElement('td');
+                td.className = `activity-cell ${activityClass}`;
+                td.innerHTML = entry.activity;
+                td.style.cursor = 'pointer';
+                td.style.padding = '12px 4px';
+                td.style.textAlign = 'center';
+                td.style.minWidth = '40px';
+                td.style.fontWeight = 'bold';
+                td.onclick = () => openHourlyModal(dateStr, hour, entry.activity, entry.notes || '');
+                tr.appendChild(td);
+            }
+
+            tbody.appendChild(tr);
+        }
+
+        function openHourlyModal(dateStr, hour, activity, notes) {
+            selectedDateForModal = dateStr;
+            document.getElementById('modalDate').value = `${dateStr} (${String(hour).padStart(2, '0')}-${String(hour + 1).padStart(2, '0')})`;
+            document.getElementById('modalActivity').value = activity;
+            document.getElementById('modalNotes').value = notes || '';
+
+            // Store the hour in the local variable
+            selectedHourForModal = hour;
+
+            // Update active button
+            const buttons = document.querySelectorAll('.activity-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            const activityClass = activity.toLowerCase();
+            const activeBtn = document.querySelector(`.activity-btn.${activityClass}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function previousHourlyDay() {
+            const dateInput = document.getElementById('hourlyInput');
+            const date = new Date(dateInput.valueAsDate);
+            date.setDate(date.getDate() - 1);
+            dateInput.valueAsDate = date;
+            loadHourly();
+        }
+
+        function nextHourlyDay() {
+            const dateInput = document.getElementById('hourlyInput');
+            const date = new Date(dateInput.valueAsDate);
+            date.setDate(date.getDate() + 1);
+            dateInput.valueAsDate = date;
+            loadHourly();
+        }
+
+        // Override saveModalChanges to support hourly saves
+        const originalSaveModalChanges = saveModalChanges;
+        window.saveModalChanges = function() {
+            const activity = document.getElementById('modalActivity').value;
+            const notes = document.getElementById('modalNotes').value;
+            const hour = selectedHourForModal;
+
+            // Build request body - only include hour if it's defined (hourly view mode)
+            const requestBody = {
+                date: selectedDateForModal,
+                activity: activity,
+                notes: notes
+            };
+
+            // Only include hour if we're in hourly edit mode
+            if (hour !== undefined && hour !== null) {
+                requestBody.hour = hour;
+            }
+
+            fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(res => res.json())
+            .then(savedEntry => {
+                // Use the correct key based on whether hour is defined
+                const key = hour !== undefined && hour !== null ? `${selectedDateForModal}-${hour}` : selectedDateForModal;
+                scheduleData[key] = savedEntry;
+                closeModal();
+
+                // Reset selectedHourForModal after saving
+                selectedHourForModal = null;
+
+                pendingSaves++;
+
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                }
+
+                toastTimeout = setTimeout(() => {
+                    if (pendingSaves > 0) {
+                        const message = pendingSaves === 1
+                            ? '1 entry saved'
+                            : `${pendingSaves} entries saved`;
+                        showToast(message);
+                        pendingSaves = 0;
+                    }
+                }, TOAST_DEBOUNCE_DELAY);
+
+                // Reload current view to show changes
+                const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                if (activeView) {
+                    const viewName = activeView.textContent.toLowerCase();
+                    if (viewName.includes('24-hour')) {
+                        loadHourly();
+                    } else {
+                        activeView.click();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error saving schedule:', err);
+                alert('Error saving schedule entry');
+            });
+        };
+
     </script>
 </body>
 </html>
