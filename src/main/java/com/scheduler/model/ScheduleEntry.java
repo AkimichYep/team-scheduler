@@ -28,7 +28,19 @@ public class ScheduleEntry {
     private Integer hourOfDay = 0; // 0-23 representing the hour slot (00-01, 01-02, etc.)
 
     @Column(nullable = false)
-    private String activity; // D (Development), S (Support), O (OnCall), V (Vacation), H (Holiday), Off
+    private String activity; // D (Development), S (Support), V (Vacation), H (Holiday), Off
+
+    @Column(name = "is_on_call", nullable = false)
+    @Builder.Default
+    private Boolean isOnCall = false; // OnCall overlay on top of regular activity (deprecated - use onCallMorning and onCallNight)
+
+    @Column(name = "on_call_morning", nullable = false)
+    @Builder.Default
+    private Boolean onCallMorning = false; // OnCall during morning hours
+
+    @Column(name = "on_call_night", nullable = false)
+    @Builder.Default
+    private Boolean onCallNight = false; // OnCall during night hours
 
     @Builder.Default
     private String notes = "";

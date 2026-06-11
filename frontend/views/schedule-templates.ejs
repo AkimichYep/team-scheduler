@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schedule Templates Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .template-card {
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .template-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            border-color: #2196F3;
+        }
+
+        .template-card.oncall {
+            background-color: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .template-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .template-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .template-hours {
+            font-size: 12px;
+            color: #888;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .btn-apply {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-apply:hover {
+            background-color: #0b7dda;
+        }
+
+        .btn-default {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-default:hover {
+            background-color: #45a049;
+        }
+
+        .btn-default.active {
+            background-color: #388e3c;
+            box-shadow: 0 2px 8px rgba(56, 142, 60, 0.3);
+        }
+
+        .controls-section {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+            min-width: 100px;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .control-group select {
+            min-width: 200px;
+        }
+
+        .apply-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .apply-btn:hover {
+            background-color: #45a049;
+        }
+
+        .apply-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .oncall-section {
+            background-color: white;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .oncall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .oncall-card {
+            background-color: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .oncall-name {
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .oncall-description {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .oncall-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-add-oncall {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-add-oncall:hover {
+            background-color: #f57c00;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #da190b;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background-color: #9e9e9e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background-color: #757575;
+        }
+
+        .buttons-container {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast-notification.hide {
+            animation: slideOut 0.3s ease-out;
+        }
+
+        .toast-notification.error {
+            background-color: #f44336;
+        }
+
+        .highlight {
+            background-color: #ffffeb;
+            padding: 12px;
+            border-left: 4px solid #2196F3;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <%- include('header') %>
+
+    <div class="container">
+        <h1>Schedule Templates & OnCall Manager</h1>
+
+        <div class="highlight">
+            <strong>💡 How it works:</strong> Select a template to apply to your schedule. OnCall hours layer on top of your schedule without overriding your base activities. Set a template as default to apply it to all future entries.
+        </div>
+
+        <!-- Active Templates Section -->
+        <h2>Available Work Schedule Templates</h2>
+        <div class="templates-grid" id="templatesContainer"></div>
+
+        <!-- Apply Template Section -->
+        <div class="controls-section">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">Apply Template to Dates</h3>
+            <div class="control-group">
+                <label>Select Template:</label>
+                <select id="templateSelect">
+                    <option value="">-- Select a template --</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Date (Single):</label>
+                <input type="date" id="singleDate" value="">
+                <button class="apply-btn" onclick="applySingleDate()">Apply to Date</button>
+            </div>
+            <div class="control-group">
+                <label>Date Range:</label>
+                <input type="date" id="startDate" placeholder="Start date">
+                <input type="date" id="endDate" placeholder="End date">
+                <button class="apply-btn" onclick="applyDateRange()">Apply to Range</button>
+            </div>
+        </div>
+
+        <!-- OnCall Templates Section -->
+        <h2>OnCall Schedule Templates</h2>
+        <div class="oncall-grid" id="oncallContainer"></div>
+
+        <div class="oncall-section">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">Add OnCall Manually</h3>
+            <div class="control-group">
+                <label>Date:</label>
+                <input type="date" id="onCallDate" value="">
+            </div>
+            <div class="control-group">
+                <label>Start Hour (0-23):</label>
+                <input type="number" id="onCallStartHour" min="0" max="23" value="0">
+            </div>
+            <div class="control-group">
+                <label>End Hour (1-24):</label>
+                <input type="number" id="onCallEndHour" min="1" max="24" value="8">
+            </div>
+            <div class="control-group">
+                <button class="apply-btn" onclick="addOnCall()">Add OnCall Hours</button>
+                <button class="apply-btn" style="background-color: #ff5252;" onclick="removeOnCall()">Remove OnCall</button>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="back-btn" onclick="location.href='/scheduler'">Back to Scheduler</button>
+            <button class="back-btn" onclick="location.href='/'">Back to Home</button>
+        </div>
+    </div>
+
+    <script>
+        const CURRENT_USER_ID = '<%= userId %>';
+        let templates = [];
+        let oncallTemplates = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date('2026-06-09');
+            document.getElementById('singleDate').valueAsDate = today;
+            document.getElementById('onCallDate').valueAsDate = today;
+            document.getElementById('startDate').value = formatDate(today);
+            document.getElementById('endDate').value = formatDate(new Date(today.getTime() + 7*24*60*60*1000));
+
+            loadTemplates();
+        });
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function loadTemplates() {
+            fetch('/api/proxy/templates')
+                .then(res => res.json())
+                .then(data => {
+                    templates = data.filter(t => !['Night OnCall', 'Evening OnCall', 'Flexible OnCall'].some(name => t.name.includes(name)));
+                    oncallTemplates = data.filter(t => ['Night OnCall', 'Evening OnCall', 'Flexible OnCall'].some(name => t.name.includes(name)));
+                    renderTemplates();
+                    renderOnCallTemplates();
+                    populateTemplateSelect();
+                })
+                .catch(err => {
+                    console.error('Error loading templates:', err);
+                    showToast('Error loading templates', 'error');
+                });
+        }
+
+        function renderTemplates() {
+            const container = document.getElementById('templatesContainer');
+            container.innerHTML = '';
+
+            templates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+                const hoursPreview = template.hourlyCsv.split(',').slice(0, 12).join(' ');
+
+                card.innerHTML = `
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-description">${template.description}</div>
+                    <div class="template-hours" title="${template.hourlyCsv}">${hoursPreview}...</div>
+                    <div class="template-actions">
+                        <button class="template-btn btn-apply" onclick="showApplyModal(${template.id}, '${template.name}')">Quick Apply</button>
+                        <button class="template-btn btn-default ${template.isDefault ? 'active' : ''}" onclick="setDefaultTemplate(${template.id})">${template.isDefault ? '✓ Default' : 'Set Default'}</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderOnCallTemplates() {
+            const container = document.getElementById('oncallContainer');
+            container.innerHTML = '';
+
+            oncallTemplates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'oncall-card';
+                card.innerHTML = `
+                    <div class="oncall-name">${template.name}</div>
+                    <div class="oncall-description">${template.description}</div>
+                    <div class="oncall-actions">
+                        <button class="btn-add-oncall" onclick="applyOnCallTemplate(${template.id}, '${template.name}')">Apply</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function populateTemplateSelect() {
+            const select = document.getElementById('templateSelect');
+            select.innerHTML = '<option value="">-- Select a template --</option>';
+            templates.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.id;
+                option.textContent = template.name;
+                select.appendChild(option);
+            });
+        }
+
+        function applySingleDate() {
+            const templateId = document.getElementById('templateSelect').value;
+            const date = document.getElementById('singleDate').value;
+
+            if (!templateId) {
+                showToast('Please select a template', 'error');
+                return;
+            }
+
+            fetch(`/api/proxy/templates/apply-to-date/${CURRENT_USER_ID}/${templateId}?date=${date}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast('Template applied successfully!');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error applying template', 'error');
+            });
+        }
+
+        function applyDateRange() {
+            const templateId = document.getElementById('templateSelect').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!templateId) {
+                showToast('Please select a template', 'error');
+                return;
+            }
+
+            if (!startDate || !endDate) {
+                showToast('Please select date range', 'error');
+                return;
+            }
+
+            fetch(`/api/proxy/templates/apply-to-range/${CURRENT_USER_ID}/${templateId}?startDate=${startDate}&endDate=${endDate}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast('Template applied to date range!');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error applying template', 'error');
+            });
+        }
+
+        function applyOnCallTemplate(templateId, templateName) {
+            const date = document.getElementById('singleDate').value;
+            fetch(`/api/proxy/templates/apply-to-date/${CURRENT_USER_ID}/${templateId}?date=${date}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast(`${templateName} applied for ${date}!`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error applying OnCall template', 'error');
+            });
+        }
+
+        function setDefaultTemplate(templateId) {
+            fetch(`/api/proxy/templates/set-default/${CURRENT_USER_ID}/${templateId}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(() => {
+                loadTemplates();
+                showToast('Default template set!');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error setting default template', 'error');
+            });
+        }
+
+        function addOnCall() {
+            const date = document.getElementById('onCallDate').value;
+            const startHour = parseInt(document.getElementById('onCallStartHour').value);
+            const endHour = parseInt(document.getElementById('onCallEndHour').value);
+
+            if (!date || isNaN(startHour) || isNaN(endHour)) {
+                showToast('Please fill all OnCall fields', 'error');
+                return;
+            }
+
+            if (startHour >= endHour || startHour < 0 || endHour > 24) {
+                showToast('Invalid hour range', 'error');
+                return;
+            }
+
+            fetch(`/api/proxy/templates/oncall/add/${CURRENT_USER_ID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    date: date,
+                    startHour: startHour,
+                    endHour: endHour
+                })
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast(`OnCall added for ${date} (${startHour}-${endHour})`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error adding OnCall', 'error');
+            });
+        }
+
+        function removeOnCall() {
+            const date = document.getElementById('onCallDate').value;
+            const startHour = parseInt(document.getElementById('onCallStartHour').value);
+            const endHour = parseInt(document.getElementById('onCallEndHour').value);
+
+            if (!date || isNaN(startHour) || isNaN(endHour)) {
+                showToast('Please fill all OnCall fields', 'error');
+                return;
+            }
+
+            fetch(`/api/proxy/templates/oncall/remove/${CURRENT_USER_ID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    date: date,
+                    startHour: startHour,
+                    endHour: endHour
+                })
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast(`OnCall removed for ${date}`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error removing OnCall', 'error');
+            });
+        }
+
+        function showApplyModal(templateId, templateName) {
+            const date = document.getElementById('singleDate').value;
+            fetch(`/api/proxy/templates/apply-to-date/${CURRENT_USER_ID}/${templateId}?date=${date}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(() => {
+                showToast(`${templateName} applied for ${date}!`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showToast('Error applying template', 'error');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.classList.add('hide');
+                setTimeout(() => existingToast.remove(), 300);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
+

@@ -223,7 +223,7 @@
             color: #333;
         }
 
-        .activity-cell.o {
+        .activity-cell.oncall {
             background-color: #ffe0b2;
             color: #333;
         }
@@ -234,9 +234,25 @@
         }
 
         .activity-cell.h {
-            background-color: #ce93d8;
-            color: white;
+            background-color: #ef9a9a;
+            color: #333;
         }
+
+        .activity-cell.leave {
+            background-color: #b0bec5;
+            color: #333;
+        }
+
+        .activity-cell.shifta { background-color: #a5d6a7; color: #1b5e20; }
+        .activity-cell.shiftb { background-color: #80cbc4; color: #004d40; }
+        .activity-cell.shiftc { background-color: #90caf9; color: #0d47a1; }
+        .activity-cell.shiftd { background-color: #ce93d8; color: #4a148c; }
+        .activity-cell.shifte { background-color: #ffcc80; color: #e65100; }
+
+        /* OC combo cell modifiers */
+        .activity-cell.oc-pre  { border-left:  3px solid #e65100 !important; }
+        .activity-cell.oc-suf  { border-right: 3px solid #e65100 !important; }
+        .activity-cell.oc-both { border-left:  3px solid #e65100 !important; border-right: 3px solid #e65100 !important; }
 
         .activity-cell.off {
             background-color: #d0d0d0;
@@ -381,19 +397,43 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #ffe0b2;"></div>
-                    <span>O - OnCall</span>
+                    <span>OnCall</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #f8bbd0;"></div>
                     <span>V - Vacation</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <div class="legend-color" style="background-color: #ef9a9a;"></div>
                     <span>H - Holiday</span>
                 </div>
                 <div class="legend-item">
+                    <div class="legend-color" style="background-color: #b0bec5;"></div>
+                    <span>Leave</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #a5d6a7;"></div>
+                    <span>A - Shift A (02-11)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #80cbc4;"></div>
+                    <span>B - Shift B (03-12)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90caf9;"></div>
+                    <span>C - Shift C (07-16)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <span>D - Shift D (10-19)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffcc80;"></div>
+                    <span>E - Shift E (09-18)</span>
+                </div>
+                <div class="legend-item">
                     <div class="legend-color" style="background-color: #d0d0d0;"></div>
-                    <span>Off - Day Off</span>
+                    <span>Off</span>
                 </div>
             </div>
         </div>
@@ -436,6 +476,78 @@
         let currentDate = new Date(2026, 0, 1);
         let selectedUserIds = [];
         let allUsers = [];
+
+        function activityPriority(activity) {
+            const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
+            return p[activity] !== undefined ? p[activity] : 1;
+        }
+
+        const SHIFT_PATTERNS = {
+            'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+        };
+        // Auto-generate OC combo patterns
+        ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
+            const base = SHIFT_PATTERNS[shift];
+            let s = 0; while (s < 24 && base[s] === 'Off') s++;
+            let e = 23; while (e >= 0 && base[e] === 'Off') e--;
+            SHIFT_PATTERNS['OC_' + shift]         = base.map(function(a,i){ return i < s ? 'OnCall' : a; });
+            SHIFT_PATTERNS[shift + '_OC']         = base.map(function(a,i){ return i > e ? 'OnCall' : a; });
+            SHIFT_PATTERNS['OC_' + shift + '_OC'] = base.map(function(a,i){ return (i < s || i > e) ? 'OnCall' : a; });
+        });
+
+        function detectShiftPattern(entries) {
+            if (!entries || entries.length === 0) return null;
+            const hourMap = new Array(24).fill('Off');
+            entries.forEach(e => {
+                if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
+                    hourMap[e.hourOfDay] = e.activity;
+                }
+            });
+            for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
+                if (pattern.every((act, i) => act === hourMap[i])) {
+                    return shiftName;
+                }
+            }
+            return null;
+        }
+
+        function getActivityClass(activity) {
+            const map = { 'D': 'd', 'S': 's', 'OnCall': 'oncall', 'Leave': 'leave', 'ShiftA': 'shifta', 'ShiftB': 'shiftb', 'ShiftC': 'shiftc', 'ShiftD': 'shiftd', 'ShiftE': 'shifte', 'Off': 'off', 'V': 'v', 'Vacation': 'v', 'H': 'h', 'Holiday': 'h' };
+            if (map[activity] !== undefined) return map[activity];
+            const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
+            if (ocPre)  return getActivityClass(ocPre[1])  + ' oc-pre';
+            if (ocSuf)  return getActivityClass(ocSuf[1])  + ' oc-suf';
+            if (ocBoth) return getActivityClass(ocBoth[1]) + ' oc-both';
+            return 'off';
+        }
+
+        function getActivityDisplay(activity) {
+            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H' };
+            if (map[activity] !== undefined) return map[activity];
+            // OC combo display
+            const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
+            if (ocPre)  return '&#9664;' + getActivityDisplay(ocPre[1]);
+            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + '&#9654;';
+            if (ocBoth) return '&#9664;' + getActivityDisplay(ocBoth[1]) + '&#9654;';
+            return activity || 'Off';
+        }
+
+        function getDominantActivity(entries) {
+            if (!entries || entries.length === 0) return 'Off';
+            const shiftName = detectShiftPattern(entries);
+            if (shiftName) return shiftName;
+            return entries.reduce((best, e) => {
+                return activityPriority(e.activity) > activityPriority(best) ? e.activity : best;
+            }, 'Off');
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date('2026-06-09');
@@ -671,11 +783,12 @@
 
                 for (let day = 1; day <= endDate; day++) {
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const entry = userSchedule.find(e => e.date === dateStr);
-                    const activity = entry ? entry.activity : 'D';
-                    const activityClass = activity.toLowerCase();
+                    const dayEntries = userSchedule.filter(e => e.date === dateStr);
+                    const activity = dayEntries.length > 0 ? getDominantActivity(dayEntries) : 'D';
+                    const activityClass = getActivityClass(activity);
+                    const displayText = getActivityDisplay(activity);
 
-                    html += `<td class="activity-cell ${activityClass}">${activity}</td>`;
+                    html += `<td class="activity-cell ${activityClass}">${displayText}</td>`;
                 }
 
                 html += '</tr>';

@@ -132,24 +132,39 @@
 
         .day-cell.d {
             background-color: #c8e6c9;
+            color: #333;
         }
 
         .day-cell.s {
             background-color: #bbdefb;
+            color: #333;
         }
 
-        .day-cell.o {
+        .day-cell.oncall {
             background-color: #ffe0b2;
+            color: #333;
         }
 
         .day-cell.v {
             background-color: #f8bbd0;
+            color: #333;
         }
 
         .day-cell.h {
-            background-color: #ce93d8;
-            color: white;
+            background-color: #ef9a9a;
+            color: #333;
         }
+
+        .day-cell.leave {
+            background-color: #b0bec5;
+            color: #333;
+        }
+
+        .day-cell.shifta { background-color: #a5d6a7; color: #1b5e20; }
+        .day-cell.shiftb { background-color: #80cbc4; color: #004d40; }
+        .day-cell.shiftc { background-color: #90caf9; color: #0d47a1; }
+        .day-cell.shiftd { background-color: #ce93d8; color: #4a148c; }
+        .day-cell.shifte { background-color: #ffcc80; color: #e65100; }
 
         .day-number {
             font-weight: bold;
@@ -185,29 +200,39 @@
              opacity: 0.8;
          }
 
-         .week-table tbody tr.d, .day-table tbody tr.d {
-             background-color: #c8e6c9;
-         }
+          .week-table tbody tr.d, .day-table tbody tr.d {
+              background-color: #c8e6c9;
+          }
 
-         .week-table tbody tr.s, .day-table tbody tr.s {
-             background-color: #bbdefb;
-         }
+          .week-table tbody tr.s, .day-table tbody tr.s {
+              background-color: #bbdefb;
+          }
 
-         .week-table tbody tr.o, .day-table tbody tr.o {
-             background-color: #ffe0b2;
-         }
+          .week-table tbody tr.oncall, .day-table tbody tr.oncall {
+              background-color: #ffe0b2;
+          }
 
-         .week-table tbody tr.v, .day-table tbody tr.v {
-             background-color: #f8bbd0;
-         }
+          .week-table tbody tr.v, .day-table tbody tr.v {
+              background-color: #f8bbd0;
+          }
 
-         .week-table tbody tr.h, .day-table tbody tr.h {
-             background-color: #ce93d8;
-         }
+          .week-table tbody tr.h, .day-table tbody tr.h {
+              background-color: #ef9a9a;
+          }
 
-         .week-table tbody tr.off, .day-table tbody tr.off {
-             background-color: #d0d0d0;
-         }
+          .week-table tbody tr.leave, .day-table tbody tr.leave {
+              background-color: #b0bec5;
+          }
+
+          .week-table tbody tr.shifta, .day-table tbody tr.shifta { background-color: #a5d6a7; }
+          .week-table tbody tr.shiftb, .day-table tbody tr.shiftb { background-color: #80cbc4; }
+          .week-table tbody tr.shiftc, .day-table tbody tr.shiftc { background-color: #90caf9; }
+          .week-table tbody tr.shiftd, .day-table tbody tr.shiftd { background-color: #ce93d8; }
+          .week-table tbody tr.shifte, .day-table tbody tr.shifte { background-color: #ffcc80; }
+
+          .week-table tbody tr.off, .day-table tbody tr.off {
+              background-color: #d0d0d0;
+          }
 
          .week-table tbody tr.weekend, .day-table tbody tr.weekend {
              border-left: 4px solid #999;
@@ -245,70 +270,102 @@
              box-shadow: 0 4px 8px rgba(0,0,0,0.15);
          }
 
-         .activity-btn.d {
-             background-color: #c8e6c9;
-             color: #333;
-             border-color: #81c784;
-         }
+          .activity-btn.d {
+              background-color: #c8e6c9;
+              color: #333;
+              border-color: #81c784;
+          }
 
-         .activity-btn.d.active {
-             background-color: #66bb6a;
-             color: white;
-             border-color: #388e3c;
-             box-shadow: 0 4px 12px rgba(104, 187, 106, 0.4);
-         }
+          .activity-btn.d.active {
+              background-color: #66bb6a;
+              color: white;
+              border-color: #388e3c;
+              box-shadow: 0 4px 12px rgba(104, 187, 106, 0.4);
+          }
 
-         .activity-btn.s {
-             background-color: #bbdefb;
-             color: #333;
-             border-color: #64b5f6;
-         }
+          .activity-btn.s {
+              background-color: #bbdefb;
+              color: #333;
+              border-color: #64b5f6;
+          }
 
-         .activity-btn.s.active {
-             background-color: #42a5f5;
-             color: white;
-             border-color: #1976d2;
-             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
-         }
+          .activity-btn.s.active {
+              background-color: #42a5f5;
+              color: white;
+              border-color: #1976d2;
+              box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+          }
 
-         .activity-btn.o {
-             background-color: #ffe0b2;
-             color: #333;
-             border-color: #ffca28;
-         }
+          .activity-btn.oncall {
+              background-color: #ffe0b2;
+              color: #333;
+              border-color: #ffca28;
+          }
 
-         .activity-btn.o.active {
-             background-color: #ffa726;
-             color: white;
-             border-color: #f57c00;
-             box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
-         }
+          .activity-btn.oncall.active {
+              background-color: #ffa726;
+              color: white;
+              border-color: #f57c00;
+              box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+          }
 
-         .activity-btn.v {
-             background-color: #f8bbd0;
-             color: #333;
-             border-color: #f48fb1;
-         }
+          .activity-btn.v {
+              background-color: #f8bbd0;
+              color: #333;
+              border-color: #f48fb1;
+          }
 
-         .activity-btn.v.active {
-             background-color: #ec407a;
-             color: white;
-             border-color: #c2185b;
-             box-shadow: 0 4px 12px rgba(236, 64, 122, 0.4);
-         }
+          .activity-btn.v.active {
+              background-color: #ec407a;
+              color: white;
+              border-color: #c2185b;
+              box-shadow: 0 4px 12px rgba(236, 64, 122, 0.4);
+          }
 
-         .activity-btn.h {
-             background-color: #ce93d8;
-             color: white;
-             border-color: #b39ddb;
-         }
+          .activity-btn.h {
+              background-color: #ef9a9a;
+              color: #333;
+              border-color: #e57373;
+          }
 
-         .activity-btn.h.active {
-             background-color: #ab47bc;
-             color: white;
-             border-color: #6a1b9a;
-             box-shadow: 0 4px 12px rgba(171, 71, 188, 0.4);
-         }
+          .activity-btn.h.active {
+              background-color: #ef5350;
+              color: white;
+              border-color: #c62828;
+              box-shadow: 0 4px 12px rgba(239, 83, 80, 0.4);
+          }
+
+          .activity-btn.leave {
+              background-color: #b0bec5;
+              color: #333;
+              border-color: #78909c;
+          }
+
+          .activity-btn.leave.active {
+              background-color: #546e7a;
+              color: white;
+              border-color: #37474f;
+              box-shadow: 0 4px 12px rgba(84, 110, 122, 0.4);
+          }
+
+          .activity-btn.shifta { background-color: #a5d6a7; color: #1b5e20; border-color: #66bb6a; }
+          .activity-btn.shifta.active { background-color: #388e3c; color: white; border-color: #1b5e20; }
+          .activity-btn.shiftb { background-color: #80cbc4; color: #004d40; border-color: #26a69a; }
+          .activity-btn.shiftb.active { background-color: #00796b; color: white; border-color: #004d40; }
+          .activity-btn.shiftc { background-color: #90caf9; color: #0d47a1; border-color: #42a5f5; }
+          .activity-btn.shiftc.active { background-color: #1565c0; color: white; border-color: #0d47a1; }
+          .activity-btn.shiftd { background-color: #ce93d8; color: #4a148c; border-color: #ab47bc; }
+          .activity-btn.shiftd.active { background-color: #7b1fa2; color: white; border-color: #4a148c; }
+          .activity-btn.shifte { background-color: #ffcc80; color: #e65100; border-color: #ffa726; }
+          .activity-btn.shifte.active { background-color: #ef6c00; color: white; border-color: #e65100; }
+
+          /* OnCall combo modifier — orange side borders signal OC presence */
+          .activity-btn.oc-pre  { box-shadow: -4px 0 0 0 #e65100 inset; }
+          .activity-btn.oc-suf  { box-shadow:  4px 0 0 0 #e65100 inset; }
+          .activity-btn.oc-both { box-shadow: -4px 0 0 0 #e65100 inset, 4px 0 0 0 #e65100 inset; }
+          .activity-btn.oc-pre.active,
+          .activity-btn.oc-suf.active,
+          .activity-btn.oc-both.active { opacity: 0.85; }
 
          .activity-btn.off {
              background-color: #d0d0d0;
@@ -316,12 +373,58 @@
              border-color: #999;
          }
 
-         .activity-btn.off.active {
-             background-color: #757575;
-             color: white;
-             border-color: #424242;
-             box-shadow: 0 4px 12px rgba(117, 117, 117, 0.4);
-         }
+          .activity-btn.off.active {
+              background-color: #757575;
+              color: white;
+              border-color: #424242;
+              box-shadow: 0 4px 12px rgba(117, 117, 117, 0.4);
+          }
+
+          .activity-cell.d {
+              background-color: #c8e6c9;
+              color: #333;
+          }
+
+          .activity-cell.s {
+              background-color: #bbdefb;
+              color: #333;
+          }
+
+          .activity-cell.oncall {
+              background-color: #ffe0b2;
+              color: #333;
+          }
+
+          .activity-cell.v {
+              background-color: #f8bbd0;
+              color: #333;
+          }
+
+          .activity-cell.h {
+              background-color: #ef9a9a;
+              color: #333;
+          }
+
+          .activity-cell.leave {
+              background-color: #b0bec5;
+              color: #333;
+          }
+
+          .activity-cell.shifta { background-color: #a5d6a7; color: #1b5e20; }
+          .activity-cell.shiftb { background-color: #80cbc4; color: #004d40; }
+          .activity-cell.shiftc { background-color: #90caf9; color: #0d47a1; }
+          .activity-cell.shiftd { background-color: #ce93d8; color: #4a148c; }
+          .activity-cell.shifte { background-color: #ffcc80; color: #e65100; }
+
+          /* OC combo cell / day-cell modifiers */
+          .activity-cell.oc-pre,  .day-cell.oc-pre  { border-left:  4px solid #e65100 !important; }
+          .activity-cell.oc-suf,  .day-cell.oc-suf  { border-right: 4px solid #e65100 !important; }
+          .activity-cell.oc-both, .day-cell.oc-both { border-left:  4px solid #e65100 !important; border-right: 4px solid #e65100 !important; }
+
+          .activity-cell.off {
+              background-color: #d0d0d0;
+              color: #666;
+          }
 
          .notes-input {
             width: 100%;
@@ -529,20 +632,26 @@
             color: #333;
         }
 
-        .month-card-day.o {
-            background-color: #ffe0b2;
-            color: #333;
-        }
-
         .month-card-day.v {
             background-color: #f8bbd0;
             color: #333;
         }
 
         .month-card-day.h {
-            background-color: #ce93d8;
-            color: white;
+            background-color: #ef9a9a;
+            color: #333;
         }
+
+        .month-card-day.leave {
+            background-color: #b0bec5;
+            color: #333;
+        }
+
+        .month-card-day.shifta { background-color: #a5d6a7; color: #1b5e20; }
+        .month-card-day.shiftb { background-color: #80cbc4; color: #004d40; }
+        .month-card-day.shiftc { background-color: #90caf9; color: #0d47a1; }
+        .month-card-day.shiftd { background-color: #ce93d8; color: #4a148c; }
+        .month-card-day.shifte { background-color: #ffcc80; color: #e65100; }
 
         .month-card-day.off {
             background-color: #d0d0d0;
@@ -579,6 +688,19 @@
             width: 20px;
             height: 20px;
             border-radius: 3px;
+        }
+
+        /* OnCall cell styling */
+        .day-cell.oncall {
+            border: 2px solid #ff8f00;
+        }
+
+        .activity-cell.oncall {
+            border: 2px solid #ff8f00;
+        }
+
+        .month-card-day.oncall {
+            border: 2px solid #ff8f00;
         }
 
         .toast-notification {
@@ -640,19 +762,43 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #ffe0b2;"></div>
-                    <span>O - OnCall</span>
+                    <span>OnCall</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #d0d0d0;"></div>
+                    <span>Off</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #f8bbd0;"></div>
                     <span>V - Vacation</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <div class="legend-color" style="background-color: #ef9a9a;"></div>
                     <span>H - Holiday</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #d0d0d0;"></div>
-                    <span>Off - Day Off</span>
+                    <div class="legend-color" style="background-color: #b0bec5;"></div>
+                    <span>Leave</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #a5d6a7;"></div>
+                    <span>A - Shift A (02-11)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #80cbc4;"></div>
+                    <span>B - Shift B (03-12)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90caf9;"></div>
+                    <span>C - Shift C (07-16)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <span>D - Shift D (10-19)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffcc80;"></div>
+                    <span>E - Shift E (09-18)</span>
                 </div>
             </div>
         </div>
@@ -716,8 +862,8 @@
                     <thead>
                         <tr>
                             <th style="width: 30%;">Date</th>
-                            <th style="width: 35%;">Activity</th>
-                            <th style="width: 35%;">Notes</th>
+                            <th style="width: 40%;">Activity</th>
+                            <th style="width: 30%;">Notes</th>
                         </tr>
                     </thead>
                     <tbody id="dayTableBody"></tbody>
@@ -767,30 +913,63 @@
                      <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                  </div>
                  <div class="form-group">
-                     <label>Activity:</label>
-                     <div class="activity-buttons-container">
-                         <button type="button" class="activity-btn d active" onclick="selectActivityType('D')" title="Development">D</button>
-                         <button type="button" class="activity-btn s" onclick="selectActivityType('S')" title="Support">S</button>
-                         <button type="button" class="activity-btn o" onclick="selectActivityType('O')" title="OnCall">O</button>
-                         <button type="button" class="activity-btn v" onclick="selectActivityType('V')" title="Vacation">V</button>
-                         <button type="button" class="activity-btn h" onclick="selectActivityType('H')" title="Holiday">H</button>
-                         <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Day Off">Off</button>
-                     </div>
-                     <input type="hidden" id="modalActivity" value="D">
-                 </div>
-                 <div class="form-group">
-                     <label>Notes (optional):</label>
-                     <textarea id="modalNotes" class="notes-input" rows="3"></textarea>
-                 </div>
-             </div>
-             <div class="modal-buttons">
-                 <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()">Fill Next 5 Days</button>
-                 <div style="flex-grow: 1;"></div>
-                 <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
-                 <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
-             </div>
-        </div>
-    </div>
+                      <label><strong>Activity:</strong></label>
+                      <div class="activity-buttons-container" style="grid-template-columns: repeat(4, 1fr);">
+                          <button type="button" class="activity-btn d active" onclick="selectActivityType('D')" title="Development">D</button>
+                          <button type="button" class="activity-btn s" onclick="selectActivityType('S')" title="Support">S</button>
+                          <button type="button" class="activity-btn oncall" onclick="selectActivityType('OnCall')" title="OnCall">OnCall</button>
+                          <button type="button" class="activity-btn leave" onclick="selectActivityType('Leave')" title="Leave">Leave</button>
+                          <button type="button" class="activity-btn v" onclick="selectActivityType('V')" title="Vacation">V</button>
+                          <button type="button" class="activity-btn h" onclick="selectActivityType('H')" title="Holiday">H</button>
+                          <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Off">Off</button>
+                      </div>
+                       <label style="margin-top:8px; display:block;"><strong>Shift Types:</strong></label>
+                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
+                           <button type="button" class="activity-btn shifta" onclick="selectActivityType('ShiftA')" title="Shift A: S 02-07, D 07-11">A</button>
+                           <button type="button" class="activity-btn shiftb" onclick="selectActivityType('ShiftB')" title="Shift B: S 03-08, D 08-12">B</button>
+                           <button type="button" class="activity-btn shiftc" onclick="selectActivityType('ShiftC')" title="Shift C: S 07-12, D 12-16">C</button>
+                           <button type="button" class="activity-btn shiftd" onclick="selectActivityType('ShiftD')" title="Shift D: S 10-14, D 14-18, S 18-19">D</button>
+                           <button type="button" class="activity-btn shifte" onclick="selectActivityType('ShiftE')" title="Shift E: D 09-13, S 13-18">E</button>
+                       </div>
+                       <label style="margin-top:8px; display:block;"><strong>OnCall + Shift (start of day):</strong></label>
+                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
+                           <button type="button" class="activity-btn shifta oc-pre" onclick="selectActivityType('OC_ShiftA')" title="OnCall at start + Shift A (S 02-07, D 07-11)">OC+A</button>
+                           <button type="button" class="activity-btn shiftb oc-pre" onclick="selectActivityType('OC_ShiftB')" title="OnCall at start + Shift B (S 03-08, D 08-12)">OC+B</button>
+                           <button type="button" class="activity-btn shiftc oc-pre" onclick="selectActivityType('OC_ShiftC')" title="OnCall at start + Shift C (S 07-12, D 12-16)">OC+C</button>
+                           <button type="button" class="activity-btn shiftd oc-pre" onclick="selectActivityType('OC_ShiftD')" title="OnCall at start + Shift D (S 10-14, D 14-18, S 18-19)">OC+D</button>
+                           <button type="button" class="activity-btn shifte oc-pre" onclick="selectActivityType('OC_ShiftE')" title="OnCall at start + Shift E (D 09-13, S 13-18)">OC+E</button>
+                       </div>
+                       <label style="margin-top:8px; display:block;"><strong>Shift + OnCall (end of day):</strong></label>
+                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
+                           <button type="button" class="activity-btn shifta oc-suf" onclick="selectActivityType('ShiftA_OC')" title="Shift A + OnCall at end">A+OC</button>
+                           <button type="button" class="activity-btn shiftb oc-suf" onclick="selectActivityType('ShiftB_OC')" title="Shift B + OnCall at end">B+OC</button>
+                           <button type="button" class="activity-btn shiftc oc-suf" onclick="selectActivityType('ShiftC_OC')" title="Shift C + OnCall at end">C+OC</button>
+                           <button type="button" class="activity-btn shiftd oc-suf" onclick="selectActivityType('ShiftD_OC')" title="Shift D + OnCall at end">D+OC</button>
+                           <button type="button" class="activity-btn shifte oc-suf" onclick="selectActivityType('ShiftE_OC')" title="Shift E + OnCall at end">E+OC</button>
+                       </div>
+                       <label style="margin-top:8px; display:block;"><strong>OnCall + Shift + OnCall (both ends):</strong></label>
+                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
+                           <button type="button" class="activity-btn shifta oc-both" onclick="selectActivityType('OC_ShiftA_OC')" title="OnCall at start + Shift A + OnCall at end">OC+A+OC</button>
+                           <button type="button" class="activity-btn shiftb oc-both" onclick="selectActivityType('OC_ShiftB_OC')" title="OnCall at start + Shift B + OnCall at end">OC+B+OC</button>
+                           <button type="button" class="activity-btn shiftc oc-both" onclick="selectActivityType('OC_ShiftC_OC')" title="OnCall at start + Shift C + OnCall at end">OC+C+OC</button>
+                           <button type="button" class="activity-btn shiftd oc-both" onclick="selectActivityType('OC_ShiftD_OC')" title="OnCall at start + Shift D + OnCall at end">OC+D+OC</button>
+                           <button type="button" class="activity-btn shifte oc-both" onclick="selectActivityType('OC_ShiftE_OC')" title="OnCall at start + Shift E + OnCall at end">OC+E+OC</button>
+                       </div>
+                       <input type="hidden" id="modalActivity" value="D">
+                  </div>
+                  <div class="form-group">
+                      <label>Notes (optional):</label>
+                      <textarea id="modalNotes" class="notes-input" rows="3"></textarea>
+                  </div>
+              </div>
+              <div class="modal-buttons">
+                  <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()">Fill Next 5 Days</button>
+                  <div style="flex-grow: 1;"></div>
+                  <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
+                  <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
+              </div>
+         </div>
+     </div>
 
     <script>
          const CURRENT_USER_ID = '<%= userId %>';
@@ -804,6 +983,116 @@
          let toastTimeout = null;
          const TOAST_DEBOUNCE_DELAY = 5000; // Wait 5 seconds to aggregate multiple saves
          const TOAST_DISPLAY_DELAY = 7000; // Display toast for 7 seconds
+
+         // Shift patterns: maps shift type -> array of 24 activities (index = hour)
+         const SHIFT_PATTERNS = {
+             'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+             'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+         };
+
+          function isShiftType(activity) {
+              return activity in SHIFT_PATTERNS;
+          }
+
+          // Auto-generate OnCall combo patterns: leading/trailing Off hours → OnCall
+          ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
+              const base = SHIFT_PATTERNS[shift];
+              let s = 0; while (s < 24 && base[s] === 'Off') s++;       // first work hour
+              let e = 23; while (e >= 0 && base[e] === 'Off') e--;      // last work hour
+              SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < s ? 'OnCall' : a; });
+              SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i > e ? 'OnCall' : a; });
+              SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < s || i > e) ? 'OnCall' : a; });
+          });
+
+         // Priority: higher = more "interesting" for day-level display
+         function activityPriority(activity) {
+             const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
+             return p[activity] !== undefined ? p[activity] : 1;
+         }
+
+          // Given an array of hourly entries for a day, return the one with highest priority activity
+          function getDominantEntry(entries) {
+              if (!entries || entries.length === 0) return null;
+              return entries.reduce((best, e) => {
+                  return activityPriority(e.activity) > activityPriority(best.activity) ? e : best;
+              });
+          }
+
+          // Check if 24 hourly entries exactly match a known shift pattern
+          function detectShiftPattern(entries) {
+              if (!entries || entries.length === 0) return null;
+              const hourMap = new Array(24).fill('Off');
+              entries.forEach(e => {
+                  if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
+                      hourMap[e.hourOfDay] = e.activity;
+                  }
+              });
+              for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
+                  if (pattern.every((act, i) => act === hourMap[i])) {
+                      return shiftName;
+                  }
+              }
+              return null;
+          }
+
+          // Get the best single-activity label for a day: prefers recognized shift pattern, then dominant entry
+          function getDisplayEntryForDay(entries) {
+              if (!entries || entries.length === 0) return null;
+              const shiftName = detectShiftPattern(entries);
+              if (shiftName) {
+                  return Object.assign({}, entries[0], { activity: shiftName });
+              }
+              return getDominantEntry(entries);
+          }
+
+         // Expand a shift type and save all 24 hours individually to the backend
+         function expandAndSaveShift(dateStr, shiftType, notes) {
+             const pattern = SHIFT_PATTERNS[shiftType];
+             if (!pattern) return Promise.resolve();
+
+             const promises = pattern.map((hourActivity, hour) =>
+                 fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         date: dateStr,
+                         hour: hour,
+                         activity: hourActivity,
+                         isOnCall: false,
+                         notes: hour === 0 ? (notes || '') : ''
+                     })
+                 }).then(r => r.json()).then(saved => {
+                     scheduleData[`${dateStr}-${hour}`] = saved;
+                 })
+             );
+
+             return Promise.all(promises).then(() => {
+                 pendingSaves++;
+                 if (toastTimeout) clearTimeout(toastTimeout);
+                 toastTimeout = setTimeout(() => {
+                     if (pendingSaves > 0) {
+                         showToast(`Shift ${shiftType.replace('Shift','')} saved for ${dateStr}`);
+                         pendingSaves = 0;
+                     }
+                 }, TOAST_DEBOUNCE_DELAY);
+
+                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                 if (activeView) {
+                     const viewName = activeView.textContent.toLowerCase();
+                     if (viewName.includes('month')) loadMonth();
+                     else if (viewName.includes('week')) loadWeek();
+                     else if (viewName.includes('day')) loadDay();
+                     else if (viewName.includes('year')) loadYear();
+                     else if (viewName.includes('24-hour')) loadHourly();
+                 }
+             }).catch(err => {
+                 console.error('Error saving shift:', err);
+                 showToast('Error saving shift!', 'error');
+             });
+         }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -853,72 +1142,140 @@
                 .then(res => res.json())
                 .then(data => {
                     scheduleData = {};
+                    // Group entries by date, store per-hour AND dominant per-day
+                    const byDate = {};
                     data.forEach(entry => {
-                        scheduleData[entry.date] = entry;
+                        // Store per-hour key for hourly view
+                        if (entry.hourOfDay !== undefined) {
+                            scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
+                        }
+                        // Group for dominant computation
+                        if (!byDate[entry.date]) byDate[entry.date] = [];
+                        byDate[entry.date].push(entry);
+                    });
+                    // Store display entry per date for month/year/week/day views (shift pattern detection first)
+                    Object.keys(byDate).forEach(dateStr => {
+                        scheduleData[dateStr] = getDisplayEntryForDay(byDate[dateStr]) || byDate[dateStr][0];
                     });
                     renderMonth();
                 })
                 .catch(err => console.error('Error fetching month schedule:', err));
         }
 
-        function renderMonth() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const prevLastDay = new Date(year, month, 0).getDate();
-            const startDate = firstDay.getDay();
-            const endDate = lastDay.getDate();
+         function renderMonth() {
+             const year = currentDate.getFullYear();
+             const month = currentDate.getMonth();
+             const firstDay = new Date(year, month, 1);
+             const lastDay = new Date(year, month + 1, 0);
+             const prevLastDay = new Date(year, month, 0).getDate();
+             const startDate = firstDay.getDay();
+             const endDate = lastDay.getDate();
 
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                              'July', 'August', 'September', 'October', 'November', 'December'];
+             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
 
-            document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+             document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
 
-            const calendar = document.getElementById('monthCalendar');
-            calendar.innerHTML = '';
+             const calendar = document.getElementById('monthCalendar');
+             calendar.innerHTML = '';
 
-            // Previous month's days
-            for (let i = startDate - 1; i >= 0; i--) {
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day-cell';
-                dayDiv.innerHTML = `<div class="day-number">${prevLastDay - i}</div>`;
-                dayDiv.style.opacity = '0.3';
-                calendar.appendChild(dayDiv);
-            }
+             // Previous month's days
+             for (let i = startDate - 1; i >= 0; i--) {
+                 const dayDiv = document.createElement('div');
+                 dayDiv.className = 'day-cell';
+                 dayDiv.innerHTML = `<div class="day-number">${prevLastDay - i}</div>`;
+                 dayDiv.style.opacity = '0.3';
+                 calendar.appendChild(dayDiv);
+             }
 
-            // Current month's days
-            for (let day = 1; day <= endDate; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const entry = scheduleData[dateStr] || { activity: 'D', date: dateStr };
+              // Current month's days
+              for (let day = 1; day <= endDate; day++) {
+                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                   const entry = scheduleData[dateStr] || { activity: 'D', date: dateStr, isOnCall: false };
 
-                const dayDiv = document.createElement('div');
-                const dayOfWeek = new Date(year, month, day).getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                  const dayDiv = document.createElement('div');
+                  const dayOfWeek = new Date(year, month, day).getDay();
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-                const activityClass = entry.activity.toLowerCase();
-                dayDiv.className = `day-cell ${isWeekend ? 'weekend' : ''} ${activityClass}`;
+                  let activityClass = getActivityClass(entry.activity);
+                  const oncallClass = entry.isOnCall ? 'oncall' : '';
+                  dayDiv.className = `day-cell ${isWeekend ? 'weekend' : ''} ${activityClass} ${oncallClass}`;
 
-                dayDiv.innerHTML = `
-                    <div class="day-number">${day}</div>
-                    <div class="day-activity">${entry.activity}</div>
-                `;
+                  const displayActivity = getActivityDisplay(entry.activity);
+                  dayDiv.innerHTML = `
+                      <div class="day-number">${day}</div>
+                      <div class="day-activity">${displayActivity}</div>
+                  `;
 
-                dayDiv.onclick = () => openModal(dateStr, entry.activity, entry.notes || '');
-                calendar.appendChild(dayDiv);
-            }
+                   dayDiv.onclick = () => openModal(dateStr, entry.activity, entry.notes || '');
+                  calendar.appendChild(dayDiv);
+              }
 
-            // Next month's days
-            const totalCells = calendar.children.length;
-            const remaining = 42 - totalCells;
-            for (let day = 1; day <= remaining; day++) {
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day-cell';
-                dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
-                dayDiv.style.opacity = '0.3';
-                calendar.appendChild(dayDiv);
-            }
-        }
+             // Next month's days
+             const totalCells = calendar.children.length;
+             const remaining = 42 - totalCells;
+             for (let day = 1; day <= remaining; day++) {
+                 const dayDiv = document.createElement('div');
+                 dayDiv.className = 'day-cell';
+                 dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+                 dayDiv.style.opacity = '0.3';
+                 calendar.appendChild(dayDiv);
+             }
+         }
+
+          function getActivityClass(activity) {
+              switch(activity) {
+                  case 'D': return 'd';
+                  case 'S': return 's';
+                  case 'OnCall': return 'oncall';
+                  case 'Leave': return 'leave';
+                  case 'ShiftA': return 'shifta';
+                  case 'ShiftB': return 'shiftb';
+                  case 'ShiftC': return 'shiftc';
+                  case 'ShiftD': return 'shiftd';
+                  case 'ShiftE': return 'shifte';
+                  case 'Off': return 'off';
+                  case 'V': case 'Vacation': return 'v';
+                  case 'H': case 'Holiday': return 'h';
+                  default: {
+                      // OC combo: OC_ShiftX, ShiftX_OC, OC_ShiftX_OC
+                      const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
+                      const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
+                      const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
+                      if (ocPre)  return getActivityClass(ocPre[1])  + ' oc-pre';
+                      if (ocSuf)  return getActivityClass(ocSuf[1])  + ' oc-suf';
+                      if (ocBoth) return getActivityClass(ocBoth[1]) + ' oc-both';
+                      return 'off';
+                  }
+              }
+          }
+
+          function getActivityDisplay(activity) {
+              switch(activity) {
+                  case 'D': return 'D';
+                  case 'S': return 'S';
+                  case 'OnCall': return 'OC';
+                  case 'Leave': return 'L';
+                  case 'ShiftA': return 'A';
+                  case 'ShiftB': return 'B';
+                  case 'ShiftC': return 'C';
+                  case 'ShiftD': return 'D';
+                  case 'ShiftE': return 'E';
+                  case 'Off': return 'Off';
+                  case 'V': case 'Vacation': return 'V';
+                  case 'H': case 'Holiday': return 'H';
+                  default: {
+                      // OC combo display: ◀A, A▶, ◀A▶
+                      const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
+                      const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
+                      const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
+                      if (ocPre)  return '&#9664;' + getActivityDisplay(ocPre[1]);
+                      if (ocSuf)  return getActivityDisplay(ocSuf[1]) + '&#9654;';
+                      if (ocBoth) return '&#9664;' + getActivityDisplay(ocBoth[1]) + '&#9654;';
+                      return activity || 'Off';
+                  }
+              }
+          }
 
         function loadWeek() {
             const dateStr = formatDate(currentDate);
@@ -927,74 +1284,90 @@
                 .then(res => res.json())
                 .then(data => {
                     scheduleData = {};
+                    const byDate = {};
                     data.forEach(entry => {
-                        scheduleData[entry.date] = entry;
+                        if (entry.hourOfDay !== undefined) {
+                            scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
+                        }
+                        if (!byDate[entry.date]) byDate[entry.date] = [];
+                        byDate[entry.date].push(entry);
                     });
-                    renderWeek();
+                     Object.keys(byDate).forEach(d => {
+                         scheduleData[d] = getDisplayEntryForDay(byDate[d]) || byDate[d][0];
+                     });
+                     renderWeek();
                 })
                 .catch(err => console.error('Error fetching week schedule:', err));
         }
 
-         function renderWeek() {
-              const weekStart = new Date(currentDate);
-              weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1);
-              const weekEnd = new Date(weekStart);
-              weekEnd.setDate(weekStart.getDate() + 6);
+          function renderWeek() {
+               const weekStart = new Date(currentDate);
+               weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+               const weekEnd = new Date(weekStart);
+               weekEnd.setDate(weekStart.getDate() + 6);
 
-              const dateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
-              document.getElementById('currentWeek').textContent =
-                  `Week of ${dateFormat.format(weekStart)} - ${dateFormat.format(weekEnd)}`;
+               const dateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+               document.getElementById('currentWeek').textContent =
+                   `Week of ${dateFormat.format(weekStart)} - ${dateFormat.format(weekEnd)}`;
 
-              const tbody = document.getElementById('weekTableBody');
-              tbody.innerHTML = '';
+               const tbody = document.getElementById('weekTableBody');
+               tbody.innerHTML = '';
 
-              for (let i = 0; i < 7; i++) {
-                  const date = new Date(weekStart);
-                  date.setDate(weekStart.getDate() + i);
-                  const dateStr = formatDate(date);
-                  const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(weekStart.getDate() + i);
+                    const dateStr = formatDate(date);
+                    const entry = scheduleData[dateStr] || { activity: 'D', notes: '', isOnCall: false };
 
-                  const tr = document.createElement('tr');
-                  const dayOfWeek = date.getDay();
-                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const tr = document.createElement('tr');
+                    const dayOfWeek = date.getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-                  const activityClass = entry.activity.toLowerCase();
-                  tr.className = isWeekend ? `${activityClass} weekend` : activityClass;
-                  tr.innerHTML = `
-                      <td>${date.toDateString()}</td>
-                      <td>
-                          <select class="activity-select" data-date="${dateStr}">
-                              <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                              <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                              <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
-                              <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
-                              <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
-                              <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
-                          </select>
-                      </td>
-                      <td>
-                          <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                      </td>
-                  `;
-                  tbody.appendChild(tr);
+                    let activityClass = getActivityClass(entry.activity);
 
-                  // Add event listeners for immediate save
-                  const activitySelect = tr.querySelector('.activity-select');
-                  const notesInput = tr.querySelector('.notes-input');
+                    tr.className = isWeekend ? `${activityClass} weekend` : activityClass;
+                    tr.innerHTML = `
+                        <td>${date.toDateString()}</td>
+                        <td>
+                            <select class="activity-select" data-date="${dateStr}">
+                                <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
+                                <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
+                                <option value="OnCall" ${entry.activity === 'OnCall' ? 'selected' : ''}>OnCall</option>
+                                <option value="Leave" ${entry.activity === 'Leave' ? 'selected' : ''}>Leave</option>
+                                <option value="ShiftA" ${entry.activity === 'ShiftA' ? 'selected' : ''}>A - Shift A (02-11)</option>
+                                <option value="ShiftB" ${entry.activity === 'ShiftB' ? 'selected' : ''}>B - Shift B (03-12)</option>
+                                <option value="ShiftC" ${entry.activity === 'ShiftC' ? 'selected' : ''}>C - Shift C (07-16)</option>
+                                <option value="ShiftD" ${entry.activity === 'ShiftD' ? 'selected' : ''}>D - Shift D (10-19)</option>
+                                <option value="ShiftE" ${entry.activity === 'ShiftE' ? 'selected' : ''}>E - Shift E (09-18)</option>
+                                <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off</option>
+                                <option value="V" ${(entry.activity === 'V' || entry.activity === 'Vacation') ? 'selected' : ''}>V - Vacation</option>
+                                <option value="H" ${(entry.activity === 'H' || entry.activity === 'Holiday') ? 'selected' : ''}>H - Holiday</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
 
-                  activitySelect.addEventListener('change', function() {
-                      const newActivity = this.value;
-                      const newActivityClass = newActivity.toLowerCase();
-                      tr.className = isWeekend ? `${newActivityClass} weekend` : newActivityClass;
-                      saveActivityEntry(dateStr, newActivity, notesInput.value);
-                  });
+                    // Add event listeners for immediate save
+                    const activitySelect = tr.querySelector('.activity-select');
+                    const notesInput = tr.querySelector('.notes-input');
 
-                  notesInput.addEventListener('blur', function() {
-                      const currentSelect = tr.querySelector('.activity-select');
-                      saveActivityEntry(dateStr, currentSelect.value, this.value);
-                  });
-              }
-          }
+                    activitySelect.addEventListener('change', function() {
+                        const newActivity = this.value;
+                        const newActivityClass = getActivityClass(newActivity);
+
+                        tr.className = isWeekend ? `${newActivityClass} weekend` : newActivityClass;
+                        saveActivityEntry(dateStr, newActivity, notesInput.value);
+                    });
+
+                    notesInput.addEventListener('blur', function() {
+                        const currentSelect = tr.querySelector('.activity-select');
+                        saveActivityEntry(dateStr, currentSelect.value, this.value);
+                    });
+                }
+           }
 
         function loadDay() {
             const dateInput = document.getElementById('dayInput');
@@ -1002,60 +1375,74 @@
 
             if (!dateStr) return;
 
-            fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}?date=${dateStr}`)
+            fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
                 .then(res => res.json())
-                .then(entry => {
-                    scheduleData[dateStr] = entry;
+                .then(entries => {
+                    const list = Array.isArray(entries) ? entries : [entries];
+                    list.forEach(entry => {
+                        if (entry.hourOfDay !== undefined) {
+                            scheduleData[`${dateStr}-${entry.hourOfDay}`] = entry;
+                        }
+                    });
+                     scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
                     renderDay();
                 })
                 .catch(err => console.error('Error fetching day schedule:', err));
         }
 
-         function renderDay() {
-              const dateInput = document.getElementById('dayInput');
-              const dateStr = dateInput.value;
-              const entry = scheduleData[dateStr] || { activity: 'D', notes: '' };
+           function renderDay() {
+                const dateInput = document.getElementById('dayInput');
+                const dateStr = dateInput.value;
+                const entry = scheduleData[dateStr] || { activity: 'D', notes: '', isOnCall: false };
 
-              const tbody = document.getElementById('dayTableBody');
-              tbody.innerHTML = '';
+                const tbody = document.getElementById('dayTableBody');
+                tbody.innerHTML = '';
 
-              const tr = document.createElement('tr');
-              const activityClass = entry.activity.toLowerCase();
-              tr.className = activityClass;
-              tr.innerHTML = `
-                  <td>${dateStr}</td>
-                  <td>
-                      <select class="activity-select" data-date="${dateStr}">
-                          <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                          <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                          <option value="O" ${entry.activity === 'O' ? 'selected' : ''}>O - OnCall</option>
-                          <option value="V" ${entry.activity === 'V' ? 'selected' : ''}>V - Vacation</option>
-                          <option value="H" ${entry.activity === 'H' ? 'selected' : ''}>H - Holiday</option>
-                          <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off - Day Off</option>
-                      </select>
-                  </td>
-                  <td>
-                      <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                  </td>
-              `;
-              tbody.appendChild(tr);
+                const tr = document.createElement('tr');
+                let activityClass = getActivityClass(entry.activity);
 
-              // Add event listeners for immediate save
-              const activitySelect = tr.querySelector('.activity-select');
-              const notesInput = tr.querySelector('.notes-input');
+                tr.className = activityClass;
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>
+                        <select class="activity-select" data-date="${dateStr}">
+                            <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
+                            <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
+                            <option value="OnCall" ${entry.activity === 'OnCall' ? 'selected' : ''}>OnCall</option>
+                            <option value="Leave" ${entry.activity === 'Leave' ? 'selected' : ''}>Leave</option>
+                            <option value="ShiftA" ${entry.activity === 'ShiftA' ? 'selected' : ''}>A - Shift A (02-11)</option>
+                            <option value="ShiftB" ${entry.activity === 'ShiftB' ? 'selected' : ''}>B - Shift B (03-12)</option>
+                            <option value="ShiftC" ${entry.activity === 'ShiftC' ? 'selected' : ''}>C - Shift C (07-16)</option>
+                            <option value="ShiftD" ${entry.activity === 'ShiftD' ? 'selected' : ''}>D - Shift D (10-19)</option>
+                            <option value="ShiftE" ${entry.activity === 'ShiftE' ? 'selected' : ''}>E - Shift E (09-18)</option>
+                            <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off</option>
+                            <option value="V" ${(entry.activity === 'V' || entry.activity === 'Vacation') ? 'selected' : ''}>V - Vacation</option>
+                            <option value="H" ${(entry.activity === 'H' || entry.activity === 'Holiday') ? 'selected' : ''}>H - Holiday</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
+                    </td>
+                `;
+                tbody.appendChild(tr);
 
-              activitySelect.addEventListener('change', function() {
-                  const newActivity = this.value;
-                  const newActivityClass = newActivity.toLowerCase();
-                  tr.className = newActivityClass;
-                  saveActivityEntry(dateStr, newActivity, notesInput.value);
-              });
+                // Add event listeners for immediate save
+                const activitySelect = tr.querySelector('.activity-select');
+                const notesInput = tr.querySelector('.notes-input');
 
-              notesInput.addEventListener('blur', function() {
-                  const currentSelect = tr.querySelector('.activity-select');
-                  saveActivityEntry(dateStr, currentSelect.value, this.value);
-              });
-          }
+                activitySelect.addEventListener('change', function() {
+                    const newActivity = this.value;
+                    const newActivityClass = getActivityClass(newActivity);
+
+                    tr.className = newActivityClass;
+                    saveActivityEntry(dateStr, newActivity, notesInput.value);
+                });
+
+                notesInput.addEventListener('blur', function() {
+                    const currentSelect = tr.querySelector('.activity-select');
+                    saveActivityEntry(dateStr, currentSelect.value, this.value);
+                });
+            }
 
         function loadYear() {
             const year = currentDate.getFullYear();
@@ -1064,10 +1451,18 @@
                 .then(res => res.json())
                 .then(data => {
                     scheduleData = {};
+                    const byDate = {};
                     data.forEach(entry => {
-                        scheduleData[entry.date] = entry;
+                        if (entry.hourOfDay !== undefined) {
+                            scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
+                        }
+                        if (!byDate[entry.date]) byDate[entry.date] = [];
+                        byDate[entry.date].push(entry);
                     });
-                    renderYear();
+                     Object.keys(byDate).forEach(d => {
+                         scheduleData[d] = getDisplayEntryForDay(byDate[d]) || byDate[d][0];
+                     });
+                     renderYear();
                 })
                 .catch(err => console.error('Error fetching year schedule:', err));
         }
@@ -1104,28 +1499,32 @@
                      daysGrid.appendChild(emptyDay);
                  }
 
-                 // Add days of month
-                 for (let day = 1; day <= lastDay.getDate(); day++) {
-                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                     const entry = scheduleData[dateStr];
-                     const activity = entry ? entry.activity.toLowerCase() : 'd';
+                   // Add days of month
+                   for (let day = 1; day <= lastDay.getDate(); day++) {
+                       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                       const entry = scheduleData[dateStr];
+                       const activity = entry ? entry.activity : 'D';
 
-                     const dayCell = document.createElement('div');
-                     dayCell.className = `month-card-day ${activity}`;
-                     dayCell.textContent = day;
-                     dayCell.style.cursor = 'pointer';
-                     dayCell.style.transition = 'all 0.2s';
-                     dayCell.onclick = () => openModal(dateStr, entry ? entry.activity : 'D', entry ? (entry.notes || '') : '');
-                     dayCell.onmouseover = function() {
-                         this.style.opacity = '0.8';
-                         this.style.transform = 'scale(1.05)';
-                     };
-                     dayCell.onmouseout = function() {
-                         this.style.opacity = '1';
-                         this.style.transform = 'scale(1)';
-                     };
-                     daysGrid.appendChild(dayCell);
-                 }
+                       let activityClass = getActivityClass(activity);
+                       const oncallClass = entry?.isOnCall ? 'oncall' : '';
+
+                       const dayCell = document.createElement('div');
+                       dayCell.className = `month-card-day ${activityClass} ${oncallClass}`;
+                       dayCell.textContent = day;
+                       dayCell.style.cursor = 'pointer';
+                       dayCell.style.transition = 'all 0.2s';
+                       dayCell.style.position = 'relative';
+                       dayCell.onclick = () => openModal(dateStr, entry ? entry.activity : 'D', entry ? (entry.notes || '') : '');
+                       dayCell.onmouseover = function() {
+                           this.style.opacity = '0.8';
+                           this.style.transform = 'scale(1.05)';
+                       };
+                       dayCell.onmouseout = function() {
+                           this.style.opacity = '1';
+                           this.style.transform = 'scale(1)';
+                       };
+                       daysGrid.appendChild(dayCell);
+                   }
 
                  monthCard.appendChild(daysGrid);
                  yearGrid.appendChild(monthCard);
@@ -1183,168 +1582,191 @@
             loadYear();
         }
 
-        function openModal(dateStr, activity, notes) {
-             selectedDateForModal = dateStr;
-             document.getElementById('modalDate').value = dateStr;
-             document.getElementById('modalActivity').value = activity;
-             document.getElementById('modalNotes').value = notes || '';
+           function openModal(dateStr, activity, notes) {
+                selectedDateForModal = dateStr;
+                document.getElementById('modalDate').value = dateStr;
+                document.getElementById('modalActivity').value = activity;
+                document.getElementById('modalNotes').value = notes || '';
 
-             // Update active button
-             const buttons = document.querySelectorAll('.activity-btn');
-             buttons.forEach(btn => btn.classList.remove('active'));
+                // Update active button
+                const buttons = document.querySelectorAll('.activity-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
 
-             const activityClass = activity.toLowerCase();
-             const activeBtn = document.querySelector(`.activity-btn.${activityClass}`);
-             if (activeBtn) {
-                 activeBtn.classList.add('active');
-             }
+                 // Find the matching button for the activity
+                 let activityClass = getActivityClass(activity);
+                 const classSel = activityClass.trim().split(/\s+/).map(c => '.' + c).join('');
+                 const activeBtn = document.querySelector(`.activity-btn${classSel}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
 
-             document.getElementById('editModal').style.display = 'block';
-         }
+                document.getElementById('editModal').style.display = 'block';
+            }
 
-         function selectActivityType(type) {
-             document.getElementById('modalActivity').value = type;
+           function selectActivityType(type) {
+               document.getElementById('modalActivity').value = type;
 
-             // Update button styles
-             const buttons = document.querySelectorAll('.activity-btn');
-             buttons.forEach(btn => btn.classList.remove('active'));
+               // Update button styles
+               const buttons = document.querySelectorAll('.activity-btn');
+               buttons.forEach(btn => btn.classList.remove('active'));
 
-             const typeClass = type.toLowerCase();
-             const activeBtn = document.querySelector(`.activity-btn.${typeClass}`);
-             if (activeBtn) {
-                 activeBtn.classList.add('active');
-             }
-         }
+               let typeClass = getActivityClass(type);
+               const classSel2 = typeClass.trim().split(/\s+/).map(c => '.' + c).join('');
+               const activeBtn = document.querySelector(`.activity-btn${classSel2}`);
+               if (activeBtn) {
+                   activeBtn.classList.add('active');
+               }
+           }
 
           function closeModal() {
               document.getElementById('editModal').style.display = 'none';
               selectedHourForModal = null;  // Reset hour when closing modal
           }
 
-         function fillNext5Days() {
-             const activity = document.getElementById('modalActivity').value;
-             const notes = document.getElementById('modalNotes').value;
-             const startDate = new Date(selectedDateForModal);
+           function fillNext5Days() {
+               const activity = document.getElementById('modalActivity').value;
+               const notes = document.getElementById('modalNotes').value;
+               const startDate = new Date(selectedDateForModal);
 
-             // Save current day first
-             saveActivityToBackend(selectedDateForModal, activity, notes);
+               // Save current day first
+               saveActivityToBackend(selectedDateForModal, activity, notes);
 
-             // Save next 4 days (5 days total including today)
-             for (let i = 1; i < 5; i++) {
-                 const nextDate = new Date(startDate);
-                 nextDate.setDate(nextDate.getDate() + i);
-                 const nextDateStr = formatDate(nextDate);
-                 saveActivityToBackend(nextDateStr, activity, notes);
-             }
+               // Save next 4 days (5 days total including today)
+               for (let i = 1; i < 5; i++) {
+                   const nextDate = new Date(startDate);
+                   nextDate.setDate(nextDate.getDate() + i);
+                   const nextDateStr = formatDate(nextDate);
+                   saveActivityToBackend(nextDateStr, activity, notes);
+               }
 
-             closeModal();
-             showToast('Filling next 5 days with selected activity...');
-         }
+              closeModal();
+              showToast('Filling next 5 days with selected activity...');
+          }
 
-         function saveActivityToBackend(dateStr, activity, notes) {
-             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json'
-                 },
-                 body: JSON.stringify({
-                     date: dateStr,
-                     activity: activity,
-                     notes: notes
-                 })
-             })
-             .then(res => res.json())
-             .then(savedEntry => {
-                 scheduleData[dateStr] = savedEntry;
-                 pendingSaves++;
+           function saveActivityToBackend(dateStr, activity, notes) {
+               if (isShiftType(activity)) {
+                   return expandAndSaveShift(dateStr, activity, notes);
+               }
+               fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({
+                       date: dateStr,
+                       activity: activity,
+                       isOnCall: activity === 'OnCall',
+                       notes: notes || ''
+                   })
+               })
+               .then(res => res.json())
+               .then(savedEntry => {
+                   scheduleData[dateStr] = savedEntry;
+                   pendingSaves++;
 
-                 if (toastTimeout) {
-                     clearTimeout(toastTimeout);
-                 }
+                   if (toastTimeout) {
+                       clearTimeout(toastTimeout);
+                   }
 
-                 toastTimeout = setTimeout(() => {
-                     if (pendingSaves > 0) {
-                         const message = pendingSaves === 1
-                             ? '1 entry saved'
-                             : `${pendingSaves} entries saved`;
-                         showToast(message);
-                         pendingSaves = 0;
-                     }
-                 }, TOAST_DEBOUNCE_DELAY);
+                   toastTimeout = setTimeout(() => {
+                       if (pendingSaves > 0) {
+                           const message = pendingSaves === 1
+                               ? '1 entry saved'
+                               : `${pendingSaves} entries saved`;
+                           showToast(message);
+                           pendingSaves = 0;
+                       }
+                   }, TOAST_DEBOUNCE_DELAY);
 
-                 // Refresh current view
-                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                 if (activeView) {
-                     const viewName = activeView.textContent.toLowerCase();
-                     if (viewName.includes('month')) {
-                         loadMonth();
-                     } else if (viewName.includes('week')) {
-                         loadWeek();
-                     } else if (viewName.includes('day')) {
-                         loadDay();
-                     } else if (viewName.includes('year')) {
-                         loadYear();
-                     }
-                 }
-             })
-             .catch(err => {
-                 console.error('Error saving activity:', err);
-                 showToast('Error saving data!', 'error');
-             });
-         }
+                   // Refresh current view
+                   const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                   if (activeView) {
+                       const viewName = activeView.textContent.toLowerCase();
+                       if (viewName.includes('month')) {
+                           loadMonth();
+                       } else if (viewName.includes('week')) {
+                           loadWeek();
+                       } else if (viewName.includes('day')) {
+                           loadDay();
+                       } else if (viewName.includes('year')) {
+                           loadYear();
+                       }
+                   }
+               })
+               .catch(err => {
+                   console.error('Error saving activity:', err);
+                   showToast('Error saving data!', 'error');
+               });
+           }
 
-         function saveModalChanges() {
-             const activity = document.getElementById('modalActivity').value;
-             const notes = document.getElementById('modalNotes').value;
+           function saveModalChanges() {
+               const activity = document.getElementById('modalActivity').value;
+               const notes = document.getElementById('modalNotes').value;
 
-             // Immediately save to backend
-             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json'
-                 },
-                 body: JSON.stringify({
-                     date: selectedDateForModal,
-                     activity: activity,
-                     notes: notes
-                 })
-             })
-             .then(res => res.json())
-             .then(savedEntry => {
-                 // Update local scheduleData with the saved entry from backend
-                 scheduleData[selectedDateForModal] = savedEntry;
-                 closeModal();
+               if (isShiftType(activity)) {
+                   expandAndSaveShift(selectedDateForModal, activity, notes);
+                   closeModal();
+                   return;
+               }
 
-                 // Increment pending saves
-                 pendingSaves++;
+               // Immediately save to backend
+               fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({
+                       date: selectedDateForModal,
+                       activity: activity,
+                       isOnCall: activity === 'OnCall',
+                       notes: notes
+                   })
+               })
+               .then(res => res.json())
+               .then(savedEntry => {
+                   // Update local scheduleData with the saved entry from backend
+                   scheduleData[selectedDateForModal] = savedEntry;
 
-                 // Clear previous timeout
-                 if (toastTimeout) {
-                     clearTimeout(toastTimeout);
-                 }
 
-                 // Set new debounced toast
-                 toastTimeout = setTimeout(() => {
-                     if (pendingSaves > 0) {
-                         const message = pendingSaves === 1
-                             ? '1 entry saved'
-                             : `${pendingSaves} entries saved`;
-                         showToast(message);
-                         pendingSaves = 0;
-                     }
-                 }, TOAST_DEBOUNCE_DELAY);
+                   closeModal();
 
-                 // Reload current view to show changes
-                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                 if (activeView) {
-                     activeView.click();
-                 }
-             })
-             .catch(err => {
-                 console.error('Error saving schedule:', err);
-                 alert('Error saving schedule entry');
-             });
-         }
+                   // Increment pending saves
+                   pendingSaves++;
+
+                   // Clear previous timeout
+                   if (toastTimeout) {
+                       clearTimeout(toastTimeout);
+                   }
+
+                   // Set new debounced toast
+                   toastTimeout = setTimeout(() => {
+                       if (pendingSaves > 0) {
+                           const message = pendingSaves === 1
+                               ? '1 entry saved'
+                               : `${pendingSaves} entries saved`;
+                           showToast(message);
+                           pendingSaves = 0;
+                       }
+                   }, TOAST_DEBOUNCE_DELAY);
+
+                   // Reload current view to show changes
+                   const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                   if (activeView) {
+                       activeView.click();
+                   }
+               })
+               .catch(err => {
+                   console.error('Error saving schedule:', err);
+                   alert('Error saving schedule entry');
+               });
+           }
+
+           function setAsDefaultTemplate(dateStr, activity) {
+               // This would set the selected activity as default for the user
+               // For now, just set the isDefault flag in the database
+               // The backend would handle creating/updating a schedule template based on this
+               console.log(`Setting ${activity} on ${dateStr} as default template`);
+           }
 
          function saveSchedule() {
              // This function is deprecated - saving now happens automatically when changes are made
@@ -1361,62 +1783,66 @@
              }
          }
 
-         function saveActivityEntry(dateStr, activity, notes) {
-             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json'
-                 },
-                 body: JSON.stringify({
-                     date: dateStr,
-                     activity: activity,
-                     notes: notes
-                 })
-             })
-             .then(res => res.json())
-             .then(savedEntry => {
-                 // Update local scheduleData with the saved entry
-                 scheduleData[dateStr] = savedEntry;
+          function saveActivityEntry(dateStr, activity, notes) {
+              if (isShiftType(activity)) {
+                  return expandAndSaveShift(dateStr, activity, notes);
+              }
+              fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      date: dateStr,
+                      activity: activity,
+                      isOnCall: activity === 'OnCall',
+                      notes: notes || ''
+                  })
+              })
+              .then(res => res.json())
+              .then(savedEntry => {
+                  // Update local scheduleData with the saved entry
+                  scheduleData[dateStr] = savedEntry;
 
-                 // Increment pending saves
-                 pendingSaves++;
+                  // Increment pending saves
+                  pendingSaves++;
 
-                 // Clear previous timeout
-                 if (toastTimeout) {
-                     clearTimeout(toastTimeout);
-                 }
+                  // Clear previous timeout
+                  if (toastTimeout) {
+                      clearTimeout(toastTimeout);
+                  }
 
-                 // Set new debounced toast
-                 toastTimeout = setTimeout(() => {
-                     if (pendingSaves > 0) {
-                         const message = pendingSaves === 1
-                             ? '1 entry saved'
-                             : `${pendingSaves} entries saved`;
-                         showToast(message);
-                         pendingSaves = 0;
-                     }
-                 }, TOAST_DEBOUNCE_DELAY);
+                  // Set new debounced toast
+                  toastTimeout = setTimeout(() => {
+                      if (pendingSaves > 0) {
+                          const message = pendingSaves === 1
+                              ? '1 entry saved'
+                              : `${pendingSaves} entries saved`;
+                          showToast(message);
+                          pendingSaves = 0;
+                      }
+                  }, TOAST_DEBOUNCE_DELAY);
 
-                 // Refresh current view to ensure consistency
-                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                 if (activeView) {
-                     const viewName = activeView.textContent.toLowerCase();
-                     if (viewName.includes('month')) {
-                         loadMonth();
-                     } else if (viewName.includes('week')) {
-                         loadWeek();
-                     } else if (viewName.includes('day')) {
-                         loadDay();
-                     } else if (viewName.includes('year')) {
-                         loadYear();
-                     }
-                 }
-             })
-             .catch(err => {
-                 console.error('Error saving activity:', err);
-                 showToast('Error saving data!', 'error');
-             });
-         }
+                  // Refresh current view to ensure consistency
+                  const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                  if (activeView) {
+                      const viewName = activeView.textContent.toLowerCase();
+                      if (viewName.includes('month')) {
+                          loadMonth();
+                      } else if (viewName.includes('week')) {
+                          loadWeek();
+                      } else if (viewName.includes('day')) {
+                          loadDay();
+                      } else if (viewName.includes('year')) {
+                          loadYear();
+                      }
+                  }
+              })
+              .catch(err => {
+                  console.error('Error saving activity:', err);
+                  showToast('Error saving data!', 'error');
+              });
+          }
 
          function showToast(message, type = 'success') {
              // Remove any existing toast
@@ -1509,48 +1935,53 @@
             dateCell.innerHTML = `${dateStr}<br>${dayName}`;
             tr.appendChild(dateCell);
 
-            // Add all 24 hours as cells in the same row
-            for (let hour = 0; hour < 24; hour++) {
-                const key = `${dateStr}-${hour}`;
-                const entry = scheduleData[key] || { activity: 'D', notes: '' };
-                const activityClass = entry.activity.toLowerCase();
+              // Add all 24 hours as cells in the same row
+              for (let hour = 0; hour < 24; hour++) {
+                  const key = `${dateStr}-${hour}`;
+                  const entry = scheduleData[key] || { activity: 'D', notes: '', isOnCall: false };
 
-                const td = document.createElement('td');
-                td.className = `activity-cell ${activityClass}`;
-                td.innerHTML = entry.activity;
-                td.style.cursor = 'pointer';
-                td.style.padding = '12px 4px';
-                td.style.textAlign = 'center';
-                td.style.minWidth = '40px';
-                td.style.fontWeight = 'bold';
-                td.onclick = () => openHourlyModal(dateStr, hour, entry.activity, entry.notes || '');
-                tr.appendChild(td);
-            }
+                  let activityClass = getActivityClass(entry.activity);
+                  const oncallClass = entry.activity === 'OnCall' ? 'oncall' : '';
+                  const displayActivity = getActivityDisplay(entry.activity);
+
+                  const td = document.createElement('td');
+                  td.className = `activity-cell ${activityClass}`;
+                  td.innerHTML = displayActivity;
+                  td.style.cursor = 'pointer';
+                  td.style.padding = '12px 4px';
+                  td.style.textAlign = 'center';
+                  td.style.minWidth = '40px';
+                  td.style.fontWeight = 'bold';
+                  td.style.position = 'relative';
+                   td.onclick = () => openHourlyModal(dateStr, hour, entry.activity, entry.notes || '');
+                  tr.appendChild(td);
+              }
 
             tbody.appendChild(tr);
         }
 
-        function openHourlyModal(dateStr, hour, activity, notes) {
-            selectedDateForModal = dateStr;
-            document.getElementById('modalDate').value = `${dateStr} (${String(hour).padStart(2, '0')}-${String(hour + 1).padStart(2, '0')})`;
-            document.getElementById('modalActivity').value = activity;
-            document.getElementById('modalNotes').value = notes || '';
+           function openHourlyModal(dateStr, hour, activity, notes) {
+               selectedDateForModal = dateStr;
+               document.getElementById('modalDate').value = `${dateStr} (${String(hour).padStart(2, '0')}-${String(hour + 1).padStart(2, '0')})`;
+               document.getElementById('modalActivity').value = activity;
+               document.getElementById('modalNotes').value = notes || '';
 
-            // Store the hour in the local variable
-            selectedHourForModal = hour;
+              // Store the hour in the local variable
+              selectedHourForModal = hour;
 
-            // Update active button
-            const buttons = document.querySelectorAll('.activity-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
+              // Update active button
+              const buttons = document.querySelectorAll('.activity-btn');
+              buttons.forEach(btn => btn.classList.remove('active'));
 
-            const activityClass = activity.toLowerCase();
-            const activeBtn = document.querySelector(`.activity-btn.${activityClass}`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
+              let activityClass = getActivityClass(activity);
+              const classSel3 = activityClass.trim().split(/\s+/).map(c => '.' + c).join('');
+              const activeBtn = document.querySelector(`.activity-btn${classSel3}`);
+              if (activeBtn) {
+                  activeBtn.classList.add('active');
+              }
 
-            document.getElementById('editModal').style.display = 'block';
-        }
+              document.getElementById('editModal').style.display = 'block';
+          }
 
         function previousHourlyDay() {
             const dateInput = document.getElementById('hourlyInput');
@@ -1568,74 +1999,83 @@
             loadHourly();
         }
 
-        // Override saveModalChanges to support hourly saves
-        const originalSaveModalChanges = saveModalChanges;
-        window.saveModalChanges = function() {
-            const activity = document.getElementById('modalActivity').value;
-            const notes = document.getElementById('modalNotes').value;
-            const hour = selectedHourForModal;
+         // Override saveModalChanges to support hourly saves
+         const originalSaveModalChanges = saveModalChanges;
+         window.saveModalChanges = function() {
+             const activity = document.getElementById('modalActivity').value;
+             const notes = document.getElementById('modalNotes').value;
+             const hour = selectedHourForModal;
 
-            // Build request body - only include hour if it's defined (hourly view mode)
-            const requestBody = {
-                date: selectedDateForModal,
-                activity: activity,
-                notes: notes
-            };
+             // If a shift type is selected, always expand to full day pattern
+             if (isShiftType(activity)) {
+                 expandAndSaveShift(selectedDateForModal, activity, notes);
+                 closeModal();
+                 selectedHourForModal = null;
+                 return;
+             }
 
-            // Only include hour if we're in hourly edit mode
-            if (hour !== undefined && hour !== null) {
-                requestBody.hour = hour;
-            }
+             // Build request body - only include hour if it's defined (hourly view mode)
+             const requestBody = {
+                 date: selectedDateForModal,
+                 activity: activity,
+                 isOnCall: activity === 'OnCall',
+                 notes: notes
+             };
 
-            fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            })
-            .then(res => res.json())
-            .then(savedEntry => {
-                // Use the correct key based on whether hour is defined
-                const key = hour !== undefined && hour !== null ? `${selectedDateForModal}-${hour}` : selectedDateForModal;
-                scheduleData[key] = savedEntry;
-                closeModal();
+             // Only include hour if we're in hourly edit mode
+             if (hour !== undefined && hour !== null) {
+                 requestBody.hour = hour;
+             }
 
-                // Reset selectedHourForModal after saving
-                selectedHourForModal = null;
+             fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json'
+                 },
+                 body: JSON.stringify(requestBody)
+             })
+             .then(res => res.json())
+             .then(savedEntry => {
+                 // Use the correct key based on whether hour is defined
+                 const key = hour !== undefined && hour !== null ? `${selectedDateForModal}-${hour}` : selectedDateForModal;
+                 scheduleData[key] = savedEntry;
+                 closeModal();
 
-                pendingSaves++;
+                 // Reset selectedHourForModal after saving
+                 selectedHourForModal = null;
 
-                if (toastTimeout) {
-                    clearTimeout(toastTimeout);
-                }
+                 pendingSaves++;
 
-                toastTimeout = setTimeout(() => {
-                    if (pendingSaves > 0) {
-                        const message = pendingSaves === 1
-                            ? '1 entry saved'
-                            : `${pendingSaves} entries saved`;
-                        showToast(message);
-                        pendingSaves = 0;
-                    }
-                }, TOAST_DEBOUNCE_DELAY);
+                 if (toastTimeout) {
+                     clearTimeout(toastTimeout);
+                 }
 
-                // Reload current view to show changes
-                const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                if (activeView) {
-                    const viewName = activeView.textContent.toLowerCase();
-                    if (viewName.includes('24-hour')) {
-                        loadHourly();
-                    } else {
-                        activeView.click();
-                    }
-                }
-            })
-            .catch(err => {
-                console.error('Error saving schedule:', err);
-                alert('Error saving schedule entry');
-            });
-        };
+                 toastTimeout = setTimeout(() => {
+                     if (pendingSaves > 0) {
+                         const message = pendingSaves === 1
+                             ? '1 entry saved'
+                             : `${pendingSaves} entries saved`;
+                         showToast(message);
+                         pendingSaves = 0;
+                     }
+                 }, TOAST_DEBOUNCE_DELAY);
+
+                 // Reload current view to show changes
+                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                 if (activeView) {
+                     const viewName = activeView.textContent.toLowerCase();
+                     if (viewName.includes('24-hour')) {
+                         loadHourly();
+                     } else {
+                         activeView.click();
+                     }
+                 }
+             })
+             .catch(err => {
+                 console.error('Error saving schedule:', err);
+                 alert('Error saving schedule entry');
+             });
+         };
 
     </script>
 </body>

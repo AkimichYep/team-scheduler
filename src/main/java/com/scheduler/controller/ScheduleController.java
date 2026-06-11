@@ -81,6 +81,9 @@ public class ScheduleController {
                     LocalDate.parse(request.getDate()),
                     request.getHour(),
                     request.getActivity(),
+                    request.getIsOnCall(),
+                    request.getOnCallMorning(),
+                    request.getOnCallNight(),
                     request.getNotes()
             );
         } else {
@@ -89,6 +92,9 @@ public class ScheduleController {
                     userId,
                     LocalDate.parse(request.getDate()),
                     request.getActivity(),
+                    request.getIsOnCall(),
+                    request.getOnCallMorning(),
+                    request.getOnCallNight(),
                     request.getNotes()
             );
         }
@@ -150,6 +156,9 @@ public class ScheduleController {
         private String date;
         private Integer hour;
         private String activity;
+        private Boolean isOnCall;
+        private Boolean onCallMorning;
+        private Boolean onCallNight;
         private String notes;
 
         public String getDate() {
@@ -174,6 +183,30 @@ public class ScheduleController {
 
         public void setActivity(String activity) {
             this.activity = activity;
+        }
+
+        public Boolean getIsOnCall() {
+            return isOnCall != null ? isOnCall : false;
+        }
+
+        public void setIsOnCall(Boolean isOnCall) {
+            this.isOnCall = isOnCall;
+        }
+
+        public Boolean getOnCallMorning() {
+            return onCallMorning != null ? onCallMorning : false;
+        }
+
+        public void setOnCallMorning(Boolean onCallMorning) {
+            this.onCallMorning = onCallMorning;
+        }
+
+        public Boolean getOnCallNight() {
+            return onCallNight != null ? onCallNight : false;
+        }
+
+        public void setOnCallNight(Boolean onCallNight) {
+            this.onCallNight = onCallNight;
         }
 
         public String getNotes() {

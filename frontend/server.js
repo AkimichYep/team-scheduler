@@ -247,6 +247,14 @@ app.get('/scheduler', isAuthenticated, (req, res) => {
     });
 });
 
+app.get('/schedule-templates', isAuthenticated, (req, res) => {
+    res.render('schedule-templates', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req),
+        userId: req.session.currentUser.id
+    });
+});
+
 app.get('/summary', isAuthenticated, (req, res) => {
     res.render('summary', {
         currentUser: req.session.currentUser,
@@ -362,6 +370,101 @@ app.get('/api/proxy/schedule/daily-summary/:userId', isAuthenticated, async (req
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch daily summary" });
+    }
+});
+
+// --- Schedule Templates Routes ---
+
+app.get('/api/proxy/templates', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/templates`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch templates" });
+    }
+});
+
+app.get('/api/proxy/templates/:id', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/templates/${req.params.id}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch template" });
+    }
+});
+
+app.get('/api/proxy/templates/default/template', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/templates/default/template`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(404).json({ error: "No default template found" });
+    }
+});
+
+app.get('/api/proxy/templates/user/:userId/default', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.get(`${SPRING_API}/templates/user/${req.params.userId}/default`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(404).json({ error: "No default template set for user" });
+    }
+});
+
+app.post('/api/proxy/templates', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.post(`${SPRING_API}/templates`, req.body, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to create template" });
+    }
+});
+
+app.post('/api/proxy/templates/apply-to-date/:userId/:templateId', isAuthenticated, async (req, res) => {
+    try {
+        const date = req.query.date;
+        const response = await axios.post(`${SPRING_API}/templates/apply-to-date/${req.params.userId}/${req.params.templateId}?date=${date}`, {}, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to apply template" });
+    }
+});
+
+app.post('/api/proxy/templates/apply-to-range/:userId/:templateId', isAuthenticated, async (req, res) => {
+    try {
+        const startDate = req.query.startDate;
+        const endDate = req.query.endDate;
+        const response = await axios.post(`${SPRING_API}/templates/apply-to-range/${req.params.userId}/${req.params.templateId}?startDate=${startDate}&endDate=${endDate}`, {}, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to apply template" });
+    }
+});
+
+app.post('/api/proxy/templates/set-default/:userId/:templateId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.post(`${SPRING_API}/templates/set-default/${req.params.userId}/${req.params.templateId}`, {}, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to set default template" });
+    }
+});
+
+app.post('/api/proxy/templates/oncall/add/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.post(`${SPRING_API}/templates/oncall/add/${req.params.userId}`, req.body, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to add OnCall" });
+    }
+});
+
+app.post('/api/proxy/templates/oncall/remove/:userId', isAuthenticated, async (req, res) => {
+    try {
+        const response = await axios.post(`${SPRING_API}/templates/oncall/remove/${req.params.userId}`, req.body, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to remove OnCall" });
     }
 });
 

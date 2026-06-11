@@ -177,19 +177,19 @@ public class ScheduleService {
         }
     }
 
-    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, String activity, String notes) {
+    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, String activity, Boolean isOnCall, Boolean onCallMorning, Boolean onCallNight, String notes) {
         User user = userRepository.findById(userId).orElseThrow();
 
         // When no hour is specified, update ALL 24 hours for that day
         ScheduleEntry lastUpdated = null;
         for (int hour = 0; hour < 24; hour++) {
-            lastUpdated = updateScheduleEntry(userId, date, hour, activity, notes);
+            lastUpdated = updateScheduleEntry(userId, date, hour, activity, isOnCall, onCallMorning, onCallNight, notes);
         }
 
         return lastUpdated;
     }
 
-    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, Integer hour, String activity, String notes) {
+    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, Integer hour, String activity, Boolean isOnCall, Boolean onCallMorning, Boolean onCallNight, String notes) {
         User user = userRepository.findById(userId).orElseThrow();
 
         Optional<ScheduleEntry> existingEntry = scheduleEntryRepository.findByUserIdAndDateAndHourOfDay(userId, date, hour);
@@ -198,6 +198,9 @@ public class ScheduleService {
         if (existingEntry.isPresent()) {
             entry = existingEntry.get();
             entry.setActivity(activity);
+            entry.setIsOnCall(isOnCall != null ? isOnCall : false);
+            entry.setOnCallMorning(onCallMorning != null ? onCallMorning : false);
+            entry.setOnCallNight(onCallNight != null ? onCallNight : false);
             entry.setNotes(notes != null ? notes : "");
         } else {
             entry = ScheduleEntry.builder()
@@ -205,11 +208,22 @@ public class ScheduleService {
                     .date(date)
                     .hourOfDay(hour)
                     .activity(activity)
+                    .isOnCall(isOnCall != null ? isOnCall : false)
+                    .onCallMorning(onCallMorning != null ? onCallMorning : false)
+                    .onCallNight(onCallNight != null ? onCallNight : false)
                     .notes(notes != null ? notes : "")
                     .build();
         }
         
         return scheduleEntryRepository.save(entry);
+    }
+
+    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, String activity, Boolean isOnCall, String notes) {
+        return updateScheduleEntry(userId, date, activity, isOnCall, false, false, notes);
+    }
+
+    public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, Integer hour, String activity, Boolean isOnCall, String notes) {
+        return updateScheduleEntry(userId, date, hour, activity, isOnCall, false, false, notes);
     }
 
     public void deleteScheduleEntry(Long userId, LocalDate date) {

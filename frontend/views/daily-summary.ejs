@@ -128,7 +128,7 @@
             color: #333;
         }
 
-        .activity-cell.o {
+        .activity-cell.oncall {
             background-color: #ffe0b2;
             color: #333;
         }
@@ -139,14 +139,25 @@
         }
 
         .activity-cell.h {
-            background-color: #ce93d8;
-            color: white;
-        }
-
-        .activity-cell.off {
-            background-color: #d0d0d0;
+            background-color: #ef9a9a;
             color: #333;
         }
+
+        .activity-cell.leave {
+            background-color: #b0bec5;
+            color: #333;
+        }
+
+        .activity-cell.leave {
+            background-color: #b0bec5;
+            color: #333;
+        }
+
+        .activity-cell.shifta { background-color: #a5d6a7; color: #1b5e20; }
+        .activity-cell.shiftb { background-color: #80cbc4; color: #004d40; }
+        .activity-cell.shiftc { background-color: #90caf9; color: #0d47a1; }
+        .activity-cell.shiftd { background-color: #ce93d8; color: #4a148c; }
+        .activity-cell.shifte { background-color: #ffcc80; color: #e65100; }
 
         .legend {
             background-color: white;
@@ -260,19 +271,43 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #ffe0b2;"></div>
-                    <span>O - OnCall</span>
+                    <span>OnCall</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #f8bbd0;"></div>
                     <span>V - Vacation</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <div class="legend-color" style="background-color: #ef9a9a;"></div>
                     <span>H - Holiday</span>
                 </div>
                 <div class="legend-item">
+                    <div class="legend-color" style="background-color: #b0bec5;"></div>
+                    <span>Leave</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #a5d6a7;"></div>
+                    <span>A - Shift A (02-11)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #80cbc4;"></div>
+                    <span>B - Shift B (03-12)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90caf9;"></div>
+                    <span>C - Shift C (07-16)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ce93d8;"></div>
+                    <span>D - Shift D (10-19)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffcc80;"></div>
+                    <span>E - Shift E (09-18)</span>
+                </div>
+                <div class="legend-item">
                     <div class="legend-color" style="background-color: #d0d0d0;"></div>
-                    <span>Off - Day Off</span>
+                    <span>Off</span>
                 </div>
             </div>
         </div>
@@ -295,6 +330,21 @@
         const CURRENT_USER_ID = '<%= userId %>';
         let currentDate = new Date(2026, 5, 9); // June 9, 2026
         let scheduleData = {};
+
+        const SHIFT_PATTERNS = {
+            'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+        };
+
+        function resolveHourlyActivity(activity, hour) {
+            if (SHIFT_PATTERNS[activity]) {
+                return SHIFT_PATTERNS[activity][hour] || 'Off';
+            }
+            return activity || 'Off';
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date('2026-06-09');
@@ -431,7 +481,8 @@
                 sortedDates.forEach(date => {
                     const dayEntries = weekData[date] || [];
                     const entry = dayEntries.find(e => e.hourOfDay === hour);
-                    const activity = entry ? entry.activity : 'D';
+                    const rawActivity = entry ? entry.activity : 'Off';
+                    const activity = resolveHourlyActivity(rawActivity, hour);
                     const activityClass = activity.toLowerCase();
                     html += `<td class="activity-cell ${activityClass}">${activity}</td>`;
                 });

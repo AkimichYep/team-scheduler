@@ -34,6 +34,10 @@ public class User {
 
     private String email;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "default_schedule_template_id")
+    private ScheduleTemplate defaultScheduleTemplate;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
