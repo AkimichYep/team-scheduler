@@ -13,7 +13,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-const SPRING_API = 'http://localhost:8080/api';
+const SPRING_API = process.env.SPRING_API || 'http://localhost:8080/api';
 
 // Middleware to check auth and fetch current user info
 const isAuthenticated = async (req, res, next) => {
