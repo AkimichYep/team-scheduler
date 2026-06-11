@@ -1048,46 +1048,55 @@
               return getDominantEntry(entries);
           }
 
-         // Expand a shift type and save all 24 hours individually to the backend
+         // Expand a shift type and save all 24 hours in a single batched request
          function expandAndSaveShift(dateStr, shiftType, notes) {
              const pattern = SHIFT_PATTERNS[shiftType];
              if (!pattern) return Promise.resolve();
 
-             const promises = pattern.map((hourActivity, hour) =>
-                 fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({
-                         date: dateStr,
-                         hour: hour,
-                         activity: hourActivity,
-                         isOnCall: false,
-                         notes: hour === 0 ? (notes || '') : ''
-                     })
-                 }).then(r => r.json()).then(saved => {
-                     scheduleData[`${dateStr}-${hour}`] = saved;
+             // Build batched hours array
+             const hours = pattern.map((hourActivity, hour) => ({
+                 hour: hour,
+                 activity: hourActivity
+             }));
+
+             // Send single request with all 24 hours
+             return fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                     date: dateStr,
+                     hours: hours,
+                     notes: notes || ''
                  })
-             );
+             }).then(r => r.json()).then(saved => {
+                 // Only fetch the updated day, not the entire month/week/year
+                 return fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
+                     .then(res => res.json())
+                     .then(dayData => {
+                         // Update local schedule data with fetched day
+                         const list = Array.isArray(dayData) ? dayData : [dayData];
+                         scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
 
-             return Promise.all(promises).then(() => {
-                 pendingSaves++;
-                 if (toastTimeout) clearTimeout(toastTimeout);
-                 toastTimeout = setTimeout(() => {
-                     if (pendingSaves > 0) {
-                         showToast(`Shift ${shiftType.replace('Shift','')} saved for ${dateStr}`);
-                         pendingSaves = 0;
-                     }
-                 }, TOAST_DEBOUNCE_DELAY);
+                         pendingSaves++;
+                         if (toastTimeout) clearTimeout(toastTimeout);
+                         toastTimeout = setTimeout(() => {
+                             if (pendingSaves > 0) {
+                                 showToast(`Shift ${shiftType.replace('Shift','')} saved for ${dateStr}`);
+                                 pendingSaves = 0;
+                             }
+                         }, TOAST_DEBOUNCE_DELAY);
 
-                 const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                 if (activeView) {
-                     const viewName = activeView.textContent.toLowerCase();
-                     if (viewName.includes('month')) loadMonth();
-                     else if (viewName.includes('week')) loadWeek();
-                     else if (viewName.includes('day')) loadDay();
-                     else if (viewName.includes('year')) loadYear();
-                     else if (viewName.includes('24-hour')) loadHourly();
-                 }
+                         // Re-render only the current view (will use updated scheduleData)
+                         const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                         if (activeView) {
+                             const viewName = activeView.textContent.toLowerCase();
+                             if (viewName.includes('month')) renderMonth();
+                             else if (viewName.includes('week')) renderWeek();
+                             else if (viewName.includes('day')) renderDay();
+                             else if (viewName.includes('year')) renderYear();
+                             else if (viewName.includes('24-hour')) renderHourly(dateStr);
+                         }
+                     });
              }).catch(err => {
                  console.error('Error saving shift:', err);
                  showToast('Error saving shift!', 'error');
@@ -1628,15 +1637,107 @@
                const notes = document.getElementById('modalNotes').value;
                const startDate = new Date(selectedDateForModal);
 
-               // Save current day first
-               saveActivityToBackend(selectedDateForModal, activity, notes);
+               if (isShiftType(activity)) {
+                   // For shift types, batch all 5 days with single request per day
+                   const pattern = SHIFT_PATTERNS[activity];
+                   const promises = [];
 
-               // Save next 4 days (5 days total including today)
-               for (let i = 1; i < 5; i++) {
-                   const nextDate = new Date(startDate);
-                   nextDate.setDate(nextDate.getDate() + i);
-                   const nextDateStr = formatDate(nextDate);
-                   saveActivityToBackend(nextDateStr, activity, notes);
+                   // Save current day
+                   const hours = pattern.map((hourActivity, hour) => ({
+                       hour: hour,
+                       activity: hourActivity
+                   }));
+                   promises.push(
+                       fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json' },
+                           body: JSON.stringify({
+                               date: selectedDateForModal,
+                               hours: hours,
+                               notes: notes || ''
+                           })
+                       }).then(r => r.json())
+                   );
+
+                   // Save next 4 days
+                   for (let i = 1; i < 5; i++) {
+                       const nextDate = new Date(startDate);
+                       nextDate.setDate(nextDate.getDate() + i);
+                       const nextDateStr = formatDate(nextDate);
+                       promises.push(
+                           fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+                               method: 'POST',
+                               headers: { 'Content-Type': 'application/json' },
+                               body: JSON.stringify({
+                                   date: nextDateStr,
+                                   hours: hours,
+                                   notes: notes || ''
+                               })
+                           }).then(r => r.json())
+                       );
+                   }
+
+                   Promise.all(promises).then(() => {
+                       // Only fetch the 5 days that were updated
+                       const fetchPromises = [];
+                       fetchPromises.push(
+                           fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${selectedDateForModal}`)
+                               .then(res => res.json())
+                               .then(dayData => {
+                                   const list = Array.isArray(dayData) ? dayData : [dayData];
+                                   scheduleData[selectedDateForModal] = getDisplayEntryForDay(list) || list[0];
+                               })
+                       );
+
+                       for (let i = 1; i < 5; i++) {
+                           const nextDate = new Date(new Date(selectedDateForModal));
+                           nextDate.setDate(nextDate.getDate() + i);
+                           const nextDateStr = formatDate(nextDate);
+                           fetchPromises.push(
+                               fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${nextDateStr}`)
+                                   .then(res => res.json())
+                                   .then(dayData => {
+                                       const list = Array.isArray(dayData) ? dayData : [dayData];
+                                       scheduleData[nextDateStr] = getDisplayEntryForDay(list) || list[0];
+                                   })
+                           );
+                       }
+
+                       return Promise.all(fetchPromises);
+                   }).then(() => {
+                       pendingSaves++;
+                       if (toastTimeout) clearTimeout(toastTimeout);
+                       toastTimeout = setTimeout(() => {
+                           if (pendingSaves > 0) {
+                               showToast(`Shift ${activity.replace('Shift','')} applied for 5 days`);
+                               pendingSaves = 0;
+                           }
+                       }, TOAST_DEBOUNCE_DELAY);
+
+                       // Re-render only current view
+                       const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                       if (activeView) {
+                           const viewName = activeView.textContent.toLowerCase();
+                           if (viewName.includes('month')) renderMonth();
+                           else if (viewName.includes('week')) renderWeek();
+                           else if (viewName.includes('day')) renderDay();
+                           else if (viewName.includes('year')) renderYear();
+                       }
+                   }).catch(err => {
+                       console.error('Error saving shift for 5 days:', err);
+                       showToast('Error saving shift!', 'error');
+                   });
+               } else {
+                   // For non-shift activities, use original method
+                   saveActivityToBackend(selectedDateForModal, activity, notes);
+
+                   // Save next 4 days
+                   for (let i = 1; i < 5; i++) {
+                       const nextDate = new Date(startDate);
+                       nextDate.setDate(nextDate.getDate() + i);
+                       const nextDateStr = formatDate(nextDate);
+                       saveActivityToBackend(nextDateStr, activity, notes);
+                   }
                }
 
               closeModal();
@@ -1647,7 +1748,7 @@
                if (isShiftType(activity)) {
                    return expandAndSaveShift(dateStr, activity, notes);
                }
-               fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+               return fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
                    method: 'POST',
                    headers: {
                        'Content-Type': 'application/json'
@@ -1661,37 +1762,43 @@
                })
                .then(res => res.json())
                .then(savedEntry => {
-                   scheduleData[dateStr] = savedEntry;
-                   pendingSaves++;
+                   // Only fetch the updated day, not entire view
+                   return fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
+                       .then(res => res.json())
+                       .then(dayData => {
+                           const list = Array.isArray(dayData) ? dayData : [dayData];
+                           scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
+                           pendingSaves++;
 
-                   if (toastTimeout) {
-                       clearTimeout(toastTimeout);
-                   }
+                           if (toastTimeout) {
+                               clearTimeout(toastTimeout);
+                           }
 
-                   toastTimeout = setTimeout(() => {
-                       if (pendingSaves > 0) {
-                           const message = pendingSaves === 1
-                               ? '1 entry saved'
-                               : `${pendingSaves} entries saved`;
-                           showToast(message);
-                           pendingSaves = 0;
-                       }
-                   }, TOAST_DEBOUNCE_DELAY);
+                           toastTimeout = setTimeout(() => {
+                               if (pendingSaves > 0) {
+                                   const message = pendingSaves === 1
+                                       ? '1 entry saved'
+                                       : `${pendingSaves} entries saved`;
+                                   showToast(message);
+                                   pendingSaves = 0;
+                               }
+                           }, TOAST_DEBOUNCE_DELAY);
 
-                   // Refresh current view
-                   const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                   if (activeView) {
-                       const viewName = activeView.textContent.toLowerCase();
-                       if (viewName.includes('month')) {
-                           loadMonth();
-                       } else if (viewName.includes('week')) {
-                           loadWeek();
-                       } else if (viewName.includes('day')) {
-                           loadDay();
-                       } else if (viewName.includes('year')) {
-                           loadYear();
-                       }
-                   }
+                           // Re-render only current view
+                           const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                           if (activeView) {
+                               const viewName = activeView.textContent.toLowerCase();
+                               if (viewName.includes('month')) {
+                                   renderMonth();
+                               } else if (viewName.includes('week')) {
+                                   renderWeek();
+                               } else if (viewName.includes('day')) {
+                                   renderDay();
+                               } else if (viewName.includes('year')) {
+                                   renderYear();
+                               }
+                           }
+                       });
                })
                .catch(err => {
                    console.error('Error saving activity:', err);
@@ -1724,36 +1831,49 @@
                })
                .then(res => res.json())
                .then(savedEntry => {
-                   // Update local scheduleData with the saved entry from backend
-                   scheduleData[selectedDateForModal] = savedEntry;
+                   // Only fetch the updated day
+                   return fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${selectedDateForModal}`)
+                       .then(res => res.json())
+                       .then(dayData => {
+                           const list = Array.isArray(dayData) ? dayData : [dayData];
+                           scheduleData[selectedDateForModal] = getDisplayEntryForDay(list) || list[0];
 
+                           closeModal();
 
-                   closeModal();
+                           // Increment pending saves
+                           pendingSaves++;
 
-                   // Increment pending saves
-                   pendingSaves++;
+                           // Clear previous timeout
+                           if (toastTimeout) {
+                               clearTimeout(toastTimeout);
+                           }
 
-                   // Clear previous timeout
-                   if (toastTimeout) {
-                       clearTimeout(toastTimeout);
-                   }
+                           // Set new debounced toast
+                           toastTimeout = setTimeout(() => {
+                               if (pendingSaves > 0) {
+                                   const message = pendingSaves === 1
+                                       ? '1 entry saved'
+                                       : `${pendingSaves} entries saved`;
+                                   showToast(message);
+                                   pendingSaves = 0;
+                               }
+                           }, TOAST_DEBOUNCE_DELAY);
 
-                   // Set new debounced toast
-                   toastTimeout = setTimeout(() => {
-                       if (pendingSaves > 0) {
-                           const message = pendingSaves === 1
-                               ? '1 entry saved'
-                               : `${pendingSaves} entries saved`;
-                           showToast(message);
-                           pendingSaves = 0;
-                       }
-                   }, TOAST_DEBOUNCE_DELAY);
-
-                   // Reload current view to show changes
-                   const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
-                   if (activeView) {
-                       activeView.click();
-                   }
+                           // Re-render current view
+                           const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
+                           if (activeView) {
+                               const viewName = activeView.textContent.toLowerCase();
+                               if (viewName.includes('month')) {
+                                   renderMonth();
+                               } else if (viewName.includes('week')) {
+                                   renderWeek();
+                               } else if (viewName.includes('day')) {
+                                   renderDay();
+                               } else if (viewName.includes('year')) {
+                                   renderYear();
+                               }
+                           }
+                       });
                })
                .catch(err => {
                    console.error('Error saving schedule:', err);
