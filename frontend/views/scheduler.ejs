@@ -536,8 +536,52 @@
         .modal-buttons {
             display: flex;
             gap: 10px;
-            justify-content: flex-end;
+            justify-content: center;
             margin-top: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .modal-fill-btn {
+            background-color: #2196F3;
+            color: white;
+            flex: 1;
+            min-width: 140px;
+            order: -1;
+        }
+
+        .modal-fill-btn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .modal-save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .modal-save-btn:hover {
+            background-color: #45a049;
+        }
+
+        .modal-cancel-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .modal-cancel-btn:hover {
+            background-color: #da190b;
         }
 
         .modal-btn {
@@ -909,11 +953,11 @@
             <div class="modal-header">Edit Activity</div>
             <div class="modal-body">
                 <div class="form-group">
-                     <label>Date:</label>
-                     <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                     <label><strong>Date:</strong></label>
+                     <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background-color: #f9f9f9;">
                  </div>
                  <div class="form-group">
-                      <label><strong>Activity:</strong></label>
+                      <label><strong>📅 Basic Activities:</strong></label>
                       <div class="activity-buttons-container" style="grid-template-columns: repeat(4, 1fr);">
                           <button type="button" class="activity-btn d active" onclick="selectActivityType('D')" title="Development">D</button>
                           <button type="button" class="activity-btn s" onclick="selectActivityType('S')" title="Support">S</button>
@@ -923,48 +967,38 @@
                           <button type="button" class="activity-btn h" onclick="selectActivityType('H')" title="Holiday">H</button>
                           <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Off">Off</button>
                       </div>
-                       <label style="margin-top:8px; display:block;"><strong>Shift Types:</strong></label>
-                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
-                           <button type="button" class="activity-btn shifta" onclick="selectActivityType('ShiftA')" title="Shift A: S 02-07, D 07-11">A</button>
-                           <button type="button" class="activity-btn shiftb" onclick="selectActivityType('ShiftB')" title="Shift B: S 03-08, D 08-12">B</button>
-                           <button type="button" class="activity-btn shiftc" onclick="selectActivityType('ShiftC')" title="Shift C: S 07-12, D 12-16">C</button>
-                           <button type="button" class="activity-btn shiftd" onclick="selectActivityType('ShiftD')" title="Shift D: S 10-14, D 14-18, S 18-19">D</button>
-                           <button type="button" class="activity-btn shifte" onclick="selectActivityType('ShiftE')" title="Shift E: D 09-13, S 13-18">E</button>
-                       </div>
-                       <label style="margin-top:8px; display:block;"><strong>OnCall + Shift (start of day):</strong></label>
-                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
-                           <button type="button" class="activity-btn shifta oc-pre" onclick="selectActivityType('OC_ShiftA')" title="OnCall at start + Shift A (S 02-07, D 07-11)">OC+A</button>
-                           <button type="button" class="activity-btn shiftb oc-pre" onclick="selectActivityType('OC_ShiftB')" title="OnCall at start + Shift B (S 03-08, D 08-12)">OC+B</button>
-                           <button type="button" class="activity-btn shiftc oc-pre" onclick="selectActivityType('OC_ShiftC')" title="OnCall at start + Shift C (S 07-12, D 12-16)">OC+C</button>
-                           <button type="button" class="activity-btn shiftd oc-pre" onclick="selectActivityType('OC_ShiftD')" title="OnCall at start + Shift D (S 10-14, D 14-18, S 18-19)">OC+D</button>
-                           <button type="button" class="activity-btn shifte oc-pre" onclick="selectActivityType('OC_ShiftE')" title="OnCall at start + Shift E (D 09-13, S 13-18)">OC+E</button>
-                       </div>
-                       <label style="margin-top:8px; display:block;"><strong>Shift + OnCall (end of day):</strong></label>
-                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
-                           <button type="button" class="activity-btn shifta oc-suf" onclick="selectActivityType('ShiftA_OC')" title="Shift A + OnCall at end">A+OC</button>
-                           <button type="button" class="activity-btn shiftb oc-suf" onclick="selectActivityType('ShiftB_OC')" title="Shift B + OnCall at end">B+OC</button>
-                           <button type="button" class="activity-btn shiftc oc-suf" onclick="selectActivityType('ShiftC_OC')" title="Shift C + OnCall at end">C+OC</button>
-                           <button type="button" class="activity-btn shiftd oc-suf" onclick="selectActivityType('ShiftD_OC')" title="Shift D + OnCall at end">D+OC</button>
-                           <button type="button" class="activity-btn shifte oc-suf" onclick="selectActivityType('ShiftE_OC')" title="Shift E + OnCall at end">E+OC</button>
-                       </div>
-                       <label style="margin-top:8px; display:block;"><strong>OnCall + Shift + OnCall (both ends):</strong></label>
-                       <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom:0;">
-                           <button type="button" class="activity-btn shifta oc-both" onclick="selectActivityType('OC_ShiftA_OC')" title="OnCall at start + Shift A + OnCall at end">OC+A+OC</button>
-                           <button type="button" class="activity-btn shiftb oc-both" onclick="selectActivityType('OC_ShiftB_OC')" title="OnCall at start + Shift B + OnCall at end">OC+B+OC</button>
-                           <button type="button" class="activity-btn shiftc oc-both" onclick="selectActivityType('OC_ShiftC_OC')" title="OnCall at start + Shift C + OnCall at end">OC+C+OC</button>
-                           <button type="button" class="activity-btn shiftd oc-both" onclick="selectActivityType('OC_ShiftD_OC')" title="OnCall at start + Shift D + OnCall at end">OC+D+OC</button>
-                           <button type="button" class="activity-btn shifte oc-both" onclick="selectActivityType('OC_ShiftE_OC')" title="OnCall at start + Shift E + OnCall at end">OC+E+OC</button>
-                       </div>
-                       <input type="hidden" id="modalActivity" value="D">
+
+                      <label style="margin-top: 16px; display:block; font-weight: bold;">📊 Shift Type:</label>
+                      <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 12px;">
+                          <button type="button" class="activity-btn shifta" onclick="selectShift('ShiftA')" title="Shift A">A</button>
+                          <button type="button" class="activity-btn shiftb" onclick="selectShift('ShiftB')" title="Shift B">B</button>
+                          <button type="button" class="activity-btn shiftc" onclick="selectShift('ShiftC')" title="Shift C">C</button>
+                          <button type="button" class="activity-btn shiftd" onclick="selectShift('ShiftD')" title="Shift D">D</button>
+                          <button type="button" class="activity-btn shifte" onclick="selectShift('ShiftE')" title="Shift E">E</button>
+                      </div>
+
+                      <label style="display:block; margin-bottom: 12px; font-weight: bold;">🔔 Add OnCall:</label>
+                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+                          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                              <input type="checkbox" id="ocBefore" onchange="updateShiftSelection()" style="width: 18px; height: 18px; cursor: pointer;">
+                              <span>At Start</span>
+                          </label>
+                          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                              <input type="checkbox" id="ocAfter" onchange="updateShiftSelection()" style="width: 18px; height: 18px; cursor: pointer;">
+                              <span>At End</span>
+                          </label>
+                      </div>
+
+                      <input type="hidden" id="modalActivity" value="D">
+                      <input type="hidden" id="selectedShift" value="">
                   </div>
                   <div class="form-group">
-                      <label>Notes (optional):</label>
-                      <textarea id="modalNotes" class="notes-input" rows="3"></textarea>
+                      <label><strong>📝 Notes (optional):</strong></label>
+                      <textarea id="modalNotes" class="notes-input" rows="2" placeholder="Add any notes about this activity..."></textarea>
                   </div>
               </div>
               <div class="modal-buttons">
-                  <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()">Fill Next 5 Days</button>
-                  <div style="flex-grow: 1;"></div>
+                  <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()" style="font-weight: bold; flex: 1;">⏭️ Apply to Next 5 Days</button>
                   <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
                   <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
               </div>
@@ -997,14 +1031,15 @@
               return activity in SHIFT_PATTERNS;
           }
 
-          // Auto-generate OnCall combo patterns: leading/trailing Off hours → OnCall
+          // Auto-generate OnCall combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
           ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
               const base = SHIFT_PATTERNS[shift];
-              let s = 0; while (s < 24 && base[s] === 'Off') s++;       // first work hour
-              let e = 23; while (e >= 0 && base[e] === 'Off') e--;      // last work hour
-              SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < s ? 'OnCall' : a; });
-              SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i > e ? 'OnCall' : a; });
-              SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < s || i > e) ? 'OnCall' : a; });
+              // OnCall at start: hours 0-1 (2 hours)
+              SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
+              // OnCall at end: hours 19-23 (5 hours)
+              SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
+              // OnCall at both: hours 0-1 and 19-23
+              SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
           });
 
          // Priority: higher = more "interesting" for day-level display
@@ -1630,6 +1665,53 @@
           function closeModal() {
               document.getElementById('editModal').style.display = 'none';
               selectedHourForModal = null;  // Reset hour when closing modal
+              // Reset shift selection
+              document.getElementById('selectedShift').value = '';
+              document.getElementById('ocBefore').checked = false;
+              document.getElementById('ocAfter').checked = false;
+          }
+
+          function selectShift(shiftType) {
+              document.getElementById('selectedShift').value = shiftType;
+              updateShiftSelection();
+          }
+
+          function updateShiftSelection() {
+              const selectedShift = document.getElementById('selectedShift').value;
+              const ocBefore = document.getElementById('ocBefore').checked;
+              const ocAfter = document.getElementById('ocAfter').checked;
+
+              let activity = selectedShift;
+
+              // Handle OnCall checkboxes
+              if (selectedShift) {
+                  if (ocBefore && ocAfter) {
+                      // OnCall before AND after
+                      activity = `OC_${selectedShift}_OC`;
+                  } else if (ocBefore) {
+                      // OnCall before only
+                      activity = `OC_${selectedShift}`;
+                  } else if (ocAfter) {
+                      // OnCall after only
+                      activity = `${selectedShift}_OC`;
+                  }
+              }
+
+              // Update hidden input
+              document.getElementById('modalActivity').value = activity;
+          }
+
+          function toggleAdvancedOptions() {
+              const advancedOptions = document.getElementById('advancedOptions');
+              const toggleBtn = document.getElementById('advancedToggleBtn');
+
+              if (advancedOptions.style.display === 'none') {
+                  advancedOptions.style.display = 'block';
+                  toggleBtn.textContent = '▼ Advanced Options (Shifts & OnCall)';
+              } else {
+                  advancedOptions.style.display = 'none';
+                  toggleBtn.textContent = '▶ Advanced Options (Shifts & OnCall)';
+              }
           }
 
            function fillNext5Days() {
