@@ -172,6 +172,21 @@
             margin-bottom: 3px;
         }
 
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .calendar-header-cell {
+            text-align: center;
+            font-weight: bold;
+            color: #2196F3;
+            padding: 8px;
+            font-size: 13px;
+        }
+
         .day-activity {
             font-size: 14px;
             font-weight: bold;
@@ -1217,8 +1232,19 @@
 
              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                                'July', 'August', 'September', 'October', 'November', 'December'];
+             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
              document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+
+             const calendarContainer = document.getElementById('monthCalendar').parentElement;
+             const headerDiv = document.getElementById('monthCalendarHeader') || document.createElement('div');
+             headerDiv.id = 'monthCalendarHeader';
+             headerDiv.className = 'calendar-header';
+             headerDiv.innerHTML = dayNames.map(day => `<div class="calendar-header-cell">${day}</div>`).join('');
+
+             if (!document.getElementById('monthCalendarHeader')) {
+                 document.getElementById('monthCalendar').parentElement.insertBefore(headerDiv, document.getElementById('monthCalendar'));
+             }
 
              const calendar = document.getElementById('monthCalendar');
              calendar.innerHTML = '';
