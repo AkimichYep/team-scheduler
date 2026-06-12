@@ -354,6 +354,20 @@ app.get('/api/proxy/schedule/team/month/:year/:month', isAuthenticated, async (r
     }
 });
 
+app.get('/api/proxy/schedule/team/week/:startDate', isAuthenticated, async (req, res) => {
+    try {
+        const query = new URLSearchParams();
+        if (req.query.userIds) {
+            const userIds = Array.isArray(req.query.userIds) ? req.query.userIds : [req.query.userIds];
+            userIds.forEach(id => query.append('userIds', id));
+        }
+        const response = await axios.get(`${SPRING_API}/schedule/team/week/${req.params.startDate}?${query.toString()}`, { auth: req.session.user });
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch team week schedule" });
+    }
+});
+
 app.get('/api/proxy/schedule/all-users', isAuthenticated, async (req, res) => {
     try {
         const response = await axios.get(`${SPRING_API}/schedule/all-users`, { auth: req.session.user });

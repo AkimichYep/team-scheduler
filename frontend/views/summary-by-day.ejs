@@ -500,6 +500,46 @@
         let selectedUserIds = [];
         let allUsers = [];
         let scheduleData = {};
+        let scheduleCache = {}; // Cache: key = "userId:date" -> data
+
+        // Cache utility functions
+        function getCachedDayHours(userId, date) {
+            const key = `${userId}:${date}`;
+            return scheduleCache[key] || null;
+        }
+
+        function setCachedDayHours(userId, date, data) {
+            const key = `${userId}:${date}`;
+            scheduleCache[key] = data;
+        }
+
+        function clearCache() {
+            scheduleCache = {};
+        }
+
+        // Expand grouped entries (with hourRange) into individual hour entries
+        function expandGroupedEntries(groupedEntries) {
+            const expanded = [];
+            groupedEntries.forEach(entry => {
+                // Parse hourRange: "0" or "0-3" or "10-23"
+                const [startStr, endStr] = entry.hourRange.split('-');
+                const startHour = parseInt(startStr);
+                const endHour = endStr ? parseInt(endStr) : startHour;
+
+                for (let hour = startHour; hour <= endHour; hour++) {
+                    expanded.push({
+                        date: entry.date,
+                        hourOfDay: hour,
+                        activity: entry.activity,
+                        isOnCall: entry.isOnCall,
+                        onCallMorning: entry.onCallMorning,
+                        onCallNight: entry.onCallNight,
+                        notes: entry.notes
+                    });
+                }
+            });
+            return expanded;
+        }
 
         // Shift patterns: index = hour (0-23), value = actual activity
         const SHIFT_PATTERNS = {
@@ -590,6 +630,7 @@
                 const checkbox = document.getElementById(`user-${userId}`);
                 if (checkbox) checkbox.checked = false;
             }
+            clearCache(); // Clear cache when user selection changes
             saveSelection();
         }
 
@@ -614,7 +655,6 @@
         }
 
         function loadSummaryByDay() {
-            scheduleData = {};  // Reset stale data before loading
             if (selectedUserIds.length === 0) {
                 const msg = 'Please select at least one team member';
                 showError(msg);
@@ -639,46 +679,88 @@
 
             console.log('Loading summary for week starting:', formatDate(weekStart), 'Selected users:', selectedUserIds);
 
-            // Load hourly data for each selected user for each day of the week
-            const promises = [];
-
+            // Check if all data is cached
+            let allCached = true;
             for (let i = 0; i < 7; i++) {
                 const date = new Date(weekStart);
                 date.setDate(date.getDate() + i);
                 const dateStr = formatDate(date);
 
-                selectedUserIds.forEach(userId => {
-                    promises.push(
-                        fetch(`/api/proxy/schedule/day/${userId}/hours?date=${dateStr}`)
-                            .then(res => {
-                                if (!res.ok) {
-                                    throw new Error(`HTTP error! status: ${res.status}`);
-                                }
-                                return res.json();
-                            })
-                            .then(data => {
-                                if (!scheduleData[userId]) scheduleData[userId] = {};
-                                // Ensure data is an array
-                                const entries = Array.isArray(data) ? data : (data && data.data ? data.data : []);
-                                scheduleData[userId][dateStr] = entries;
-                                console.log(`✓ Loaded ${entries.length} entries for user ${userId} on ${dateStr}`);
-                            })
-                            .catch(err => {
-                                console.error('✗ Error loading hourly data for user', userId, 'on', dateStr, err);
-                                showError(`Failed to load schedule for user ${userId} on ${dateStr}`);
-                            })
-                    );
-                });
+                for (const userId of selectedUserIds) {
+                    const cached = getCachedDayHours(userId, dateStr);
+                    if (!cached) {
+                        allCached = false;
+                        break;
+                    }
+                }
+                if (!allCached) break;
             }
 
-            Promise.all(promises)
-                .then(() => {
-                    console.log('All data loaded, rendering...');
+            // If all cached, use cached data
+            if (allCached) {
+                console.log('✓ All data found in cache, loading cached data...');
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(date.getDate() + i);
+                    const dateStr = formatDate(date);
+
+                    selectedUserIds.forEach(userId => {
+                        if (!scheduleData[userId]) scheduleData[userId] = {};
+                        scheduleData[userId][dateStr] = getCachedDayHours(userId, dateStr);
+                    });
+                }
+                document.getElementById('loadingContainer').style.display = 'none';
+                renderSummaryByDay(weekStart);
+                return;
+            }
+
+            // Fetch all week data for selected users in ONE optimized request
+            const weekStartStr = formatDate(weekStart);
+            const params = new URLSearchParams();
+            selectedUserIds.forEach(id => params.append('userIds', id));
+
+            fetch(`/api/proxy/schedule/team/week/${weekStartStr}?${params}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(teamData => {
+                    // Process and cache the data
+                    for (const userId in teamData) {
+                        const userIdNum = parseInt(userId);
+                        if (!scheduleData[userIdNum]) scheduleData[userIdNum] = {};
+
+                        let entries = teamData[userId];
+
+                        // Expand grouped entries (with hourRange) to individual hours
+                        entries = expandGroupedEntries(entries);
+
+                        const entriesByDate = {};
+
+                        // Group entries by date
+                        entries.forEach(entry => {
+                            if (!entriesByDate[entry.date]) {
+                                entriesByDate[entry.date] = [];
+                            }
+                            entriesByDate[entry.date].push(entry);
+                        });
+
+                        // Store in cache and scheduleData
+                        for (const dateStr in entriesByDate) {
+                            const dayEntries = entriesByDate[dateStr];
+                            scheduleData[userIdNum][dateStr] = dayEntries;
+                            setCachedDayHours(userIdNum, dateStr, dayEntries);
+                            console.log(`✓ Loaded ${dayEntries.length} entries for user ${userIdNum} on ${dateStr}`);
+                        }
+                    }
+
                     document.getElementById('loadingContainer').style.display = 'none';
                     renderSummaryByDay(weekStart);
                 })
                 .catch(err => {
-                    console.error('Promise.all error:', err);
+                    console.error('✗ Error loading team week schedule:', err);
                     document.getElementById('loadingContainer').style.display = 'none';
                     showError('Failed to load team summary: ' + err.message);
                 });

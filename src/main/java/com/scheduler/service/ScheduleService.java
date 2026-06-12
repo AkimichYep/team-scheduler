@@ -242,8 +242,39 @@ public class ScheduleService {
     public List<ScheduleEntry> getScheduleForYear(Long userId, int year) {
         LocalDate startDate = LocalDate.of(year, 1, 1);
         LocalDate endDate = LocalDate.of(year, 12, 31);
-        
+
         return scheduleEntryRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+    }
+
+    public List<ScheduleEntry> getScheduleForDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
+        List<ScheduleEntry> entries = scheduleEntryRepository.findByUserIdAndDateBetweenOrderByDateAscHourOfDayAsc(userId, startDate, endDate);
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // Initialize default entries for all hours of days that don't have entries
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            final LocalDate currentDate = date;
+            for (int hour = 0; hour < 24; hour++) {
+                final int h = hour;
+                if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
+                    String activity = isWeekend(currentDate) ? "Off" : "D";
+                    ScheduleEntry entry = ScheduleEntry.builder()
+                            .user(user)
+                            .date(currentDate)
+                            .hourOfDay(hour)
+                            .activity(activity)
+                            .notes("")
+                            .build();
+                    entries.add(entry);
+                }
+            }
+        }
+
+        entries.sort((a, b) -> {
+            int dateCompare = a.getDate().compareTo(b.getDate());
+            if (dateCompare != 0) return dateCompare;
+            return a.getHourOfDay().compareTo(b.getHourOfDay());
+        });
+        return entries;
     }
 }
 

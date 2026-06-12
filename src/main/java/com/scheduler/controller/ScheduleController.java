@@ -5,6 +5,8 @@ import com.scheduler.model.User;
 import com.scheduler.service.ScheduleService;
 import com.scheduler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +26,7 @@ public class ScheduleController {
     private UserService userService;
 
     @GetMapping("/month/{userId}/{year}/{month}")
+    @Cacheable(value = "scheduleMonth", key = "#userId + ':' + #year + ':' + #month", unless = "#result == null or #result.body == null")
     public ResponseEntity<List<ScheduleEntryResponse>> getMonthSchedule(
             @PathVariable Long userId,
             @PathVariable int year,
@@ -52,6 +55,7 @@ public class ScheduleController {
     }
 
     @GetMapping("/day/{userId}/hours")
+    @Cacheable(value = "scheduleDayHours", key = "#userId + ':' + #date", unless = "#result == null or #result.body == null")
     public ResponseEntity<List<ScheduleEntryResponse>> getDayScheduleAllHours(
             @PathVariable Long userId,
             @RequestParam String date) {
@@ -69,6 +73,7 @@ public class ScheduleController {
     }
 
     @PostMapping("/{userId}")
+    @CacheEvict(value = {"scheduleMonth", "scheduleTeamMonth", "scheduleDayHours"}, allEntries = true)
     public ResponseEntity<?> updateScheduleEntry(
             @PathVariable Long userId,
             @RequestBody ScheduleEntryRequest request) {
@@ -125,6 +130,7 @@ public class ScheduleController {
     }
 
     @DeleteMapping("/{userId}")
+    @CacheEvict(value = {"scheduleMonth", "scheduleTeamMonth", "scheduleDayHours"}, allEntries = true)
     public ResponseEntity<Void> deleteScheduleEntry(
             @PathVariable Long userId,
             @RequestParam String date,
@@ -151,12 +157,18 @@ public class ScheduleController {
         return ResponseEntity.ok(responseSummary);
     }
 
-    @GetMapping("/team/month/{year}/{month}")
-    public ResponseEntity<Map<Long, List<ScheduleEntryResponse>>> getTeamMonthSchedule(
-            @PathVariable int year,
-            @PathVariable int month,
+    @GetMapping("/all-users")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @GetMapping("/team/week/{startDate}")
+    public ResponseEntity<Map<Long, List<GroupedScheduleEntryResponse>>> getTeamWeekSchedule(
+            @PathVariable String startDate,
             @RequestParam(required = false) List<Long> userIds) {
-        Map<Long, List<ScheduleEntryResponse>> teamSchedule = new HashMap<>();
+        LocalDate weekStart = LocalDate.parse(startDate);
+        LocalDate weekEnd = weekStart.plusDays(6);
+        Map<Long, List<GroupedScheduleEntryResponse>> teamSchedule = new HashMap<>();
 
         List<User> users;
         if (userIds != null && !userIds.isEmpty()) {
@@ -166,16 +178,35 @@ public class ScheduleController {
         }
 
         for (User user : users) {
-            List<ScheduleEntry> schedule = scheduleService.getScheduleForMonth(user.getId(), year, month);
-            teamSchedule.put(user.getId(), toResponseList(schedule));
+            List<ScheduleEntry> schedule = scheduleService.getScheduleForDateRange(user.getId(), weekStart, weekEnd);
+            teamSchedule.put(user.getId(), toGroupedResponseList(schedule));
         }
 
         return ResponseEntity.ok(teamSchedule);
     }
 
-    @GetMapping("/all-users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    @GetMapping("/team/month/{year}/{month}")
+    public ResponseEntity<Map<Long, List<GroupedScheduleEntryResponse>>> getTeamMonthSchedule(
+            @PathVariable int year,
+            @PathVariable int month,
+            @RequestParam(required = false) List<Long> userIds) {
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        LocalDate monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth());
+        Map<Long, List<GroupedScheduleEntryResponse>> teamSchedule = new HashMap<>();
+
+        List<User> users;
+        if (userIds != null && !userIds.isEmpty()) {
+            users = userService.getUsersByIds(userIds);
+        } else {
+            users = userService.getAllUsers();
+        }
+
+        for (User user : users) {
+            List<ScheduleEntry> schedule = scheduleService.getScheduleForDateRange(user.getId(), monthStart, monthEnd);
+            teamSchedule.put(user.getId(), toGroupedResponseList(schedule));
+        }
+
+        return ResponseEntity.ok(teamSchedule);
     }
 
     // DTO for schedule entry requests
@@ -290,6 +321,110 @@ public class ScheduleController {
 
     private List<ScheduleEntryResponse> toResponseList(List<ScheduleEntry> entries) {
         return entries.stream().map(this::toResponse).collect(java.util.stream.Collectors.toList());
+    }
+
+    // Group consecutive hours with same activity to reduce payload
+    private List<GroupedScheduleEntryResponse> toGroupedResponseList(List<ScheduleEntry> entries) {
+        if (entries == null || entries.isEmpty()) return new java.util.ArrayList<>();
+
+        // Sort by date and hour to ensure consecutive hours are grouped
+        List<ScheduleEntry> sorted = entries.stream()
+            .sorted((a, b) -> {
+                int dateCompare = a.getDate().compareTo(b.getDate());
+                if (dateCompare != 0) return dateCompare;
+                return Integer.compare(a.getHourOfDay(), b.getHourOfDay());
+            })
+            .collect(java.util.stream.Collectors.toList());
+
+        List<GroupedScheduleEntryResponse> grouped = new java.util.ArrayList<>();
+        int groupStartHour = 0;
+        ScheduleEntry groupEntry = null;
+
+        for (int i = 0; i < sorted.size(); i++) {
+            ScheduleEntry current = sorted.get(i);
+
+            // Start new group if first entry or activity changed or date changed
+            if (groupEntry == null ||
+                !current.getDate().equals(groupEntry.getDate()) ||
+                !current.getActivity().equals(groupEntry.getActivity()) ||
+                !java.util.Objects.equals(current.getIsOnCall(), groupEntry.getIsOnCall())) {
+
+                // Save previous group if exists
+                if (groupEntry != null) {
+                    grouped.add(new GroupedScheduleEntryResponse(
+                        groupEntry.getDate(),
+                        groupStartHour,
+                        (i > 0 ? sorted.get(i - 1).getHourOfDay() : groupStartHour),
+                        groupEntry.getActivity(),
+                        groupEntry.getIsOnCall(),
+                        groupEntry.getOnCallMorning(),
+                        groupEntry.getOnCallNight(),
+                        groupEntry.getNotes()
+                    ));
+                } else if (current.getHourOfDay() > 0) {
+                    // Add missing Off hours at beginning of first date
+                    grouped.add(new GroupedScheduleEntryResponse(
+                        current.getDate(), 0, current.getHourOfDay() - 1,
+                        "Off", false, false, false, ""
+                    ));
+                }
+
+                groupStartHour = current.getHourOfDay();
+                groupEntry = current;
+            }
+
+            // If this is the last entry, save it
+            if (i == sorted.size() - 1) {
+                grouped.add(new GroupedScheduleEntryResponse(
+                    current.getDate(),
+                    groupStartHour,
+                    current.getHourOfDay(),
+                    current.getActivity(),
+                    current.getIsOnCall(),
+                    current.getOnCallMorning(),
+                    current.getOnCallNight(),
+                    current.getNotes()
+                ));
+            }
+        }
+
+        return grouped;
+    }
+
+    // Grouped response DTO for optimized API responses
+    public static class GroupedScheduleEntryResponse {
+        private java.time.LocalDate date;
+        private String hourRange; // e.g., "0-3" for hours 0,1,2,3 or "0" for single hour
+        private String activity;
+        private Boolean isOnCall;
+        private Boolean onCallMorning;
+        private Boolean onCallNight;
+        private String notes;
+
+        public GroupedScheduleEntryResponse(java.time.LocalDate date, int startHour, int endHour, String activity, Boolean isOnCall, Boolean onCallMorning, Boolean onCallNight, String notes) {
+            this.date = date;
+            this.hourRange = startHour == endHour ? String.valueOf(startHour) : startHour + "-" + endHour;
+            this.activity = activity;
+            this.isOnCall = isOnCall;
+            this.onCallMorning = onCallMorning;
+            this.onCallNight = onCallNight;
+            this.notes = notes;
+        }
+
+        public java.time.LocalDate getDate() { return date; }
+        public void setDate(java.time.LocalDate date) { this.date = date; }
+        public String getHourRange() { return hourRange; }
+        public void setHourRange(String hourRange) { this.hourRange = hourRange; }
+        public String getActivity() { return activity; }
+        public void setActivity(String activity) { this.activity = activity; }
+        public Boolean getIsOnCall() { return isOnCall; }
+        public void setIsOnCall(Boolean isOnCall) { this.isOnCall = isOnCall; }
+        public Boolean getOnCallMorning() { return onCallMorning; }
+        public void setOnCallMorning(Boolean onCallMorning) { this.onCallMorning = onCallMorning; }
+        public Boolean getOnCallNight() { return onCallNight; }
+        public void setOnCallNight(Boolean onCallNight) { this.onCallNight = onCallNight; }
+        public String getNotes() { return notes; }
+        public void setNotes(String notes) { this.notes = notes; }
     }
 
     // Lightweight response DTO without user object

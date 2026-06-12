@@ -476,6 +476,61 @@
         let currentDate = new Date(2026, 0, 1);
         let selectedUserIds = [];
         let allUsers = [];
+        let scheduleCache = {}; // Cache: key = "year:month:userIds" -> data
+
+        // Cache utility functions
+        function getCacheKey(year, month, userIds) {
+            const sorted = [...userIds].sort().join(',');
+            return `${year}:${month}:${sorted}`;
+        }
+
+        function getCachedData(year, month, userIds) {
+            const key = getCacheKey(year, month, userIds);
+            return scheduleCache[key] || null;
+        }
+
+        function setCachedData(year, month, userIds, data) {
+            const key = getCacheKey(year, month, userIds);
+            scheduleCache[key] = data;
+        }
+
+        function clearCache() {
+            scheduleCache = {};
+        }
+
+        // Expand grouped entries (with hourRange) into individual hour entries
+        function expandGroupedEntries(groupedEntries) {
+            const expanded = [];
+            if (!groupedEntries || !Array.isArray(groupedEntries)) return expanded;
+
+            groupedEntries.forEach(entry => {
+                if (!entry || !entry.hourRange) return; // Skip invalid entries
+
+                // Parse hourRange: "0" or "0-3" or "10-23"
+                const parts = entry.hourRange.split('-');
+                const startHour = parseInt(parts[0]);
+                const endHour = parts.length > 1 ? parseInt(parts[1]) : startHour;
+
+                // Validate hours
+                if (isNaN(startHour) || isNaN(endHour) || startHour < 0 || endHour > 23 || startHour > endHour) {
+                    console.warn('Invalid hourRange:', entry.hourRange);
+                    return;
+                }
+
+                for (let hour = startHour; hour <= endHour; hour++) {
+                    expanded.push({
+                        date: entry.date,
+                        hourOfDay: hour,
+                        activity: entry.activity || 'Off',
+                        isOnCall: entry.isOnCall || false,
+                        onCallMorning: entry.onCallMorning || false,
+                        onCallNight: entry.onCallNight || false,
+                        notes: entry.notes || ''
+                    });
+                }
+            });
+            return expanded;
+        }
 
         function activityPriority(activity) {
             const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
@@ -501,18 +556,62 @@
 
         function detectShiftPattern(entries) {
             if (!entries || entries.length === 0) return null;
+
+            // Build hourMap with S/D/Off/OnCall values
             const hourMap = new Array(24).fill('Off');
+            let onCallHours = [];
+
             entries.forEach(e => {
                 if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
                     hourMap[e.hourOfDay] = e.activity;
+                    if (e.activity === 'OnCall') {
+                        onCallHours.push(e.hourOfDay);
+                    }
                 }
             });
+
+            // First, try to match exact S/D/Off patterns (without OnCall)
+            // by temporarily replacing OnCall hours with Off
+            const hourMapForMatching = hourMap.slice();
+            for (let i of onCallHours) {
+                hourMapForMatching[i] = 'Off';
+            }
+
+            let matchedShiftName = null;
             for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
-                if (pattern.every((act, i) => act === hourMap[i])) {
-                    return shiftName;
+                // Only check base patterns (ShiftA-E), not OC combinations
+                if (!/^Shift[A-E]$/.test(shiftName)) continue;
+
+                if (pattern.every((act, i) => act === hourMapForMatching[i])) {
+                    matchedShiftName = shiftName;
+                    break;
                 }
             }
-            return null;
+
+            // If we found a matching base pattern, check for OnCall and add markers
+            if (matchedShiftName && onCallHours.length > 0) {
+                // Find the shift boundaries in the base pattern
+                const basePattern = SHIFT_PATTERNS[matchedShiftName];
+                let shiftStart = -1, shiftEnd = -1;
+                for (let i = 0; i < 24; i++) {
+                    if (basePattern[i] !== 'Off') {
+                        if (shiftStart === -1) shiftStart = i;
+                        shiftEnd = i;
+                    }
+                }
+
+                // Check if OnCall is before, after, or both
+                const minOnCall = Math.min(...onCallHours);
+                const maxOnCall = Math.max(...onCallHours);
+                const onCallBefore = minOnCall < shiftStart;
+                const onCallAfter = maxOnCall > shiftEnd;
+
+                if (onCallBefore && onCallAfter) return 'OC_' + matchedShiftName + '_OC';
+                if (onCallBefore) return 'OC_' + matchedShiftName;
+                if (onCallAfter) return matchedShiftName + '_OC';
+            }
+
+            return matchedShiftName;
         }
 
         function getActivityClass(activity) {
@@ -620,6 +719,7 @@
                 const checkbox = document.getElementById(`user-${userId}`);
                 if (checkbox) checkbox.checked = false;
             }
+            clearCache(); // Clear cache when user selection changes
             saveSelection();
         }
 
@@ -666,40 +766,80 @@
             document.getElementById('summaryContainer').innerHTML = '';
             document.getElementById('errorContainer').innerHTML = '';
 
-            // Load all three months data
-            const promises = [];
+            // Prepare months to fetch (prev, current, next)
+            const monthsToFetch = [];
+            const results = [];
 
             // Previous month
             const prevDate = new Date(year, month - 2, 1);
             const prevYear = prevDate.getFullYear();
             const prevMonth = prevDate.getMonth() + 1;
-            const params1 = new URLSearchParams();
-            params1.append('year', prevYear);
-            params1.append('month', prevMonth);
-            selectedUserIds.forEach(id => params1.append('userIds', id));
-            promises.push(fetch(`/api/proxy/schedule/team/month/${prevYear}/${prevMonth}?${params1}`).then(res => res.json()).then(data => ({month: prevMonth, year: prevYear, data})));
+            const prevCached = getCachedData(prevYear, prevMonth, selectedUserIds);
+            if (prevCached) {
+                results.push({month: prevMonth, year: prevYear, data: prevCached});
+            } else {
+                monthsToFetch.push({year: prevYear, month: prevMonth});
+            }
 
             // Current month
-            const params2 = new URLSearchParams();
-            params2.append('year', year);
-            params2.append('month', month);
-            selectedUserIds.forEach(id => params2.append('userIds', id));
-            promises.push(fetch(`/api/proxy/schedule/team/month/${year}/${month}?${params2}`).then(res => res.json()).then(data => ({month, year, data})));
+            const currCached = getCachedData(year, month, selectedUserIds);
+            if (currCached) {
+                results.push({month: month, year: year, data: currCached});
+            } else {
+                monthsToFetch.push({year: year, month: month});
+            }
 
             // Next month
             const nextDate = new Date(year, month, 1);
             const nextYear = nextDate.getFullYear();
             const nextMonth = nextDate.getMonth() + 1;
-            const params3 = new URLSearchParams();
-            params3.append('year', nextYear);
-            params3.append('month', nextMonth);
-            selectedUserIds.forEach(id => params3.append('userIds', id));
-            promises.push(fetch(`/api/proxy/schedule/team/month/${nextYear}/${nextMonth}?${params3}`).then(res => res.json()).then(data => ({month: nextMonth, year: nextYear, data})));
+            const nextCached = getCachedData(nextYear, nextMonth, selectedUserIds);
+            if (nextCached) {
+                results.push({month: nextMonth, year: nextYear, data: nextCached});
+            } else {
+                monthsToFetch.push({year: nextYear, month: nextMonth});
+            }
+
+            // If nothing to fetch, render cached results
+            if (monthsToFetch.length === 0) {
+                document.getElementById('loadingContainer').style.display = 'none';
+                results.sort((a, b) => {
+                    if (a.year !== b.year) return a.year - b.year;
+                    return a.month - b.month;
+                });
+                renderAllMonths(results);
+                return;
+            }
+
+            // Fetch only missing months
+            const promises = monthsToFetch.map(({year, month}) => {
+                const params = new URLSearchParams();
+                params.append('year', year);
+                params.append('month', month);
+                selectedUserIds.forEach(id => params.append('userIds', id));
+                return fetch(`/api/proxy/schedule/team/month/${year}/${month}?${params}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Expand grouped entries for all users
+                        const expandedData = {};
+                        for (const userId in data) {
+                            expandedData[userId] = expandGroupedEntries(data[userId]);
+                        }
+                        setCachedData(year, month, selectedUserIds, expandedData);
+                        return {month, year, data: expandedData};
+                    });
+            });
 
             Promise.all(promises)
-                .then(results => {
+                .then(fetchedResults => {
+                    // Combine cached and fetched results
+                    const allResults = results.concat(fetchedResults);
+                    allResults.sort((a, b) => {
+                        if (a.year !== b.year) return a.year - b.year;
+                        return a.month - b.month;
+                    });
                     document.getElementById('loadingContainer').style.display = 'none';
-                    renderAllMonths(results);
+                    renderAllMonths(allResults);
                 })
                 .catch(err => {
                     console.error('Error loading summary:', err);
@@ -807,8 +947,12 @@
 
                 for (let day = 1; day <= endDate; day++) {
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayEntries = userSchedule.filter(e => e.date === dateStr);
-                    const activity = dayEntries.length > 0 ? getDominantActivity(dayEntries) : 'D';
+                    const dayEntries = userSchedule.filter(e => {
+                        // Ensure date match - handle both string and date formats
+                        const entryDate = typeof e.date === 'string' ? e.date : new Date(e.date).toISOString().split('T')[0];
+                        return entryDate === dateStr;
+                    });
+                    const activity = dayEntries.length > 0 ? getDominantActivity(dayEntries) : 'Off';
                     const activityClass = getActivityClass(activity);
                     const displayText = getActivityDisplay(activity);
 
