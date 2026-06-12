@@ -561,11 +561,30 @@
                 .then(users => {
                     allUsers = users;
                     renderUserCheckboxes();
-                    // Auto-select first 3 users or all if less than 3
-                    const defaultCount = Math.min(3, users.length);
-                    for (let i = 0; i < defaultCount; i++) {
-                        toggleUser(users[i].id, true);
+                    
+                    // Try to load saved selection from localStorage
+                    const savedIds = localStorage.getItem('selected_team_members');
+                    let idsToSelect = [];
+                    
+                    if (savedIds) {
+                        try {
+                            const parsedIds = JSON.parse(savedIds);
+                            // Only select users that still exist in the allUsers list
+                            idsToSelect = parsedIds.filter(id => users.some(u => u.id === id));
+                        } catch (e) {
+                            console.error('Error parsing saved users:', e);
+                        }
                     }
+                    
+                    // If no saved selection or all saved users no longer exist, select first 3 as default
+                    if (idsToSelect.length === 0) {
+                        const defaultCount = Math.min(3, users.length);
+                        for (let i = 0; i < defaultCount; i++) {
+                            idsToSelect.push(users[i].id);
+                        }
+                    }
+                    
+                    idsToSelect.forEach(id => toggleUser(id, true));
                     loadSummary();
                 })
                 .catch(err => {
@@ -601,6 +620,11 @@
                 const checkbox = document.getElementById(`user-${userId}`);
                 if (checkbox) checkbox.checked = false;
             }
+            saveSelection();
+        }
+
+        function saveSelection() {
+            localStorage.setItem('selected_team_members', JSON.stringify(selectedUserIds));
         }
 
         function selectAllUsers() {

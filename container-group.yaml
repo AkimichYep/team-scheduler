@@ -1,0 +1,62 @@
+apiVersion: 2021-09-01
+location: eastus
+name: team-scheduler-app
+properties:
+  containers:
+  - name: nginx
+    properties:
+      image: teamschedulerregistry.azurecr.io/team-scheduler-nginx:latest
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGb: 0.5
+      ports:
+      - port: 80
+        protocol: TCP
+      - port: 443
+        protocol: TCP
+  - name: backend
+    properties:
+      image: teamschedulerregistry.azurecr.io/team-scheduler-backend:latest
+      resources:
+        requests:
+          cpu: 1
+          memoryInGb: 1
+      ports:
+      - port: 8080
+        protocol: TCP
+      environmentVariables:
+      - name: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://team-scheduler-db.postgres.database.azure.com:5432/team_scheduler
+      - name: SPRING_DATASOURCE_USERNAME
+        value: scheduler_user
+      - name: SPRING_DATASOURCE_PASSWORD
+        secureValue: SchedulerPassTs9mK@xL2pN5vQ8w
+      - name: SPRING_PROFILES_ACTIVE
+        value: prod
+  - name: frontend
+    properties:
+      image: teamschedulerregistry.azurecr.io/team-scheduler-frontend:latest
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGb: 0.5
+      ports:
+      - port: 3000
+        protocol: TCP
+      environmentVariables:
+      - name: SPRING_API
+        value: http://localhost:8080/api
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: team-scheduler-app
+    ports:
+    - port: 80
+      protocol: TCP
+    - port: 443
+      protocol: TCP
+  imageRegistryCredentials:
+  - server: teamschedulerregistry.azurecr.io
+    username: teamschedulerregistry
+    password: 5J2Dw1spYPtKD2OhzapNHbN6bkH1f31jtCUqUBWyr6w6JFNrgTGOJQQJ99CFACYeBjFEqg7NAAACAZCRabB3
