@@ -1,8 +1,17 @@
 FROM nginx:alpine
 
+# Create certs directory
+RUN mkdir -p /etc/nginx/certs
+
+# Copy nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy certificates
 COPY cert.pem /etc/nginx/certs/cert.pem
 COPY key.pem /etc/nginx/certs/key.pem
+
+# Set proper permissions
+RUN chmod 644 /etc/nginx/certs/cert.pem && chmod 644 /etc/nginx/certs/key.pem
 
 EXPOSE 80 443
 
