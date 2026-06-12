@@ -1,9 +1,15 @@
 const express = require('express');
-const axios = require('axios');
+const path = require('path');
 const session = require('express-session');
+const api = require('./src/services/api');
+const { isAuthenticated } = require('./src/middleware/auth');
+
 const app = express();
 
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -12,28 +18,6 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
-
-const SPRING_API = process.env.SPRING_API || 'http://localhost:8080/api';
-
-// Middleware to check auth and fetch current user info
-const isAuthenticated = async (req, res, next) => {
-    if (req.session.user) {
-        try {
-            // Fetch current user info from API
-            const response = await axios.get(`${SPRING_API}/users`, { auth: req.session.user });
-            // Find the current logged-in user
-            const currentUser = response.data.find(u => u.username === req.session.user.username);
-            if (currentUser) {
-                req.session.currentUser = currentUser;
-            }
-            next();
-        } catch (error) {
-            res.redirect('/login');
-        }
-    } else {
-        res.redirect('/login');
-    }
-};
 
 // Helper function to format last access time
 const formatLastAccessTime = (lastAccessTime) => {
@@ -44,7 +28,6 @@ const formatLastAccessTime = (lastAccessTime) => {
 
 // Helper function to get the access time to display
 const getDisplayAccessTime = (req) => {
-    // Show the access time stored at login (the previous login time)
     return formatLastAccessTime(req.session.displayLastAccessTime);
 };
 
@@ -53,17 +36,15 @@ app.get('/login', (req, res) => res.render('login'));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        // Verify credentials and get user info
-        const response = await axios.get(`${SPRING_API}/users`, { auth: { username, password } });
+        const response = await api.getUsers({ username, password });
         const user = response.data.find(u => u.username === username);
         if (user) {
             req.session.user = { username, password };
             req.session.currentUser = user;
-            // Store the OLD last access time to display in header throughout this session
             req.session.displayLastAccessTime = user.lastAccessTime || null;
-            // Update the database with current time immediately (don't wait for page load)
-            await axios.put(`${SPRING_API}/users/${username}/update-access-time`, {}, { auth: { username, password } }).catch(() => {});
-            res.redirect('/');
+            
+            await api.updateAccessTime(username, { username, password }).catch(() => {});
+            res.redirect('/summary');
         } else {
             res.status(401).send("Invalid credentials");
         }
@@ -77,11 +58,11 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// --- Proxy Routes ---
+// --- Main Views ---
 
 app.get('/', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/users`, { auth: req.session.user });
+        const response = await api.getUsers(req.session.user);
         res.render('users', {
             users: response.data,
             currentUser: req.session.currentUser,
@@ -94,7 +75,7 @@ app.get('/', isAuthenticated, async (req, res) => {
 
 app.get('/add', isAuthenticated, async (req, res) => {
     try {
-        const rolesResponse = await axios.get(`${SPRING_API}/roles/active`, { auth: req.session.user });
+        const rolesResponse = await api.getActiveRoles(req.session.user);
         res.render('add', {
             roles: rolesResponse.data,
             currentUser: req.session.currentUser,
@@ -107,8 +88,8 @@ app.get('/add', isAuthenticated, async (req, res) => {
 
 app.get('/edit/:id', isAuthenticated, async (req, res) => {
     try {
-        const userResponse = await axios.get(`${SPRING_API}/users/${req.params.id}`, { auth: req.session.user });
-        const rolesResponse = await axios.get(`${SPRING_API}/roles/active`, { auth: req.session.user });
+        const userResponse = await api.getUser(req.params.id, req.session.user);
+        const rolesResponse = await api.getActiveRoles(req.session.user);
         res.render('edit', {
             user: userResponse.data,
             roles: rolesResponse.data,
@@ -120,9 +101,11 @@ app.get('/edit/:id', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- User Management API Proxy ---
+
 app.delete('/proxy/delete/:id', isAuthenticated, async (req, res) => {
     try {
-        await axios.delete(`${SPRING_API}/users/${req.params.id}`, { auth: req.session.user });
+        await api.deleteUser(req.params.id, req.session.user);
         res.status(204).send();
     } catch (error) {
         res.status(500).send("Delete failed");
@@ -137,7 +120,7 @@ app.post('/proxy/add', isAuthenticated, async (req, res) => {
             roleId: parseInt(req.body.roleId),
             project: req.body.project
         };
-        await axios.post(`${SPRING_API}/users`, userData, { auth: req.session.user });
+        await api.addUser(userData, req.session.user);
         res.redirect('/');
     } catch (error) {
         res.status(500).send("Create failed");
@@ -150,22 +133,20 @@ app.post('/proxy/edit/:id', isAuthenticated, async (req, res) => {
             username: req.body.username,
             active: req.body.active === 'on',
             project: req.body.project,
-            role: {
-                id: parseInt(req.body.roleId)
-            }
+            role: { id: parseInt(req.body.roleId) }
         };
-        await axios.put(`${SPRING_API}/users/${req.params.id}`, userData, { auth: req.session.user });
+        await api.updateUser(req.params.id, userData, req.session.user);
         res.redirect('/');
     } catch (error) {
         res.status(500).send("Update failed");
     }
 });
 
-// --- Role Management Routes ---
+// --- Role Management ---
 
 app.get('/roles', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/roles`, { auth: req.session.user });
+        const response = await api.getRoles(req.session.user);
         res.render('roles', {
             roles: response.data,
             currentUser: req.session.currentUser,
@@ -185,7 +166,7 @@ app.get('/roles/add', isAuthenticated, (req, res) => {
 
 app.get('/roles/edit/:id', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/roles/${req.params.id}`, { auth: req.session.user });
+        const response = await api.getRole(req.params.id, req.session.user);
         res.render('roles-edit', {
             role: response.data,
             currentUser: req.session.currentUser,
@@ -198,7 +179,7 @@ app.get('/roles/edit/:id', isAuthenticated, async (req, res) => {
 
 app.delete('/proxy/roles/delete/:id', isAuthenticated, async (req, res) => {
     try {
-        await axios.delete(`${SPRING_API}/roles/${req.params.id}`, { auth: req.session.user });
+        await api.deleteRole(req.params.id, req.session.user);
         res.status(204).send();
     } catch (error) {
         res.status(500).send("Delete failed");
@@ -207,8 +188,11 @@ app.delete('/proxy/roles/delete/:id', isAuthenticated, async (req, res) => {
 
 app.put('/proxy/roles/toggle/:id', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.put(`${SPRING_API}/roles/${req.params.id}/toggle`, {}, { auth: req.session.user });
-        res.json(response.data);
+        const response = await api.getRole(req.params.id, req.session.user);
+        const role = response.data;
+        role.active = !role.active;
+        await api.updateRole(req.params.id, role, req.session.user);
+        res.json(role);
     } catch (error) {
         res.status(500).json({ error: "Toggle failed" });
     }
@@ -216,7 +200,7 @@ app.put('/proxy/roles/toggle/:id', isAuthenticated, async (req, res) => {
 
 app.post('/proxy/roles/add', isAuthenticated, async (req, res) => {
     try {
-        await axios.post(`${SPRING_API}/roles`, req.body, { auth: req.session.user });
+        await api.addRole(req.body, req.session.user);
         res.redirect('/roles');
     } catch (error) {
         res.status(500).send("Create failed");
@@ -230,14 +214,14 @@ app.post('/proxy/roles/edit/:id', isAuthenticated, async (req, res) => {
             description: req.body.description,
             active: req.body.active === 'on'
         };
-        await axios.put(`${SPRING_API}/roles/${req.params.id}`, roleData, { auth: req.session.user });
+        await api.updateRole(req.params.id, roleData, req.session.user);
         res.redirect('/roles');
     } catch (error) {
         res.status(500).send("Update failed");
     }
 });
 
-// --- Scheduler Routes ---
+// --- Scheduler Views ---
 
 app.get('/scheduler', isAuthenticated, (req, res) => {
     res.render('scheduler', {
@@ -277,9 +261,20 @@ app.get('/summary-by-day', isAuthenticated, (req, res) => {
     });
 });
 
+// --- Scheduler & Team API Proxy ---
+
+app.get('/api/proxy/schedule/team/summary-by-day/:year/:month', isAuthenticated, async (req, res) => {
+    try {
+        const response = await api.getTeamSummaryByDay(req.params.year, req.params.month, req.query.userIds, req.session.user);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch team summary" });
+    }
+});
+
 app.get('/api/proxy/schedule/month/:userId/:year/:month', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/month/${req.params.userId}/${req.params.year}/${req.params.month}`, { auth: req.session.user });
+        const response = await api.getScheduleMonth(req.params.userId, req.params.year, req.params.month, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -288,7 +283,7 @@ app.get('/api/proxy/schedule/month/:userId/:year/:month', isAuthenticated, async
 
 app.get('/api/proxy/schedule/week/:userId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/week/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        const response = await api.getScheduleWeek(req.params.userId, req.query.date, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -297,7 +292,7 @@ app.get('/api/proxy/schedule/week/:userId', isAuthenticated, async (req, res) =>
 
 app.get('/api/proxy/schedule/day/:userId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/day/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        const response = await api.getScheduleDay(req.params.userId, req.query.date, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -306,7 +301,7 @@ app.get('/api/proxy/schedule/day/:userId', isAuthenticated, async (req, res) => 
 
 app.get('/api/proxy/schedule/day/:userId/hours', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/day/${req.params.userId}/hours?date=${req.query.date}`, { auth: req.session.user });
+        const response = await api.getScheduleDayHours(req.params.userId, req.query.date, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -315,7 +310,7 @@ app.get('/api/proxy/schedule/day/:userId/hours', isAuthenticated, async (req, re
 
 app.get('/api/proxy/schedule/year/:userId/:year', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/year/${req.params.userId}/${req.params.year}`, { auth: req.session.user });
+        const response = await api.getScheduleYear(req.params.userId, req.params.year, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedule" });
@@ -324,7 +319,7 @@ app.get('/api/proxy/schedule/year/:userId/:year', isAuthenticated, async (req, r
 
 app.post('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.post(`${SPRING_API}/schedule/${req.params.userId}`, req.body, { auth: req.session.user });
+        const response = await api.updateSchedule(req.params.userId, req.body, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to update schedule" });
@@ -333,7 +328,7 @@ app.post('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
 
 app.delete('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
     try {
-        await axios.delete(`${SPRING_API}/schedule/${req.params.userId}?date=${req.query.date}`, { auth: req.session.user });
+        await api.deleteScheduleByDate(req.params.userId, req.query.date, req.session.user);
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: "Failed to delete schedule" });
@@ -342,12 +337,7 @@ app.delete('/api/proxy/schedule/:userId', isAuthenticated, async (req, res) => {
 
 app.get('/api/proxy/schedule/team/month/:year/:month', isAuthenticated, async (req, res) => {
     try {
-        const query = new URLSearchParams();
-        if (req.query.userIds) {
-            const userIds = Array.isArray(req.query.userIds) ? req.query.userIds : [req.query.userIds];
-            userIds.forEach(id => query.append('userIds', id));
-        }
-        const response = await axios.get(`${SPRING_API}/schedule/team/month/${req.params.year}/${req.params.month}?${query.toString()}`, { auth: req.session.user });
+        const response = await api.getTeamScheduleMonth(req.params.year, req.params.month, req.query.userIds, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch team schedule" });
@@ -356,21 +346,16 @@ app.get('/api/proxy/schedule/team/month/:year/:month', isAuthenticated, async (r
 
 app.get('/api/proxy/schedule/team/week/:startDate', isAuthenticated, async (req, res) => {
     try {
-        const query = new URLSearchParams();
-        if (req.query.userIds) {
-            const userIds = Array.isArray(req.query.userIds) ? req.query.userIds : [req.query.userIds];
-            userIds.forEach(id => query.append('userIds', id));
-        }
-        const response = await axios.get(`${SPRING_API}/schedule/team/week/${req.params.startDate}?${query.toString()}`, { auth: req.session.user });
+        const response = await api.getTeamScheduleWeek(req.params.startDate, req.query.userIds, req.session.user);
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch team week schedule" });
+        res.status(500).json({ error: "Failed to fetch team schedule" });
     }
 });
 
 app.get('/api/proxy/schedule/all-users', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/schedule/all-users`, { auth: req.session.user });
+        const response = await api.getAllUsers(req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch users" });
@@ -379,19 +364,18 @@ app.get('/api/proxy/schedule/all-users', isAuthenticated, async (req, res) => {
 
 app.get('/api/proxy/schedule/daily-summary/:userId', isAuthenticated, async (req, res) => {
     try {
-        const date = req.query.date;
-        const response = await axios.get(`${SPRING_API}/schedule/daily-summary/${req.params.userId}?date=${date}`, { auth: req.session.user });
+        const response = await api.getDailySummaryDirect(req.params.userId, req.query.date, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch daily summary" });
     }
 });
 
-// --- Schedule Templates Routes ---
+// --- Schedule Templates API Proxy ---
 
 app.get('/api/proxy/templates', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/templates`, { auth: req.session.user });
+        const response = await api.getTemplates(req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch templates" });
@@ -400,7 +384,7 @@ app.get('/api/proxy/templates', isAuthenticated, async (req, res) => {
 
 app.get('/api/proxy/templates/:id', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/templates/${req.params.id}`, { auth: req.session.user });
+        const response = await api.getTemplate(req.params.id, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch template" });
@@ -409,7 +393,7 @@ app.get('/api/proxy/templates/:id', isAuthenticated, async (req, res) => {
 
 app.get('/api/proxy/templates/default/template', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/templates/default/template`, { auth: req.session.user });
+        const response = await api.getDefaultTemplate(req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(404).json({ error: "No default template found" });
@@ -418,7 +402,7 @@ app.get('/api/proxy/templates/default/template', isAuthenticated, async (req, re
 
 app.get('/api/proxy/templates/user/:userId/default', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.get(`${SPRING_API}/templates/user/${req.params.userId}/default`, { auth: req.session.user });
+        const response = await api.getUserDefaultTemplate(req.params.userId, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(404).json({ error: "No default template set for user" });
@@ -427,7 +411,7 @@ app.get('/api/proxy/templates/user/:userId/default', isAuthenticated, async (req
 
 app.post('/api/proxy/templates', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.post(`${SPRING_API}/templates`, req.body, { auth: req.session.user });
+        const response = await api.addTemplate(req.body, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to create template" });
@@ -436,8 +420,7 @@ app.post('/api/proxy/templates', isAuthenticated, async (req, res) => {
 
 app.post('/api/proxy/templates/apply-to-date/:userId/:templateId', isAuthenticated, async (req, res) => {
     try {
-        const date = req.query.date;
-        const response = await axios.post(`${SPRING_API}/templates/apply-to-date/${req.params.userId}/${req.params.templateId}?date=${date}`, {}, { auth: req.session.user });
+        const response = await api.applyTemplateToDate(req.params.userId, req.params.templateId, req.query.date, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to apply template" });
@@ -446,9 +429,7 @@ app.post('/api/proxy/templates/apply-to-date/:userId/:templateId', isAuthenticat
 
 app.post('/api/proxy/templates/apply-to-range/:userId/:templateId', isAuthenticated, async (req, res) => {
     try {
-        const startDate = req.query.startDate;
-        const endDate = req.query.endDate;
-        const response = await axios.post(`${SPRING_API}/templates/apply-to-range/${req.params.userId}/${req.params.templateId}?startDate=${startDate}&endDate=${endDate}`, {}, { auth: req.session.user });
+        const response = await api.applyTemplateToRange(req.params.userId, req.params.templateId, req.query.startDate, req.query.endDate, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to apply template" });
@@ -457,7 +438,7 @@ app.post('/api/proxy/templates/apply-to-range/:userId/:templateId', isAuthentica
 
 app.post('/api/proxy/templates/set-default/:userId/:templateId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.post(`${SPRING_API}/templates/set-default/${req.params.userId}/${req.params.templateId}`, {}, { auth: req.session.user });
+        const response = await api.setDefaultTemplate(req.params.userId, req.params.templateId, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to set default template" });
@@ -466,7 +447,7 @@ app.post('/api/proxy/templates/set-default/:userId/:templateId', isAuthenticated
 
 app.post('/api/proxy/templates/oncall/add/:userId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.post(`${SPRING_API}/templates/oncall/add/${req.params.userId}`, req.body, { auth: req.session.user });
+        const response = await api.addOnCall(req.params.userId, req.body, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to add OnCall" });
@@ -475,7 +456,7 @@ app.post('/api/proxy/templates/oncall/add/:userId', isAuthenticated, async (req,
 
 app.post('/api/proxy/templates/oncall/remove/:userId', isAuthenticated, async (req, res) => {
     try {
-        const response = await axios.post(`${SPRING_API}/templates/oncall/remove/${req.params.userId}`, req.body, { auth: req.session.user });
+        const response = await api.removeOnCall(req.params.userId, req.body, req.session.user);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to remove OnCall" });

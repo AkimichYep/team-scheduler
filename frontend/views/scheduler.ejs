@@ -1,31 +1,23 @@
-<html>
-<head>
-    <title>My Scheduler</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <%- include('header', { activePage: 'scheduler' }) %>
 
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
+    <div class="container scheduler-page">
+        <div class="card">
+        <div class="header-with-actions">
+            <h1>My Scheduler</h1>
+        </div>
+        <style>
+            .scheduler-page {
+                padding-top: 20px;
+            }
+            .header-with-actions {
+                margin-bottom: 25px;
+                border-bottom: 2px solid var(--border-color);
+                padding-bottom: 15px;
+            }
+        </style>
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .view-selector {
+        <style>
+            .view-selector {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
@@ -260,6 +252,15 @@
              border-radius: 4px;
              cursor: pointer;
          }
+
+        .scheduler-page {
+            padding-top: 0;
+        }
+
+        .scheduler-page h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
 
          .activity-buttons-container {
              display: grid;
@@ -801,9 +802,6 @@
             animation: slideOut 0.3s ease-out;
         }
     </style>
-</head>
-<body>
-    <%- include('header') %>
 
     <div class="container">
         <h1>My Scheduler - 2026</h1>
@@ -864,13 +862,7 @@
 
         <div class="view-selector">
             <button class="view-btn active" onclick="switchView('month')">Month View</button>
-            <button class="view-btn" onclick="switchView('week')">Week View</button>
-            <button class="view-btn" onclick="switchView('day')">Day View</button>
-            <button class="view-btn" onclick="switchView('hourly')">24-Hour View</button>
             <button class="view-btn" onclick="switchView('year')">Year View</button>
-            <button class="view-btn" onclick="location.href='/summary-by-day'">Team Summary</button>
-            <button class="view-btn" onclick="location.href='/summary'">Team by Week</button>
-            <button class="view-btn" onclick="location.href='/daily-summary'">Daily Summary</button>
         </div>
 
         <!-- Month View -->
@@ -882,67 +874,6 @@
             </div>
             <div class="calendar-container">
                 <div class="month-calendar" id="monthCalendar"></div>
-            </div>
-        </div>
-
-        <!-- Week View -->
-        <div id="weekView" class="view-content" style="display: none;">
-            <div class="nav-controls">
-                <button class="nav-btn" onclick="previousWeek()">← Previous</button>
-                <div class="current-date" id="currentWeek"></div>
-                <button class="nav-btn" onclick="nextWeek()">Next →</button>
-            </div>
-            <div class="calendar-container">
-                <table class="week-table" id="weekTable">
-                    <thead>
-                        <tr>
-                            <th>Monday</th>
-                            <th>Tuesday</th>
-                            <th>Wednesday</th>
-                            <th>Thursday</th>
-                            <th>Friday</th>
-                            <th>Saturday</th>
-                            <th>Sunday</th>
-                        </tr>
-                    </thead>
-                    <tbody id="weekTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Day View -->
-        <div id="dayView" class="view-content" style="display: none;">
-            <div class="nav-controls">
-                <button class="nav-btn" onclick="previousDay()">← Previous</button>
-                <input type="date" id="dayInput" class="date-input" onchange="loadDay()">
-                <button class="nav-btn" onclick="nextDay()">Next →</button>
-            </div>
-            <div class="calendar-container">
-                <table class="day-table" id="dayTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 30%;">Date</th>
-                            <th style="width: 40%;">Activity</th>
-                            <th style="width: 30%;">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dayTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 24-Hour View -->
-        <div id="hourlyView" class="view-content" style="display: none;">
-            <div class="nav-controls">
-                <button class="nav-btn" onclick="previousHourlyDay()">← Previous</button>
-                <input type="date" id="hourlyInput" class="date-input" onchange="loadHourly()">
-                <button class="nav-btn" onclick="nextHourlyDay()">Next →</button>
-            </div>
-            <div class="calendar-container">
-                <table class="week-table" id="hourlyTable">
-                    <thead id="hourlyTableHead"></thead>
-                    <tbody id="hourlyTableBody"></tbody>
-                </table>
             </div>
         </div>
 
@@ -1018,13 +949,12 @@
                   <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
                   <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
               </div>
-         </div>
-     </div>
+    </div>
 
     <script>
          const CURRENT_USER_ID = '<%= userId %>';
          let scheduleData = {};
-         let currentDate = new Date(2026, 0, 1);
+         let currentDate = new Date();
          let selectedDateForModal = null;
          let selectedHourForModal = null; // Initialize for hourly view
 
@@ -1140,12 +1070,9 @@
                          // Re-render only the current view (will use updated scheduleData)
                          const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
                          if (activeView) {
-                             const viewName = activeView.textContent.toLowerCase();
-                             if (viewName.includes('month')) renderMonth();
-                             else if (viewName.includes('week')) renderWeek();
-                             else if (viewName.includes('day')) renderDay();
-                             else if (viewName.includes('year')) renderYear();
-                             else if (viewName.includes('24-hour')) renderHourly(dateStr);
+                             const onclickAttr = activeView.getAttribute('onclick');
+                             if (onclickAttr.includes('month')) renderMonth();
+                             else if (onclickAttr.includes('year')) renderYear();
                          }
                      });
              }).catch(err => {
@@ -1156,11 +1083,9 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date('2026-06-09');
+            const today = new Date();
             currentDate = new Date(today);
-            document.getElementById('dayInput').valueAsDate = today;
-            document.getElementById('hourlyInput').valueAsDate = today;
-            loadMonth();
+            switchView('month');
         });
 
         function switchView(viewName) {
@@ -1175,20 +1100,21 @@
             });
 
             // Show selected view
-            document.getElementById(viewName + 'View').style.display = 'block';
+            const viewElement = document.getElementById(viewName + 'View');
+            if (viewElement) {
+                viewElement.style.display = 'block';
+            }
 
-            // Update buttons
-            event.target.classList.add('active');
+            // Update buttons - search for the button with the corresponding switchView call
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                if (btn.getAttribute('onclick') === `switchView('${viewName}')`) {
+                    btn.classList.add('active');
+                }
+            });
 
             // Load data for the view
             if (viewName === 'month') {
                 loadMonth();
-            } else if (viewName === 'week') {
-                loadWeek();
-            } else if (viewName === 'day') {
-                loadDay();
-            } else if (viewName === 'hourly') {
-                loadHourly();
             } else if (viewName === 'year') {
                 loadYear();
             }
@@ -1348,172 +1274,7 @@
               }
           }
 
-        function loadWeek() {
-            const dateStr = formatDate(currentDate);
 
-            fetch(`/api/proxy/schedule/week/${CURRENT_USER_ID}?date=${dateStr}`)
-                .then(res => res.json())
-                .then(data => {
-                    scheduleData = {};
-                    const byDate = {};
-                    data.forEach(entry => {
-                        if (entry.hourOfDay !== undefined) {
-                            scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
-                        }
-                        if (!byDate[entry.date]) byDate[entry.date] = [];
-                        byDate[entry.date].push(entry);
-                    });
-                     Object.keys(byDate).forEach(d => {
-                         scheduleData[d] = getDisplayEntryForDay(byDate[d]) || byDate[d][0];
-                     });
-                     renderWeek();
-                })
-                .catch(err => console.error('Error fetching week schedule:', err));
-        }
-
-          function renderWeek() {
-               const weekStart = new Date(currentDate);
-               weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1);
-               const weekEnd = new Date(weekStart);
-               weekEnd.setDate(weekStart.getDate() + 6);
-
-               const dateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
-               document.getElementById('currentWeek').textContent =
-                   `Week of ${dateFormat.format(weekStart)} - ${dateFormat.format(weekEnd)}`;
-
-               const tbody = document.getElementById('weekTableBody');
-               tbody.innerHTML = '';
-
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(weekStart);
-                    date.setDate(weekStart.getDate() + i);
-                    const dateStr = formatDate(date);
-                    const entry = scheduleData[dateStr] || { activity: 'D', notes: '', isOnCall: false };
-
-                    const tr = document.createElement('tr');
-                    const dayOfWeek = date.getDay();
-                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-                    let activityClass = getActivityClass(entry.activity);
-
-                    tr.className = isWeekend ? `${activityClass} weekend` : activityClass;
-                    tr.innerHTML = `
-                        <td>${date.toDateString()}</td>
-                        <td>
-                            <select class="activity-select" data-date="${dateStr}">
-                                <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                                <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                                <option value="OnCall" ${entry.activity === 'OnCall' ? 'selected' : ''}>OnCall</option>
-                                <option value="Leave" ${entry.activity === 'Leave' ? 'selected' : ''}>Leave</option>
-                                <option value="ShiftA" ${entry.activity === 'ShiftA' ? 'selected' : ''}>A - Shift A (02-11)</option>
-                                <option value="ShiftB" ${entry.activity === 'ShiftB' ? 'selected' : ''}>B - Shift B (03-12)</option>
-                                <option value="ShiftC" ${entry.activity === 'ShiftC' ? 'selected' : ''}>C - Shift C (07-16)</option>
-                                <option value="ShiftD" ${entry.activity === 'ShiftD' ? 'selected' : ''}>D - Shift D (10-19)</option>
-                                <option value="ShiftE" ${entry.activity === 'ShiftE' ? 'selected' : ''}>E - Shift E (09-18)</option>
-                                <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off</option>
-                                <option value="V" ${(entry.activity === 'V' || entry.activity === 'Vacation') ? 'selected' : ''}>V - Vacation</option>
-                                <option value="H" ${(entry.activity === 'H' || entry.activity === 'Holiday') ? 'selected' : ''}>H - Holiday</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-
-                    // Add event listeners for immediate save
-                    const activitySelect = tr.querySelector('.activity-select');
-                    const notesInput = tr.querySelector('.notes-input');
-
-                    activitySelect.addEventListener('change', function() {
-                        const newActivity = this.value;
-                        const newActivityClass = getActivityClass(newActivity);
-
-                        tr.className = isWeekend ? `${newActivityClass} weekend` : newActivityClass;
-                        saveActivityEntry(dateStr, newActivity, notesInput.value);
-                    });
-
-                    notesInput.addEventListener('blur', function() {
-                        const currentSelect = tr.querySelector('.activity-select');
-                        saveActivityEntry(dateStr, currentSelect.value, this.value);
-                    });
-                }
-           }
-
-        function loadDay() {
-            const dateInput = document.getElementById('dayInput');
-            const dateStr = dateInput.value;
-
-            if (!dateStr) return;
-
-            fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
-                .then(res => res.json())
-                .then(entries => {
-                    const list = Array.isArray(entries) ? entries : [entries];
-                    list.forEach(entry => {
-                        if (entry.hourOfDay !== undefined) {
-                            scheduleData[`${dateStr}-${entry.hourOfDay}`] = entry;
-                        }
-                    });
-                     scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
-                    renderDay();
-                })
-                .catch(err => console.error('Error fetching day schedule:', err));
-        }
-
-           function renderDay() {
-                const dateInput = document.getElementById('dayInput');
-                const dateStr = dateInput.value;
-                const entry = scheduleData[dateStr] || { activity: 'D', notes: '', isOnCall: false };
-
-                const tbody = document.getElementById('dayTableBody');
-                tbody.innerHTML = '';
-
-                const tr = document.createElement('tr');
-                let activityClass = getActivityClass(entry.activity);
-
-                tr.className = activityClass;
-                tr.innerHTML = `
-                    <td>${dateStr}</td>
-                    <td>
-                        <select class="activity-select" data-date="${dateStr}">
-                            <option value="D" ${entry.activity === 'D' ? 'selected' : ''}>D - Development</option>
-                            <option value="S" ${entry.activity === 'S' ? 'selected' : ''}>S - Support</option>
-                            <option value="OnCall" ${entry.activity === 'OnCall' ? 'selected' : ''}>OnCall</option>
-                            <option value="Leave" ${entry.activity === 'Leave' ? 'selected' : ''}>Leave</option>
-                            <option value="ShiftA" ${entry.activity === 'ShiftA' ? 'selected' : ''}>A - Shift A (02-11)</option>
-                            <option value="ShiftB" ${entry.activity === 'ShiftB' ? 'selected' : ''}>B - Shift B (03-12)</option>
-                            <option value="ShiftC" ${entry.activity === 'ShiftC' ? 'selected' : ''}>C - Shift C (07-16)</option>
-                            <option value="ShiftD" ${entry.activity === 'ShiftD' ? 'selected' : ''}>D - Shift D (10-19)</option>
-                            <option value="ShiftE" ${entry.activity === 'ShiftE' ? 'selected' : ''}>E - Shift E (09-18)</option>
-                            <option value="Off" ${entry.activity === 'Off' ? 'selected' : ''}>Off</option>
-                            <option value="V" ${(entry.activity === 'V' || entry.activity === 'Vacation') ? 'selected' : ''}>V - Vacation</option>
-                            <option value="H" ${(entry.activity === 'H' || entry.activity === 'Holiday') ? 'selected' : ''}>H - Holiday</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="notes-input" data-date="${dateStr}" value="${entry.notes || ''}" placeholder="Add notes...">
-                    </td>
-                `;
-                tbody.appendChild(tr);
-
-                // Add event listeners for immediate save
-                const activitySelect = tr.querySelector('.activity-select');
-                const notesInput = tr.querySelector('.notes-input');
-
-                activitySelect.addEventListener('change', function() {
-                    const newActivity = this.value;
-                    const newActivityClass = getActivityClass(newActivity);
-
-                    tr.className = newActivityClass;
-                    saveActivityEntry(dateStr, newActivity, notesInput.value);
-                });
-
-                notesInput.addEventListener('blur', function() {
-                    const currentSelect = tr.querySelector('.activity-select');
-                    saveActivityEntry(dateStr, currentSelect.value, this.value);
-                });
-            }
 
         function loadYear() {
             const year = currentDate.getFullYear();
@@ -1615,32 +1376,6 @@
         function nextMonth() {
             currentDate.setMonth(currentDate.getMonth() + 1);
             loadMonth();
-        }
-
-        function previousWeek() {
-            currentDate.setDate(currentDate.getDate() - 7);
-            loadWeek();
-        }
-
-        function nextWeek() {
-            currentDate.setDate(currentDate.getDate() + 7);
-            loadWeek();
-        }
-
-        function previousDay() {
-            const dateInput = document.getElementById('dayInput');
-            const date = new Date(dateInput.valueAsDate);
-            date.setDate(date.getDate() - 1);
-            dateInput.valueAsDate = date;
-            loadDay();
-        }
-
-        function nextDay() {
-            const dateInput = document.getElementById('dayInput');
-            const date = new Date(dateInput.valueAsDate);
-            date.setDate(date.getDate() + 1);
-            dateInput.valueAsDate = date;
-            loadDay();
         }
 
         function previousYear() {
@@ -1826,11 +1561,9 @@
                        // Re-render only current view
                        const activeView = Array.from(document.querySelectorAll('.view-btn')).find(btn => btn.classList.contains('active'));
                        if (activeView) {
-                           const viewName = activeView.textContent.toLowerCase();
-                           if (viewName.includes('month')) renderMonth();
-                           else if (viewName.includes('week')) renderWeek();
-                           else if (viewName.includes('day')) renderDay();
-                           else if (viewName.includes('year')) renderYear();
+                           const onclickAttr = activeView.getAttribute('onclick');
+                           if (onclickAttr.includes('month')) renderMonth();
+                           else if (onclickAttr.includes('year')) renderYear();
                        }
                    }).catch(err => {
                        console.error('Error saving shift for 5 days:', err);
@@ -2112,121 +1845,6 @@
             }
         }
 
-        // 24-Hour Hourly View Functions
-        function loadHourly() {
-            const dateInput = document.getElementById('hourlyInput');
-            const dateStr = dateInput.value;
-
-            if (!dateStr) return;
-
-            fetch(`/api/proxy/schedule/day/${CURRENT_USER_ID}/hours?date=${dateStr}`)
-                .then(res => res.json())
-                .then(data => {
-                    scheduleData = {};
-                    data.forEach(entry => {
-                        const key = `${entry.date}-${entry.hourOfDay}`;
-                        scheduleData[key] = entry;
-                    });
-                    renderHourly(dateStr);
-                })
-                .catch(err => console.error('Error fetching hourly schedule:', err));
-        }
-
-        function renderHourly(dateStr) {
-            const dateObj = new Date(dateStr + 'T00:00:00');
-            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-
-            // Build header with 24 hour slots (all columns)
-            const thead = document.getElementById('hourlyTableHead');
-            thead.innerHTML = '';
-            const headerRow = document.createElement('tr');
-            headerRow.innerHTML = `<th style="width: 150px; min-width: 150px;">Date / User</th>`;
-
-            for (let hour = 0; hour < 24; hour++) {
-                const startHour = String(hour).padStart(2, '0');
-                const endHour = String(hour + 1).padStart(2, '0');
-                headerRow.innerHTML += `<th style="min-width: 40px; padding: 8px 4px; font-size: 11px;">${startHour}-${endHour}</th>`;
-            }
-            thead.appendChild(headerRow);
-
-            // Build single body row with all 24 hours as columns
-            const tbody = document.getElementById('hourlyTableBody');
-            tbody.innerHTML = '';
-
-            const tr = document.createElement('tr');
-
-            // First cell: Date and day name
-            const dateCell = document.createElement('td');
-            dateCell.style.backgroundColor = '#f5f5f5';
-            dateCell.style.fontWeight = 'bold';
-            dateCell.style.textAlign = 'left';
-            dateCell.style.minWidth = '150px';
-            dateCell.innerHTML = `${dateStr}<br>${dayName}`;
-            tr.appendChild(dateCell);
-
-              // Add all 24 hours as cells in the same row
-              for (let hour = 0; hour < 24; hour++) {
-                  const key = `${dateStr}-${hour}`;
-                  const entry = scheduleData[key] || { activity: 'D', notes: '', isOnCall: false };
-
-                  let activityClass = getActivityClass(entry.activity);
-                  const oncallClass = entry.activity === 'OnCall' ? 'oncall' : '';
-                  const displayActivity = getActivityDisplay(entry.activity);
-
-                  const td = document.createElement('td');
-                  td.className = `activity-cell ${activityClass}`;
-                  td.innerHTML = displayActivity;
-                  td.style.cursor = 'pointer';
-                  td.style.padding = '12px 4px';
-                  td.style.textAlign = 'center';
-                  td.style.minWidth = '40px';
-                  td.style.fontWeight = 'bold';
-                  td.style.position = 'relative';
-                   td.onclick = () => openHourlyModal(dateStr, hour, entry.activity, entry.notes || '');
-                  tr.appendChild(td);
-              }
-
-            tbody.appendChild(tr);
-        }
-
-           function openHourlyModal(dateStr, hour, activity, notes) {
-               selectedDateForModal = dateStr;
-               document.getElementById('modalDate').value = `${dateStr} (${String(hour).padStart(2, '0')}-${String(hour + 1).padStart(2, '0')})`;
-               document.getElementById('modalActivity').value = activity;
-               document.getElementById('modalNotes').value = notes || '';
-
-              // Store the hour in the local variable
-              selectedHourForModal = hour;
-
-              // Update active button
-              const buttons = document.querySelectorAll('.activity-btn');
-              buttons.forEach(btn => btn.classList.remove('active'));
-
-              let activityClass = getActivityClass(activity);
-              const classSel3 = activityClass.trim().split(/\s+/).map(c => '.' + c).join('');
-              const activeBtn = document.querySelector(`.activity-btn${classSel3}`);
-              if (activeBtn) {
-                  activeBtn.classList.add('active');
-              }
-
-              document.getElementById('editModal').style.display = 'block';
-          }
-
-        function previousHourlyDay() {
-            const dateInput = document.getElementById('hourlyInput');
-            const date = new Date(dateInput.valueAsDate);
-            date.setDate(date.getDate() - 1);
-            dateInput.valueAsDate = date;
-            loadHourly();
-        }
-
-        function nextHourlyDay() {
-            const dateInput = document.getElementById('hourlyInput');
-            const date = new Date(dateInput.valueAsDate);
-            date.setDate(date.getDate() + 1);
-            dateInput.valueAsDate = date;
-            loadHourly();
-        }
 
          // Override saveModalChanges to support hourly saves
          const originalSaveModalChanges = saveModalChanges;
@@ -2307,6 +1925,4 @@
          };
 
     </script>
-</body>
-</html>
 

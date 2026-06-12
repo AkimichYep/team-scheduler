@@ -1,36 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add Role</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .form-container { max-width: 500px; margin: 30px auto; padding: 20px; }
-        h2 { color: #333; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input, textarea, button, a { padding: 10px; margin: 5px 0; display: block; width: 100%; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        a { text-align: center; background-color: #999; color: white; text-decoration: none; }
-        a:hover { background-color: #888; }
-        textarea { resize: vertical; min-height: 100px; font-family: Arial, sans-serif; }
-    </style>
+    <title>Add Role - Team Scheduler</title>
 </head>
 <body>
-    <%- include('header') %>
+    <%- include('header', { activePage: 'members' }) %>
 
-    <div class="form-container">
-        <h2>Add New Role</h2>
-        <form action="/proxy/roles/add" method="POST">
-            <label for="name">Role Name (required):</label>
-            <input type="text" name="name" id="name" placeholder="e.g., L2_SUPPORT" required>
+    <div class="container">
+        <header class="page-header">
+            <h1>Add New Role</h1>
+            <a href="/roles" class="btn btn-primary">Back to Roles</a>
+        </header>
 
-            <label for="description">Description (optional):</label>
-            <textarea name="description" id="description" placeholder="Brief description of the role"></textarea>
+        <form action="/proxy/roles/add" method="POST" class="card">
+            <div class="form-group">
+                <label for="name">Role Name</label>
+                <input type="text" id="name" name="name" placeholder="e.g., L2_SUPPORT" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Brief description of the role responsibilities" rows="4"></textarea>
+            </div>
 
-            <button type="submit">Create Role</button>
-            <a href="/roles">Cancel</a>
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-secondary" style="flex: 2;">Create Role</button>
+                <a href="/roles" class="btn btn-danger" style="flex: 1; text-align: center;">Cancel</a>
+            </div>
         </form>
     </div>
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+    </style>
 </body>
 </html>
 

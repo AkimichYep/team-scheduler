@@ -1,44 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Role</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .form-container { max-width: 500px; margin: 30px auto; padding: 20px; }
-        h2 { color: #333; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input, textarea, button, a { padding: 10px; margin: 5px 0; display: block; width: 100%; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        a { text-align: center; background-color: #999; color: white; text-decoration: none; }
-        a:hover { background-color: #888; }
-        textarea { resize: vertical; min-height: 100px; font-family: Arial, sans-serif; }
-        .checkbox-container { margin-top: 15px; }
-        .checkbox-container input { width: auto; display: inline; }
-        .checkbox-container label { display: inline; margin-left: 5px; }
-    </style>
+    <title>Edit Role - Team Scheduler</title>
 </head>
 <body>
-    <%- include('header') %>
+    <%- include('header', { activePage: 'members' }) %>
 
-    <div class="form-container">
-        <h2>Edit Role</h2>
-        <form action="/proxy/roles/edit/<%= role.id %>" method="POST">
-            <label for="name">Role Name (required):</label>
-            <input type="text" name="name" id="name" value="<%= role.name %>" required>
+    <div class="container">
+        <header class="page-header">
+            <h1>Edit Role: <%= role.name %></h1>
+            <a href="/roles" class="btn btn-primary">Back to Roles</a>
+        </header>
 
-            <label for="description">Description (optional):</label>
-            <textarea name="description" id="description"><%= role.description || '' %></textarea>
-
-            <div class="checkbox-container">
-                <input type="checkbox" name="active" id="active" <%= role.active ? 'checked' : '' %>>
-                <label for="active">Active</label>
+        <form action="/proxy/roles/edit/<%= role.id %>" method="POST" class="card">
+            <div class="form-group">
+                <label for="name">Role Name</label>
+                <input type="text" id="name" name="name" value="<%= role.name %>" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Brief description of the role responsibilities" rows="4"><%= role.description || '' %></textarea>
             </div>
 
-            <button type="submit">Save Changes</button>
-            <a href="/roles">Cancel</a>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="active" name="active" <%= role.active ? 'checked' : '' %>>
+                <label for="active" style="display: inline; margin-left: 5px;">Role is Active</label>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-secondary" style="flex: 2;">Save Changes</button>
+                <a href="/roles" class="btn btn-danger" style="flex: 1; text-align: center;">Cancel</a>
+            </div>
         </form>
     </div>
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-bottom: 0;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+    </style>
 </body>
 </html>
 

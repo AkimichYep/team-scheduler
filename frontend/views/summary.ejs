@@ -1,476 +1,132 @@
 <html>
 <head>
-    <title>Team Summary</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .controls-panel {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .controls-title {
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .nav-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .nav-btn {
-            padding: 8px 12px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .nav-btn:hover {
-            background-color: #0b7dda;
-        }
-
-        .current-date {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            min-width: 200px;
-            text-align: center;
-        }
-
-        .users-selection {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .user-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #fafafa;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .user-checkbox:hover {
-            background-color: #f0f0f0;
-            border-color: #2196F3;
-        }
-
-        .user-checkbox input[type="checkbox"] {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-        }
-
-        .user-checkbox input[type="checkbox"]:checked + label {
-            font-weight: bold;
-            color: #2196F3;
-        }
-
-        .user-checkbox label {
-            cursor: pointer;
-            flex-grow: 1;
-            margin: 0;
-            color: #333;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background-color: #2196F3;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0b7dda;
-        }
-
-        .btn-secondary {
-            background-color: #9e9e9e;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #757575;
-        }
-
-        .btn-success {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background-color: #45a049;
-        }
-
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            border-radius: 0;
-            overflow: visible;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .summary-table th {
-            padding: 10px 8px;
-            text-align: center;
-            border: 1px solid #999;
-            font-weight: bold;
-            background-color: #2196F3;
-            color: white;
-            min-width: 45px;
-            font-size: 12px;
-        }
-
-        .summary-table td {
-            padding: 10px 8px;
-            text-align: center;
-            border: 1px solid #ddd;
-            font-weight: bold;
-            font-size: 13px;
-            min-width: 45px;
-        }
-
-        .member-header {
-            text-align: left;
-            background-color: #f5f5f5;
-            border-right: 2px solid #999;
-            min-width: 120px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .week-header {
-            background-color: #1976d2;
-            color: white;
-            border-bottom: 2px solid #0d47a1;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .date-number-row td {
-            background-color: #e3f2fd;
-            font-size: 11px;
-            padding: 6px 4px;
-            border: 1px solid #999;
-        }
-
-        .date-number-row .member-header {
-            background-color: #f5f5f5;
-        }
-
-        .activity-cell.d {
-            background-color: #c8e6c9;
-            color: #333;
-        }
-
-        .activity-cell.s {
-            background-color: #bbdefb;
-            color: #333;
-        }
-
-        .activity-cell.oncall {
-            background-color: #ffe0b2;
-            color: #333;
-        }
-
-        .activity-cell.v {
-            background-color: #f8bbd0;
-            color: #333;
-        }
-
-        .activity-cell.h {
-            background-color: #ef9a9a;
-            color: #333;
-        }
-
-        .activity-cell.leave {
-            background-color: #b0bec5;
-            color: #333;
-        }
-
-        .activity-cell.shifta { background-color: #a5d6a7; color: #1b5e20; }
-        .activity-cell.shiftb { background-color: #80cbc4; color: #004d40; }
-        .activity-cell.shiftc { background-color: #90caf9; color: #0d47a1; }
-        .activity-cell.shiftd { background-color: #ce93d8; color: #4a148c; }
-        .activity-cell.shifte { background-color: #ffcc80; color: #e65100; }
-
-        /* OC combo cell modifiers */
-        .activity-cell.oc-pre  { border-left:  3px solid #e65100 !important; }
-        .activity-cell.oc-suf  { border-right: 3px solid #e65100 !important; }
-        .activity-cell.oc-both { border-left:  3px solid #e65100 !important; border-right: 3px solid #e65100 !important; }
-
-        .activity-cell.off {
-            background-color: #d0d0d0;
-            color: #333;
-        }
-
-        .legend {
-            background-color: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .legend-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .legend-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-        }
-
-        .back-btn {
-            padding: 10px 20px;
-            background-color: #9e9e9e;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            background-color: #757575;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 18px;
-            color: #666;
-        }
-
-        .error-message {
-            background-color: #f44336;
-            color: white;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .no-users-message {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .buttons-container {
-            text-align: center;
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .toast-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 2000;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-
-        .toast-notification.hide {
-            animation: slideOut 0.3s ease-out;
-        }
-    </style>
+    <title>Team Summary - Team Scheduler</title>
 </head>
 <body>
-    <%- include('header') %>
+    <%- include('header', { activePage: 'summary' }) %>
 
-    <div class="container">
-        <h1 id="pageTitle">Team Summary by Week</h1>
+    <div class="container summary-page">
+        <header class="page-header">
+            <h1>Team Summary <span class="subtitle">- Weekly Overview</span></h1>
+        </header>
 
-        <div class="legend">
-            <div class="legend-title">Activity Types:</div>
-            <div class="legend-items">
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #c8e6c9;"></div>
-                    <span>D - Development</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #bbdefb;"></div>
-                    <span>S - Support</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ffe0b2;"></div>
-                    <span>OnCall</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #f8bbd0;"></div>
-                    <span>V - Vacation</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ef9a9a;"></div>
-                    <span>H - Holiday</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #b0bec5;"></div>
-                    <span>Leave</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #a5d6a7;"></div>
-                    <span>A - Shift A (02-11)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #80cbc4;"></div>
-                    <span>B - Shift B (03-12)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #90caf9;"></div>
-                    <span>C - Shift C (07-16)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ce93d8;"></div>
-                    <span>D - Shift D (10-19)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ffcc80;"></div>
-                    <span>E - Shift E (09-18)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #d0d0d0;"></div>
-                    <span>Off</span>
-                </div>
+        <div class="card legend-card">
+            <h3>Activity Legend</h3>
+            <div class="legend-grid">
+                <div class="legend-item"><span class="color-box d"></span> D - Development</div>
+                <div class="legend-item"><span class="color-box s"></span> S - Support</div>
+                <div class="legend-item"><span class="color-box oncall"></span> OnCall</div>
+                <div class="legend-item"><span class="color-box v"></span> V - Vacation</div>
+                <div class="legend-item"><span class="color-box h"></span> H - Holiday</div>
+                <div class="legend-item"><span class="color-box leave"></span> Leave</div>
+                <div class="legend-item"><span class="color-box shifta"></span> Shift A (02-11)</div>
+                <div class="legend-item"><span class="color-box shiftb"></span> Shift B (03-12)</div>
+                <div class="legend-item"><span class="color-box shiftc"></span> Shift C (07-16)</div>
+                <div class="legend-item"><span class="color-box shiftd"></span> Shift D (10-19)</div>
+                <div class="legend-item"><span class="color-box shifte"></span> Shift E (09-18)</div>
+                <div class="legend-item"><span class="color-box off"></span> Off</div>
             </div>
         </div>
 
-        <div class="controls-panel">
-            <div class="controls-title">View Options:</div>
-            <div class="nav-controls">
-                <button class="nav-btn" style="background-color: #2196F3;">📊 Team by Week</button>
-                <button class="nav-btn" onclick="location.href='/summary-by-day'" style="background-color: #666;">📅 Team by Day (Hourly)</button>
+        <div class="card controls-card">
+            <div class="controls-row">
+                <div class="control-group view-toggle">
+                    <a href="/summary" class="btn btn-primary active-view">📊 Team by Week</a>
+                    <a href="/summary-by-day" class="btn btn-secondary">📅 Team by Day (Hourly)</a>
+                </div>
+                <div class="control-group date-nav">
+                    <button class="btn btn-primary" onclick="previousMonth()">← Prev Month</button>
+                    <button class="btn btn-primary" onclick="nextMonth()">Next Month →</button>
+                </div>
             </div>
 
-            <div class="controls-title">Navigation:</div>
-            <div class="nav-controls">
-                <button class="nav-btn" onclick="previousMonth()">← Previous Month</button>
-                <button class="nav-btn" onclick="nextMonth()">Next Month →</button>
-            </div>
-
-            <div class="controls-title">Select Team Members:</div>
-            <div class="users-selection" id="usersSelection"></div>
-
-            <div class="action-buttons">
-                <button class="btn btn-success" onclick="selectAllUsers()">Select All</button>
-                <button class="btn btn-secondary" onclick="clearAllUsers()">Clear All</button>
-                <button class="btn btn-primary" onclick="loadSummary()">Load Summary</button>
+            <div class="member-selection-area">
+                <h4>Select Team Members</h4>
+                <div class="users-grid" id="usersSelection"></div>
+                <div class="selection-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="selectAllUsers()">Select All</button>
+                    <button class="btn btn-danger btn-sm" onclick="clearAllUsers()">Clear All</button>
+                    <button class="btn btn-accent" onclick="loadSummary()">Load Summary</button>
+                </div>
             </div>
         </div>
 
         <div id="errorContainer"></div>
-        <div id="loadingContainer" style="display: none;" class="loading">Loading summary...</div>
+        <div id="loadingContainer" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Gathering team data...</p>
+        </div>
 
         <div id="summaryContainer"></div>
-
-
-          <div class="buttons-container">
-              <button class="back-btn" onclick="location.href='/'">Back to Home</button>
-          </div>
     </div>
+
+    <style>
+        .summary-page { max-width: 1400px; }
+        .page-header h1 { color: var(--primary-color); margin-bottom: 25px; }
+        .subtitle { font-weight: normal; font-size: 0.7em; color: #666; }
+        
+        .legend-card h3 { margin-top: 0; font-size: 1.1em; }
+        .legend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; font-size: 0.85em; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-box { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+        .color-box.d { background-color: #c8e6c9; }
+        .color-box.s { background-color: #bbdefb; }
+        .color-box.oncall { background-color: #ffe0b2; }
+        .color-box.v { background-color: #f8bbd0; }
+        .color-box.h { background-color: #ef9a9a; }
+        .color-box.leave { background-color: #b0bec5; }
+        .color-box.shifta { background-color: #a5d6a7; }
+        .color-box.shiftb { background-color: #80cbc4; }
+        .color-box.shiftc { background-color: #90caf9; }
+        .color-box.shiftd { background-color: #ce93d8; }
+        .color-box.shifte { background-color: #ffcc80; }
+        .color-box.off { background-color: #d0d0d0; }
+
+        .controls-card { margin-top: 20px; }
+        .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .view-toggle, .date-nav { display: flex; gap: 10px; }
+        
+        .member-selection-area h4 { margin: 0 0 15px 0; border-top: 1px solid #eee; padding-top: 15px; }
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .user-checkbox-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: #f9f9f9; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .user-checkbox-item:hover { background: #eee; }
+        .user-checkbox-item input { width: 16px; height: 16px; margin: 0; }
+        .selection-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-sm { padding: 6px 12px; font-size: 0.85em; }
+
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85em; background: white; margin-bottom: 40px; box-shadow: var(--shadow); border-radius: 8px; overflow: hidden; }
+        .month-title { color: var(--primary-dark); margin: 30px 0 15px 0; border-left: 5px solid var(--primary-color); padding-left: 15px; }
+        .week-header { background-color: var(--primary-color); color: white; padding: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .date-number-row td { background-color: #f0f7ff; color: #555; padding: 8px 4px; border: 1px solid #e0e0e0; font-size: 0.9em; line-height: 1.2; }
+        .member-header { background-color: #f9f9f9; font-weight: bold; text-align: left; padding: 10px 15px; border: 1px solid #e0e0e0; min-width: 140px; }
+        .activity-cell { height: 45px; border: 1px solid #eee; text-align: center; font-weight: bold; min-width: 35px; }
+        
+        .activity-cell.d { background-color: #e8f5e9; color: #2e7d32; }
+        .activity-cell.s { background-color: #e3f2fd; color: #1565c0; }
+        .activity-cell.oncall { background-color: #fff3e0; color: #e65100; }
+        .activity-cell.v { background-color: #fce4ec; color: #c2185b; }
+        .activity-cell.h { background-color: #ffebee; color: #c62828; }
+        .activity-cell.leave { background-color: #eceff1; color: #455a64; }
+        .activity-cell.shifta { background-color: #a5d6a7; }
+        .activity-cell.shiftb { background-color: #80cbc4; }
+        .activity-cell.shiftc { background-color: #90caf9; }
+        .activity-cell.shiftd { background-color: #ce93d8; }
+        .activity-cell.shifte { background-color: #ffcc80; }
+        .activity-cell.off { background-color: #f5f5f5; color: #999; }
+        
+        .activity-cell.oc-pre { border-left: 4px solid #ff9800 !important; }
+        .activity-cell.oc-suf { border-right: 4px solid #ff9800 !important; }
+        .activity-cell.oc-both { border-left: 4px solid #ff9800 !important; border-right: 4px solid #ff9800 !important; }
+
+        .loading-overlay { text-align: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; margin: 0 auto 15px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .view-toggle .btn.active-view {
+            background-color: var(--primary-dark);
+            cursor: default;
+            pointer-events: none;
+        }
+    </style>
 
     <script>
         let currentDate = new Date(2026, 0, 1);
@@ -698,7 +354,7 @@
 
             allUsers.forEach(user => {
                 const div = document.createElement('div');
-                div.className = 'user-checkbox';
+                div.className = 'user-checkbox-item';
                 div.innerHTML = `
                     <input type="checkbox" id="user-${user.id}" onchange="toggleUser(${user.id}, this.checked)">
                     <label for="user-${user.id}">${user.username}</label>
@@ -852,7 +508,7 @@
             let html = '';
 
             results.forEach(result => {
-                html += `<div style="margin-bottom: 40px;">`;
+                html += `<div class="month-section">`;
                 html += renderTeamSummaryTable(result.data, result.year, result.month);
                 html += `</div>`;
             });

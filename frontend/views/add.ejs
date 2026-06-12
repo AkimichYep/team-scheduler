@@ -1,38 +1,56 @@
 <html>
 <head>
-    <title>Add User</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .form-container { max-width: 500px; margin: 30px auto; padding: 20px; }
-        input, select, button, a { padding: 8px; margin: 5px 0; display: block; width: 100%; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        a { text-align: center; background-color: #999; color: white; text-decoration: none; }
-        a:hover { background-color: #888; }
-    </style>
+    <title>Add User - Team Scheduler</title>
 </head>
 <body>
-    <%- include('header') %>
+    <%- include('header', { activePage: 'members' }) %>
 
-    <div class="form-container">
-        <h2>Add New User</h2>
-        <form action="/proxy/add" method="POST">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
+    <div class="container">
+        <header class="page-header">
+            <h1>Add New User</h1>
+            <a href="/" class="btn btn-primary">Back to List</a>
+        </header>
 
-            <label for="role">Role:</label>
-            <select name="roleId" id="role" required>
-                <option value="">Select a role</option>
-                <% roles.forEach(role => { %>
-                    <option value="<%= role.id %>"><%= role.name %></option>
-                <% }) %>
-            </select>
+        <form action="/proxy/add" method="POST" class="card">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password" required>
+            </div>
 
-            <input type="text" name="project" placeholder="Project Name">
+            <div class="form-group">
+                <label for="roleId">Role</label>
+                <select name="roleId" id="roleId" required>
+                    <option value="">Select a role</option>
+                    <% roles.forEach(role => { %>
+                        <option value="<%= role.id %>"><%= role.name %></option>
+                    <% }) %>
+                </select>
+            </div>
 
-            <button type="submit">Create User</button>
-            <a href="/">Cancel</a>
+            <div class="form-group">
+                <label for="project">Project</label>
+                <input type="text" id="project" name="project" placeholder="Enter project name">
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-secondary" style="flex: 2;">Create User</button>
+                <a href="/" class="btn btn-danger" style="flex: 1; text-align: center;">Cancel</a>
+            </div>
         </form>
     </div>
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+    </style>
 </body>
 </html>

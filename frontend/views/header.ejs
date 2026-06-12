@@ -1,27 +1,117 @@
-<!-- User Info Header -->
-<div style="background-color: #f0f0f0; border-bottom: 2px solid #333; padding: 15px; margin-bottom: 20px;">
-    <div style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1;">
-            <strong>Logged in as:</strong> <span style="color: #2196F3; font-size: 16px;"><%= currentUser.username %></span>
-            <div style="margin-top: 5px; font-size: 14px; color: #666;">
-                <strong>Role:</strong> <span style="background-color: #4CAF50; color: white; padding: 2px 8px; border-radius: 3px;"><%= currentUser.role.name %></span>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<header class="main-header">
+    <div class="header-container">
+        <div class="user-info">
+            <div class="user-main">
+                <span class="label">Logged in as:</span>
+                <span class="value username"><%= currentUser.username %></span>
             </div>
-            <div style="margin-top: 5px; font-size: 14px; color: #666;">
-                <strong>Last Access:</strong> <span style="color: #ff9800;"><%= lastAccessTime %></span>
-            </div>
-        </div>
-        <div style="text-align: right;">
-            <div style="margin-bottom: 10px; display: flex; gap: 10px;">
-                <a href="/" style="background-color: #2196F3; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Team Members</a>
-                <a href="/scheduler" style="background-color: #4CAF50; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">My Scheduler</a>
-                <a href="/summary-by-day" style="background-color: #ff9800; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Team Summary</a>
-            </div>
-            <div>
-                <a href="/logout" style="background-color: #f44336; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px; display: inline-block;">Logout</a>
+            <div class="user-details">
+                <span class="tag role-tag"><%= currentUser.role.name %></span>
+                <span class="last-access">Last Access: <%= lastAccessTime %></span>
             </div>
         </div>
+        <nav class="header-nav">
+            <div class="nav-links">
+                <a href="/" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'members') ? 'active' : '' %>">Team Members</a>
+                <a href="/scheduler" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'scheduler') ? 'active' : '' %>">My Scheduler</a>
+                <a href="/summary" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'summary') ? 'active' : '' %>">Team Summary</a>
+            </div>
+            <a href="/logout" class="btn btn-danger btn-logout">Logout</a>
+        </nav>
     </div>
-</div>
+</header>
+
+<style>
+.main-header {
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.username {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.85em;
+    color: #666;
+}
+
+.role-tag {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    text-decoration: none;
+    color: #666;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.nav-btn:hover {
+    color: var(--primary-color);
+    background-color: #f0f7ff;
+}
+
+.nav-btn.active {
+    color: var(--primary-color);
+    background-color: #f0f7ff;
+    font-weight: bold;
+}
+
+.btn-logout {
+    padding: 6px 12px;
+    font-size: 0.9em;
+}
+</style>
 
 
 
