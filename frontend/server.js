@@ -256,7 +256,10 @@ app.get('/schedule-templates', isAuthenticated, (req, res) => {
 });
 
 app.get('/summary', isAuthenticated, (req, res) => {
-    res.redirect('/summary-by-day');
+    res.render('summary', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req)
+    });
 });
 
 app.get('/daily-summary', isAuthenticated, (req, res) => {
