@@ -26,7 +26,6 @@ public class ScheduleController {
     private UserService userService;
 
     @GetMapping("/month/{userId}/{year}/{month}")
-    @Cacheable(value = "scheduleMonth", key = "#userId + ':' + #year + ':' + #month", unless = "#result == null or #result.body == null")
     public ResponseEntity<List<ScheduleEntryResponse>> getMonthSchedule(
             @PathVariable Long userId,
             @PathVariable int year,
@@ -55,7 +54,6 @@ public class ScheduleController {
     }
 
     @GetMapping("/day/{userId}/hours")
-    @Cacheable(value = "scheduleDayHours", key = "#userId + ':' + #date", unless = "#result == null or #result.body == null")
     public ResponseEntity<List<ScheduleEntryResponse>> getDayScheduleAllHours(
             @PathVariable Long userId,
             @RequestParam String date) {
@@ -73,14 +71,14 @@ public class ScheduleController {
     }
 
     @PostMapping("/{userId}")
-    @CacheEvict(value = {"scheduleMonth", "scheduleTeamMonth", "scheduleDayHours"}, allEntries = true)
-    public ResponseEntity<?> updateScheduleEntry(
+    public ResponseEntity<List<ScheduleEntryResponse>> updateScheduleEntry(
             @PathVariable Long userId,
             @RequestBody ScheduleEntryRequest request) {
 
+        LocalDate date = LocalDate.parse(request.getDate());
+
         // Handle batched hours (optimized request with multiple hours)
         if (request.getHours() != null && !request.getHours().isEmpty()) {
-            LocalDate date = LocalDate.parse(request.getDate());
             for (HourEntry hourEntry : request.getHours()) {
                 scheduleService.updateScheduleEntry(
                         userId,
@@ -93,20 +91,11 @@ public class ScheduleController {
                         hourEntry.getHour() == 0 ? (request.getNotes() != null ? request.getNotes() : "") : ""
                 );
             }
-            // Return the last updated entry or a summary
-            return ResponseEntity.ok(new HashMap<String, String>() {{
-                put("status", "success");
-                put("date", request.getDate());
-                put("hoursUpdated", String.valueOf(request.getHours().size()));
-            }});
-        }
-
-        ScheduleEntry entry;
-        if (request.getHour() != null) {
+        } else if (request.getHour() != null) {
             // Hourly view: update specific hour only
-            entry = scheduleService.updateScheduleEntry(
+            scheduleService.updateScheduleEntry(
                     userId,
-                    LocalDate.parse(request.getDate()),
+                    date,
                     request.getHour(),
                     request.getActivity(),
                     request.getIsOnCall(),
@@ -116,9 +105,9 @@ public class ScheduleController {
             );
         } else {
             // Day view: update all 24 hours for the day
-            entry = scheduleService.updateScheduleEntry(
+            scheduleService.updateScheduleEntry(
                     userId,
-                    LocalDate.parse(request.getDate()),
+                    date,
                     request.getActivity(),
                     request.getIsOnCall(),
                     request.getOnCallMorning(),
@@ -126,11 +115,13 @@ public class ScheduleController {
                     request.getNotes()
             );
         }
-        return ResponseEntity.ok(entry);
+
+        // Always return the full day data after any update to avoid an extra GET request from frontend
+        List<ScheduleEntry> updatedDay = scheduleService.getScheduleForDayAllHours(userId, date);
+        return ResponseEntity.ok(toResponseList(updatedDay));
     }
 
     @DeleteMapping("/{userId}")
-    @CacheEvict(value = {"scheduleMonth", "scheduleTeamMonth", "scheduleDayHours"}, allEntries = true)
     public ResponseEntity<Void> deleteScheduleEntry(
             @PathVariable Long userId,
             @RequestParam String date,

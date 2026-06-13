@@ -5,6 +5,8 @@ import com.scheduler.model.User;
 import com.scheduler.repository.UserRepository;
 import com.scheduler.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,10 +71,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Cacheable(value = "users", key = "#username")
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
+    @CacheEvict(value = "users", key = "#username")
     public void updateLastAccessTime(String username) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
