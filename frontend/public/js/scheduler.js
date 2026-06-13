@@ -26,33 +26,44 @@ let selectedHourForModal = null; // Initialize for hourly view
 
          // Shift patterns: maps shift type -> array of 24 activities (index = hour)
          const SHIFT_PATTERNS = {
-             'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-             'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+             'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+             'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+             'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+             'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+             'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+             'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
+             'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
+             'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
              'D': new Array(24).fill('D'),
              'S': new Array(24).fill('S'),
              'OnCall': new Array(24).fill('OnCall'),
              'Leave': new Array(24).fill('Leave'),
              'H': new Array(24).fill('Holiday'),
-             'V': new Array(24).fill('Vacation')
+             'V': new Array(24).fill('Vacation'),
+             'Off': new Array(24).fill('Off')
          };
+
+         // Generate OnCall combinations for all patterns
+         Object.keys(SHIFT_PATTERNS).forEach(key => {
+             if (key.startsWith('Shift')) {
+                 const base = SHIFT_PATTERNS[key];
+                 SHIFT_PATTERNS['OC_' + key] = base.map((a, i) => i < 2 ? 'OnCall' : a);
+                 SHIFT_PATTERNS[key + '_OC'] = base.map((a, i) => i >= 19 ? 'OnCall' : a);
+                 SHIFT_PATTERNS['OC_' + key + '_OC'] = base.map((a, i) => (i < 2 || i >= 19) ? 'OnCall' : a);
+             }
+         });
 
           function isShiftType(activity) {
               return activity in SHIFT_PATTERNS;
           }
 
-          // Auto-generate OnCall combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
-          ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
-              const base = SHIFT_PATTERNS[shift];
-              // OnCall at start: hours 0-1 (2 hours)
-              SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
-              // OnCall at end: hours 19-23 (5 hours)
-              SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
-              // OnCall at both: hours 0-1 and 19-23
-              SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
-          });
 
           function activityPriority(activity) {
              const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0, 'Development': 8, 'Support': 7 };
@@ -171,6 +182,12 @@ let selectedHourForModal = null; // Initialize for hourly view
          }
 
         // Initialize on page load
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('[DEBUG_LOG] DOMContentLoaded triggered');
             try {
@@ -384,19 +401,34 @@ let selectedHourForModal = null; // Initialize for hourly view
                   case 'ShiftC': return 'C';
                   case 'ShiftD': return 'D';
                   case 'ShiftE': return 'E';
+                  case 'ShiftA_M': return 'A';
+                  case 'ShiftB_M': return 'B';
+                  case 'ShiftC_M': return 'C';
+                  case 'ShiftD_M': return 'D';
+                  case 'ShiftE_M': return 'E';
+                  case 'ShiftA_S': return 'A';
+                  case 'ShiftB_S': return 'B';
+                  case 'ShiftC_S': return 'C';
+                  case 'ShiftD_S': return 'D';
+                  case 'ShiftE_S': return 'E';
+                  case 'ShiftA_D': return 'A';
+                  case 'ShiftB_D': return 'B';
+                  case 'ShiftC_D': return 'C';
+                  case 'ShiftD_D': return 'D';
+                  case 'ShiftE_D': return 'E';
                   case 'Off': return 'Off';
                   case 'Vacation': return 'V';
                   case 'Holiday': return 'H';
                   case 'Development': return 'D';
                   case 'Support': return 'S';
                   default: {
-                      // OC combo display: ◀A, A▶, ◀A▶
-                      const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
-                      const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
-                      const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
-                      if (ocPre)  return '&#9664;' + getActivityDisplay(ocPre[1]);
-                      if (ocSuf)  return getActivityDisplay(ocSuf[1]) + '&#9654;';
-                      if (ocBoth) return '&#9664;' + getActivityDisplay(ocBoth[1]) + '&#9654;';
+                      // OC combo display: < A, A >, < A >
+                      const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+                      const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+                      const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+                      if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
+                      if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
+                      if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
                       return activity || 'Off';
                   }
               }
@@ -528,26 +560,53 @@ let selectedHourForModal = null; // Initialize for hourly view
            function openModal(dateStr, activity, notes) {
                 selectedDateForModal = dateStr;
                 document.getElementById('modalDate').value = dateStr;
+                const headerDate = document.getElementById('headerDate');
+                if (headerDate) headerDate.textContent = dateStr;
                 document.getElementById('modalActivity').value = activity;
                 document.getElementById('modalNotes').value = notes || '';
 
-                // Update active button
-                const buttons = document.querySelectorAll('.activity-btn');
-                buttons.forEach(btn => btn.classList.remove('active'));
-
-                 // Find the matching button for the activity
-                 let activityClass = getActivityClass(activity);
-                 const classSel = activityClass.trim().split(/\s+/).map(c => '.' + c).join('');
-                 const activeBtn = document.querySelector(`.activity-btn${classSel}`);
-                if (activeBtn) {
-                    activeBtn.classList.add('active');
+                // Reset shift-specific inputs
+                document.getElementById('selectedShift').value = '';
+                document.getElementById('selectedVariant').value = '';
+                document.getElementById('ocBefore').checked = false;
+                document.getElementById('ocAfter').checked = false;
+                
+                // If the activity is a shift pattern, try to parse it
+                if (activity && activity.includes('Shift')) {
+                    let base = activity;
+                    if (base.startsWith('OC_')) {
+                        document.getElementById('ocBefore').checked = true;
+                        base = base.replace('OC_', '');
+                    }
+                    if (base.endsWith('_OC')) {
+                        document.getElementById('ocAfter').checked = true;
+                        base = base.replace('_OC', '');
+                    }
+                    
+                    let variant = "";
+                    if (base.endsWith('_S')) {
+                        variant = "_S";
+                        base = base.replace('_S', '');
+                    } else if (base.endsWith('_D')) {
+                        variant = "_D";
+                        base = base.replace('_D', '');
+                    } else if (base.endsWith('_M')) {
+                        variant = "_M";
+                        base = base.replace('_M', '');
+                    }
+                    
+                    document.getElementById('selectedShift').value = base;
+                    document.getElementById('selectedVariant').value = variant;
                 }
+
+                updateShiftSelection(); // This will also handle button active states
 
                 document.getElementById('editModal').style.display = 'block';
             }
 
            function selectActivityType(type) {
                document.getElementById('modalActivity').value = type;
+               document.getElementById('selectedShift').value = ''; // Reset shift selection
 
                // Update button styles
                const buttons = document.querySelectorAll('.activity-btn');
@@ -559,6 +618,10 @@ let selectedHourForModal = null; // Initialize for hourly view
                if (activeBtn) {
                    activeBtn.classList.add('active');
                }
+
+               // Clear preview when selecting non-shift type
+               const preview = document.getElementById('shiftPreview');
+               if (preview) preview.textContent = "Select a shift to see hours.";
            }
 
           function closeModal() {
@@ -570,34 +633,136 @@ let selectedHourForModal = null; // Initialize for hourly view
               document.getElementById('ocAfter').checked = false;
           }
 
-          function selectShift(shiftType) {
-              document.getElementById('selectedShift').value = shiftType;
+          function selectShift(shiftType, variant = "_M") {
+              const baseType = shiftType.replace(/_S|_D$/, '');
+              if (['ShiftA', 'ShiftB', 'ShiftC', 'ShiftD', 'ShiftE'].includes(baseType)) {
+                  document.getElementById('selectedShift').value = baseType;
+                  document.getElementById('selectedVariant').value = variant;
+              } else {
+                  // If it's a basic activity (D, S, etc.), selectActivityType handles it
+                  selectActivityType(shiftType);
+                  return;
+              }
               updateShiftSelection();
+          }
+
+          function renderShiftRows() {
+              const columns = {
+                  '_M': document.querySelector('#colMixed .shift-col-rows'),
+                  '_S': document.querySelector('#colSupport .shift-col-rows'),
+                  '_D': document.querySelector('#colDev .shift-col-rows')
+              };
+              
+              if (!columns['_M']) return;
+              
+              const selectedShift = document.getElementById('selectedShift').value;
+              let selectedVariant = document.getElementById('selectedVariant').value;
+              if (selectedShift && !selectedVariant) selectedVariant = '_M';
+              
+              const ocBefore = document.getElementById('ocBefore').checked;
+              const ocAfter = document.getElementById('ocAfter').checked;
+              
+              const shifts = ['ShiftA', 'ShiftB', 'ShiftC', 'ShiftD', 'ShiftE'];
+              const variants = ['_M', '_S', '_D'];
+              
+              variants.forEach(v => {
+                  let html = '';
+                  shifts.forEach(shiftId => {
+                      let patternKey = shiftId + v;
+                      if (ocBefore && ocAfter) patternKey = `OC_${patternKey}_OC`;
+                      else if (ocBefore) patternKey = `OC_${patternKey}`;
+                      else if (ocAfter) patternKey = `${patternKey}_OC`;
+                      
+                      const pattern = SHIFT_PATTERNS[patternKey];
+                      if (!pattern) return;
+                      
+                      const isActive = selectedShift === shiftId && selectedVariant === v;
+                      
+                      // Generate pseudographics
+                      const visual = pattern.map(act => {
+                          if (act === 'S') return '<span style="color:#2196F3; font-weight:bold;">S</span>';
+                          if (act === 'D') return '<span style="color:#4CAF50; font-weight:bold;">D</span>';
+                          if (act === 'OnCall') return '<span style="color:#FF9800; font-weight:bold;">O</span>';
+                          return '<span style="color:#ccc;">.</span>';
+                      }).join('');
+                      
+                      html += `
+                          <div class="shift-row ${isActive ? 'active' : ''}" 
+                               onclick="selectShift('${shiftId}', '${v}')" 
+                               style="display: flex; align-items: center; gap: 4px; padding: 4px 6px; cursor: pointer; border-radius: 4px; border: 1px solid ${isActive ? '#2196F3' : '#eee'}; background: ${isActive ? '#e3f2fd' : 'white'}; font-family: monospace; font-size: 10px; overflow: hidden; white-space: nowrap;">
+                              <div style="min-width: 15px; font-weight: bold; color: #333;">${shiftId.replace('Shift','')}</div>
+                              <div style="flex: 1; letter-spacing: 1px;">${visual}</div>
+                          </div>
+                      `;
+                  });
+                  columns[v].innerHTML = html;
+              });
           }
 
           function updateShiftSelection() {
               const selectedShift = document.getElementById('selectedShift').value;
+              const variant = document.getElementById('selectedVariant').value;
               const ocBefore = document.getElementById('ocBefore').checked;
               const ocAfter = document.getElementById('ocAfter').checked;
 
-              let activity = selectedShift;
+              let baseWithVariant = selectedShift ? (selectedShift + (variant || "_M")) : '';
+              let activity = baseWithVariant;
+              
+              if (selectedShift) {
+                  document.getElementById('modalActivity').value = activity;
+              }
 
               // Handle OnCall checkboxes
-              if (selectedShift) {
+              if (baseWithVariant) {
                   if (ocBefore && ocAfter) {
-                      // OnCall before AND after
-                      activity = `OC_${selectedShift}_OC`;
+                      activity = `OC_${baseWithVariant}_OC`;
                   } else if (ocBefore) {
-                      // OnCall before only
-                      activity = `OC_${selectedShift}`;
+                      activity = `OC_${baseWithVariant}`;
                   } else if (ocAfter) {
-                      // OnCall after only
-                      activity = `${selectedShift}_OC`;
+                      activity = `${baseWithVariant}_OC`;
                   }
+              } else {
+                  // If no shift selected but OnCall checked, it might be 24h OnCall
+                  // but usually handled by selectActivityType('OnCall')
+              }
+
+              // Update active state of buttons for basic activities
+              document.querySelectorAll('.activity-buttons-container .activity-btn').forEach(btn => {
+                  btn.classList.remove('active');
+              });
+              
+              if (!selectedShift) {
+                  const currentActivity = document.getElementById('modalActivity').value;
+                  const btn = Array.from(document.querySelectorAll('.activity-btn')).find(b => {
+                      const onClickAttr = b.getAttribute('onclick') || "";
+                      return b.textContent.trim() === currentActivity || 
+                             onClickAttr.includes(`'${currentActivity}'`) ||
+                             onClickAttr.includes(`"${currentActivity}"`);
+                  });
+                  if (btn) btn.classList.add('active');
+              }
+
+              // Render shift rows to reflect selection and OnCall changes
+              renderShiftRows();
+
+              // Update preview
+              const preview = document.getElementById('shiftPreview');
+              if (activity && SHIFT_PATTERNS[activity]) {
+                  const pattern = SHIFT_PATTERNS[activity];
+                  const hours = pattern.map((act, i) => act !== 'Off' ? i : null).filter(h => h !== null);
+                  if (hours.length > 0) {
+                      const start = hours[0];
+                      const end = hours[hours.length - 1] + 1;
+                      preview.textContent = `Hours: ${start.toString().padStart(2,'0')}:00 - ${end.toString().padStart(2,'0')}:00 (${hours.length}h)`;
+                  } else {
+                      preview.textContent = "Off (0h)";
+                  }
+              } else {
+                  preview.textContent = "Select a shift to see hours.";
               }
 
               // Update hidden input
-              document.getElementById('modalActivity').value = activity;
+              document.getElementById('modalActivity').value = activity || document.getElementById('modalActivity').value;
           }
 
           function toggleAdvancedOptions() {

@@ -1,14 +1,16 @@
 <div id="editModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">Edit Activity</div>
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Edit Activity</span>
+            <span id="headerDate" style="font-size: 0.8em; color: #666; font-weight: normal;"></span>
+        </div>
         <div class="modal-body">
-            <div class="form-group">
-                 <label><strong>Date:</strong></label>
-                 <input type="text" id="modalDate" readonly style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background-color: #f9f9f9;">
+             <div class="form-group" style="display: none;">
+                  <input type="text" id="modalDate" readonly>
              </div>
              <div class="form-group">
                   <label><strong>📅 Basic Activities (24 Hours):</strong></label>
-                  <div class="activity-buttons-container" style="grid-template-columns: repeat(4, 1fr);">
+                  <div class="activity-buttons-container" style="grid-template-columns: repeat(7, 1fr);">
                       <button type="button" class="activity-btn d active" onclick="selectShift('D')" title="Development (24h)">D</button>
                       <button type="button" class="activity-btn s" onclick="selectShift('S')" title="Support (24h)">S</button>
                       <button type="button" class="activity-btn oncall" onclick="selectShift('OnCall')" title="OnCall (24h)">OnCall</button>
@@ -18,17 +20,28 @@
                       <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Off (24h)">Off</button>
                   </div>
 
-                  <label style="margin-top: 16px; display:block; font-weight: bold;">📊 Shift Type (9 Hours):</label>
-                  <div class="activity-buttons-container" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 4px;">
-                      <button type="button" class="activity-btn shifta" onclick="selectShift('ShiftA')" title="Shift A (9h: 5h S, 4h D)">A</button>
-                      <button type="button" class="activity-btn shiftb" onclick="selectShift('ShiftB')" title="Shift B (9h: 5h S, 4h D)">B</button>
-                      <button type="button" class="activity-btn shiftc" onclick="selectShift('ShiftC')" title="Shift C (9h: 5h S, 4h D)">C</button>
-                      <button type="button" class="activity-btn shiftd" onclick="selectShift('ShiftD')" title="Shift D (9h: 5h S, 4h D)">D</button>
-                      <button type="button" class="activity-btn shifte" onclick="selectShift('ShiftE')" title="Shift E (9h: 5h S, 4h D)">E</button>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 8px;">
+                      <label style="font-weight: bold; margin: 0;">📊 Shift Patterns (Select one):</label>
                   </div>
-                  <small style="display: block; color: #666; margin-bottom: 12px; font-style: italic;">
-                      * Shifts are 9-hour blocks consisting of 5h Support (S) and 4h Development (D).
-                  </small>
+                  
+                  <div id="shiftColumnsContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                      <div id="colMixed">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Mixed (S+D)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                      <div id="colSupport">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Support (S)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                      <div id="colDev">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Dev (D)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                  </div>
+
+                  <div id="shiftPreview" style="font-size: 0.8em; color: #666; margin-bottom: 12px; min-height: 1.2em; font-style: italic; display: none;">
+                      Select a shift to see hours.
+                  </div>
 
                   <label style="display:block; margin-bottom: 12px; font-weight: bold;">🔔 Add OnCall (Increases Total Hours):</label>
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
@@ -44,6 +57,7 @@
 
                   <input type="hidden" id="modalActivity" value="D">
                   <input type="hidden" id="selectedShift" value="">
+                  <input type="hidden" id="selectedVariant" value="">
               </div>
               <div class="form-group">
                   <label><strong>📝 Notes (optional):</strong></label>

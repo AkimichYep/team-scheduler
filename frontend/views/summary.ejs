@@ -57,11 +57,11 @@
             <p>Gathering team data...</p>
         </div>
 
-        <div id="summaryContainer"></div>
+        <div id="summaryContainer" style="overflow-x: auto;"></div>
     </div>
 
     <style>
-        .summary-page { max-width: 1400px; }
+        .summary-page { max-width: 100%; }
         .page-header h1 { color: var(--primary-color); margin-bottom: 25px; }
         .subtitle { font-weight: normal; font-size: 0.7em; color: #666; }
         
@@ -94,12 +94,12 @@
         .selection-actions { display: flex; gap: 10px; justify-content: center; }
         .btn-sm { padding: 6px 12px; font-size: 0.85em; }
 
-        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85em; background: white; margin-bottom: 40px; box-shadow: var(--shadow); border-radius: 8px; overflow: hidden; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85em; background: white; margin-bottom: 40px; box-shadow: var(--shadow); border-radius: 8px; table-layout: fixed; min-width: 1200px; }
         .month-title { color: var(--primary-dark); margin: 30px 0 15px 0; border-left: 5px solid var(--primary-color); padding-left: 15px; }
         .week-header { background-color: var(--primary-color); color: white; padding: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
         .date-number-row td { background-color: #f0f7ff; color: #555; padding: 8px 4px; border: 1px solid #e0e0e0; font-size: 0.9em; line-height: 1.2; }
-        .member-header { background-color: #f9f9f9; font-weight: bold; text-align: left; padding: 10px 15px; border: 1px solid #e0e0e0; min-width: 140px; }
-        .activity-cell { height: 45px; border: 1px solid #eee; text-align: center; font-weight: bold; min-width: 35px; }
+        .member-header { background-color: #f9f9f9; font-weight: bold; text-align: left; padding: 10px 15px; border: 1px solid #e0e0e0; width: 140px; position: sticky; left: 0; z-index: 10; }
+        .activity-cell { height: 45px; border: 1px solid #eee; text-align: center; font-weight: bold; }
         
         .activity-cell.d { background-color: #e8f5e9; color: #2e7d32; }
         .activity-cell.s { background-color: #e3f2fd; color: #1565c0; }
@@ -198,27 +198,40 @@
         }
 
         const SHIFT_PATTERNS = {
-            'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+            'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+            'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+            'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+            'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+            'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
+            'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
             'D': new Array(24).fill('D'),
             'S': new Array(24).fill('S'),
             'OnCall': new Array(24).fill('OnCall'),
             'Leave': new Array(24).fill('Leave'),
             'H': new Array(24).fill('Holiday'),
-            'V': new Array(24).fill('Vacation')
+            'V': new Array(24).fill('Vacation'),
+            'Off': new Array(24).fill('Off')
         };
         // Auto-generate OC combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
-        ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
-            const base = SHIFT_PATTERNS[shift];
-            // OnCall at start: hours 0-1 (2 hours)
-            SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
-            // OnCall at end: hours 19-23 (5 hours)
-            SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
-            // OnCall at both: hours 0-1 and 19-23
-            SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
+        Object.keys(SHIFT_PATTERNS).forEach(function(key) {
+            if (key.startsWith('Shift')) {
+                const base = SHIFT_PATTERNS[key];
+                // OnCall at start: hours 0-1 (2 hours)
+                SHIFT_PATTERNS['OC_' + key]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
+                // OnCall at end: hours 19-23 (5 hours)
+                SHIFT_PATTERNS[key + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
+                // OnCall at both: hours 0-1 and 19-23
+                SHIFT_PATTERNS['OC_' + key + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
+            }
         });
 
         function detectShiftPattern(entries) {
@@ -247,7 +260,7 @@
             let matchedShiftName = null;
             for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
                 // Only check base patterns (ShiftA-E), not OC combinations
-                if (!/^Shift[A-E]$/.test(shiftName)) continue;
+                if (!/^Shift[A-E](_[MSD])?$/.test(shiftName)) continue;
 
                 if (pattern.every((act, i) => act === hourMapForMatching[i])) {
                     matchedShiftName = shiftName;
@@ -282,11 +295,11 @@
         }
 
         function getActivityClass(activity) {
-            const map = { 'D': 'd', 'S': 's', 'OnCall': 'oncall', 'Leave': 'leave', 'ShiftA': 'shifta', 'ShiftB': 'shiftb', 'ShiftC': 'shiftc', 'ShiftD': 'shiftd', 'ShiftE': 'shifte', 'Off': 'off', 'V': 'v', 'Vacation': 'v', 'H': 'h', 'Holiday': 'h' };
+            const map = { 'D': 'd', 'S': 's', 'OnCall': 'oncall', 'Leave': 'leave', 'ShiftA': 'shifta', 'ShiftB': 'shiftb', 'ShiftC': 'shiftc', 'ShiftD': 'shiftd', 'ShiftE': 'shifte', 'ShiftA_M': 'shifta', 'ShiftB_M': 'shiftb', 'ShiftC_M': 'shiftc', 'ShiftD_M': 'shiftd', 'ShiftE_M': 'shifte', 'ShiftA_S': 'shifta', 'ShiftB_S': 'shiftb', 'ShiftC_S': 'shiftc', 'ShiftD_S': 'shiftd', 'ShiftE_S': 'shifte', 'ShiftA_D': 'shifta', 'ShiftB_D': 'shiftb', 'ShiftC_D': 'shiftc', 'ShiftD_D': 'shiftd', 'ShiftE_D': 'shifte', 'Off': 'off', 'V': 'v', 'Vacation': 'v', 'H': 'h', 'Holiday': 'h' };
             if (map[activity] !== undefined) return map[activity];
-            const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
-            const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
-            const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
+            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
             if (ocPre)  return getActivityClass(ocPre[1])  + ' oc-pre';
             if (ocSuf)  return getActivityClass(ocSuf[1])  + ' oc-suf';
             if (ocBoth) return getActivityClass(ocBoth[1]) + ' oc-both';
@@ -294,15 +307,15 @@
         }
 
         function getActivityDisplay(activity) {
-            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H' };
+            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'ShiftA_M': 'A', 'ShiftB_M': 'B', 'ShiftC_M': 'C', 'ShiftD_M': 'D', 'ShiftE_M': 'E', 'ShiftA_S': 'A', 'ShiftB_S': 'B', 'ShiftC_S': 'C', 'ShiftD_S': 'D', 'ShiftE_S': 'E', 'ShiftA_D': 'A', 'ShiftB_D': 'B', 'ShiftC_D': 'C', 'ShiftD_D': 'D', 'ShiftE_D': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H' };
             if (map[activity] !== undefined) return map[activity];
-            // OC combo display
-            const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
-            const ocSuf  = /^(Shift[A-E])_OC$/.exec(activity);
-            const ocBoth = /^OC_(Shift[A-E])_OC$/.exec(activity);
-            if (ocPre)  return '&#9664;' + getActivityDisplay(ocPre[1]);
-            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + '&#9654;';
-            if (ocBoth) return '&#9664;' + getActivityDisplay(ocBoth[1]) + '&#9654;';
+            // OC combo display: < A, A >, < A >
+            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
+            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
+            if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
             return activity || 'Off';
         }
 

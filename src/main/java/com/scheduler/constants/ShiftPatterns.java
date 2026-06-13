@@ -9,11 +9,26 @@ public class ShiftPatterns {
     public static final Map<String, List<String>> PATTERNS = new HashMap<>();
 
     static {
-        PATTERNS.put("ShiftA", Arrays.asList("Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
-        PATTERNS.put("ShiftB", Arrays.asList("Off","Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
-        PATTERNS.put("ShiftC", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"));
-        PATTERNS.put("ShiftD", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","D","D","D","D","S","Off","Off","Off","Off","Off"));
-        PATTERNS.put("ShiftE", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","S","S","S","S","S","Off","Off","Off","Off","Off","Off"));
+        // ShiftA-E Support variants (S)
+        PATTERNS.put("ShiftA_S", Arrays.asList("Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftB_S", Arrays.asList("Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftC_S", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftD_S", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftE_S", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"));
+
+        // ShiftA-E Development variants (D)
+        PATTERNS.put("ShiftA_D", Arrays.asList("Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftB_D", Arrays.asList("Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftC_D", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftD_D", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftE_D", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"));
+
+        // ShiftA-E Mixed variants (S then D)
+        PATTERNS.put("ShiftA_M", Arrays.asList("Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftB_M", Arrays.asList("Off","Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftC_M", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftD_M", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","D","D","D","D","S","Off","Off","Off","Off","Off"));
+        PATTERNS.put("ShiftE_M", Arrays.asList("Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","S","S","S","S","S","Off","Off","Off","Off","Off","Off"));
 
         // 24-hour patterns
         PATTERNS.put("D", Arrays.asList(new String[24]));
@@ -22,6 +37,7 @@ public class ShiftPatterns {
         PATTERNS.put("Leave", Arrays.asList(new String[24]));
         PATTERNS.put("H", Arrays.asList(new String[24]));
         PATTERNS.put("V", Arrays.asList(new String[24]));
+        PATTERNS.put("Off", Arrays.asList(new String[24]));
 
         // Helper to populate 24-hour constants correctly
         fill24h("D", "D");
@@ -30,9 +46,15 @@ public class ShiftPatterns {
         fill24h("Leave", "Leave");
         fill24h("H", "Holiday");
         fill24h("V", "Vacation");
+        fill24h("Off", "Off");
 
-        // Generate OnCall combinations for ShiftA-E
-        for (String shift : Arrays.asList("ShiftA", "ShiftB", "ShiftC", "ShiftD", "ShiftE")) {
+        // Generate OnCall combinations for all variants
+        List<String> baseShifts = Arrays.asList(
+            "ShiftA_M", "ShiftB_M", "ShiftC_M", "ShiftD_M", "ShiftE_M",
+            "ShiftA_S", "ShiftB_S", "ShiftC_S", "ShiftD_S", "ShiftE_S",
+            "ShiftA_D", "ShiftB_D", "ShiftC_D", "ShiftD_D", "ShiftE_D"
+        );
+        for (String shift : baseShifts) {
             List<String> base = PATTERNS.get(shift);
             
             // OC_Shift
