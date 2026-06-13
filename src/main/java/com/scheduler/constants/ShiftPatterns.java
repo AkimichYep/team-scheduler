@@ -44,8 +44,8 @@ public class ShiftPatterns {
         fill24h("S", "S");
         fill24h("OnCall", "OnCall");
         fill24h("Leave", "Leave");
-        fill24h("H", "Holiday");
-        fill24h("V", "Vacation");
+        fill24h("H", "H");
+        fill24h("V", "V");
         fill24h("Off", "Off");
 
         // Generate OnCall combinations for all variants

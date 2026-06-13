@@ -45,10 +45,18 @@ let selectedHourForModal = null; // Initialize for hourly view
              'S': new Array(24).fill('S'),
              'OnCall': new Array(24).fill('OnCall'),
              'Leave': new Array(24).fill('Leave'),
-             'H': new Array(24).fill('Holiday'),
-             'V': new Array(24).fill('Vacation'),
+             'H': new Array(24).fill('H'),
+             'V': new Array(24).fill('V'),
              'Off': new Array(24).fill('Off')
          };
+
+         // Resolve actual activity for a given shift type + hour
+         function resolveHourlyActivity(activity, hour) {
+             if (SHIFT_PATTERNS[activity]) {
+                 return SHIFT_PATTERNS[activity][hour] || 'Off';
+             }
+             return activity || 'Off';
+         }
 
          // Generate OnCall combinations for all patterns
          Object.keys(SHIFT_PATTERNS).forEach(key => {
@@ -66,9 +74,26 @@ let selectedHourForModal = null; // Initialize for hourly view
 
 
           function activityPriority(activity) {
-             const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0, 'Development': 8, 'Support': 7 };
+             const p = { 'D': 10, 'S': 9, 'OnCall': 8, 'Development': 10, 'Support': 9, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
              return p[activity] !== undefined ? p[activity] : 1;
          }
+
+         function getDominantActivity(entries) {
+            if (!entries || entries.length === 0) return 'Off';
+            
+            // Normalize activities for priority calculation
+            const normalizedEntries = entries.map(e => {
+                let act = e.activity;
+                if (act === 'Development') act = 'D';
+                if (act === 'Support') act = 'S';
+                if (act === 'OnCall') act = 'OC';
+                return { ...e, activity: act };
+            });
+
+            return normalizedEntries.reduce((best, e) => {
+                return activityPriority(e.activity) > activityPriority(best) ? e.activity : best;
+            }, 'Off');
+        }
 
           // Given an array of hourly entries for a day, return the one with highest priority activity
           function getDominantEntry(entries) {
@@ -391,47 +416,37 @@ let selectedHourForModal = null; // Initialize for hourly view
           }
 
           function getActivityDisplay(activity) {
-              switch(activity) {
-                  case 'D': return 'D';
-                  case 'S': return 'S';
-                  case 'OnCall': return 'OC';
-                  case 'Leave': return 'L';
-                  case 'ShiftA': return 'A';
-                  case 'ShiftB': return 'B';
-                  case 'ShiftC': return 'C';
-                  case 'ShiftD': return 'D';
-                  case 'ShiftE': return 'E';
-                  case 'ShiftA_M': return 'A';
-                  case 'ShiftB_M': return 'B';
-                  case 'ShiftC_M': return 'C';
-                  case 'ShiftD_M': return 'D';
-                  case 'ShiftE_M': return 'E';
-                  case 'ShiftA_S': return 'A';
-                  case 'ShiftB_S': return 'B';
-                  case 'ShiftC_S': return 'C';
-                  case 'ShiftD_S': return 'D';
-                  case 'ShiftE_S': return 'E';
-                  case 'ShiftA_D': return 'A';
-                  case 'ShiftB_D': return 'B';
-                  case 'ShiftC_D': return 'C';
-                  case 'ShiftD_D': return 'D';
-                  case 'ShiftE_D': return 'E';
-                  case 'Off': return 'Off';
-                  case 'Vacation': return 'V';
-                  case 'Holiday': return 'H';
-                  case 'Development': return 'D';
-                  case 'Support': return 'S';
-                  default: {
-                      // OC combo display: < A, A >, < A >
-                      const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
-                      const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-                      const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-                      if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
-                      if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
-                      if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
-                      return activity || 'Off';
-                  }
-              }
+              const map = {
+                  'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L',
+                  'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E',
+                  'ShiftA_M': 'A', 'ShiftB_M': 'B', 'ShiftC_M': 'C', 'ShiftD_M': 'D', 'ShiftE_M': 'E',
+                  'ShiftA_S': 'A', 'ShiftB_S': 'B', 'ShiftC_S': 'C', 'ShiftD_S': 'D', 'ShiftE_S': 'E',
+                  'ShiftA_D': 'A', 'ShiftB_D': 'B', 'ShiftC_D': 'C', 'ShiftD_D': 'D', 'ShiftE_D': 'E',
+                  'ShiftA_M_OC': 'A >', 'ShiftB_M_OC': 'B >', 'ShiftC_M_OC': 'C >', 'ShiftD_M_OC': 'D >', 'ShiftE_M_OC': 'E >',
+                  'ShiftA_S_OC': 'A >', 'ShiftB_S_OC': 'B >', 'ShiftC_S_OC': 'C >', 'ShiftD_S_OC': 'D >', 'ShiftE_S_OC': 'E >',
+                  'ShiftA_D_OC': 'A >', 'ShiftB_D_OC': 'B >', 'ShiftC_D_OC': 'C >', 'ShiftD_D_OC': 'D >', 'ShiftE_D_OC': 'E >',
+                  'OC_ShiftA_M': '< A', 'OC_ShiftB_M': '< B', 'OC_ShiftC_M': '< C', 'OC_ShiftD_M': '< D', 'OC_ShiftE_M': '< E',
+                  'OC_ShiftA_S': '< A', 'OC_ShiftB_S': '< B', 'OC_ShiftC_S': '< C', 'OC_ShiftD_S': '< D', 'OC_ShiftE_S': '< E',
+                  'OC_ShiftA_D': '< A', 'OC_ShiftB_D': '< B', 'OC_ShiftC_D': '< C', 'OC_ShiftD_D': '< D', 'OC_ShiftE_D': '< E',
+                  'OC_ShiftA_M_OC': '< A >', 'OC_ShiftB_M_OC': '< B >', 'OC_ShiftC_M_OC': '< C >', 'OC_ShiftD_M_OC': '< D >', 'OC_ShiftE_M_OC': '< E >',
+                  'OC_ShiftA_S_OC': '< A >', 'OC_ShiftB_S_OC': '< B >', 'OC_ShiftC_S_OC': '< C >', 'OC_ShiftD_S_OC': '< D >', 'OC_ShiftE_S_OC': '< E >',
+                  'OC_ShiftA_D_OC': '< A >', 'OC_ShiftB_D_OC': '< B >', 'OC_ShiftC_D_OC': '< C >', 'OC_ShiftD_D_OC': '< D >', 'OC_ShiftE_D_OC': '< E >',
+                  'Off': 'Off', 'Vacation': 'V', 'Holiday': 'H', 'Development': 'D', 'Support': 'S'
+              };
+              
+              if (map[activity]) return map[activity];
+              
+              // OC combo display: < A, A >, < A >
+              const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+              const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+              const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+              
+              if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
+              if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
+              if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
+              
+              if (!activity) return '-';
+              return activity;
           }
 
 
@@ -504,7 +519,7 @@ let selectedHourForModal = null; // Initialize for hourly view
                    for (let day = 1; day <= lastDay.getDate(); day++) {
                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                        const entry = scheduleData[dateStr];
-                       const activity = entry ? entry.activity : 'D';
+                       const activity = entry ? entry.activity : 'Off';
 
                        let activityClass = getActivityClass(activity);
                        const oncallClass = entry?.isOnCall ? 'oncall' : '';
