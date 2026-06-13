@@ -1,6 +1,7 @@
 package com.scheduler.controller;
 
 import com.scheduler.constants.ShiftPatterns;
+import com.scheduler.dto.UserResponse;
 import com.scheduler.model.ScheduleEntry;
 import com.scheduler.model.User;
 import com.scheduler.service.ScheduleService;
@@ -148,8 +149,24 @@ public class ScheduleController {
     }
 
     @GetMapping("/all-users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers().stream()
+                .map(this::toUserResponse)
+                .collect(java.util.stream.Collectors.toList()));
+    }
+
+    private UserResponse toUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .project(user.getProject())
+                .active(user.isActive())
+                .email(user.getEmail())
+                .createdAt(user.getCreatedAt())
+                .lastAccessTime(user.getLastAccessTime())
+                .defaultScheduleTemplate(user.getDefaultScheduleTemplate())
+                .build();
     }
 
     @GetMapping("/team/week/{startDate}")
