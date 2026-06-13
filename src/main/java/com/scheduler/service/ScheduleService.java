@@ -1,5 +1,6 @@
 package com.scheduler.service;
 
+import com.scheduler.constants.ShiftPatterns;
 import com.scheduler.model.ScheduleEntry;
 import com.scheduler.model.User;
 import com.scheduler.repository.ScheduleEntryRepository;
@@ -179,6 +180,16 @@ public class ScheduleService {
 
     public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, String activity, Boolean isOnCall, Boolean onCallMorning, Boolean onCallNight, String notes) {
         User user = userRepository.findById(userId).orElseThrow();
+
+        // Check if it's a known shift pattern
+        if (ShiftPatterns.PATTERNS.containsKey(activity)) {
+            List<String> pattern = ShiftPatterns.PATTERNS.get(activity);
+            ScheduleEntry lastUpdated = null;
+            for (int hour = 0; hour < 24; hour++) {
+                lastUpdated = updateScheduleEntry(userId, date, hour, pattern.get(hour), false, false, false, hour == 0 ? notes : "");
+            }
+            return lastUpdated;
+        }
 
         // When no hour is specified, update ALL 24 hours for that day
         ScheduleEntry lastUpdated = null;

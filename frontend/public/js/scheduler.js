@@ -30,7 +30,13 @@ let selectedHourForModal = null; // Initialize for hourly view
              'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
              'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
              'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-             'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+             'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+             'D': new Array(24).fill('D'),
+             'S': new Array(24).fill('S'),
+             'OnCall': new Array(24).fill('OnCall'),
+             'Leave': new Array(24).fill('Leave'),
+             'H': new Array(24).fill('Holiday'),
+             'V': new Array(24).fill('Vacation')
          };
 
           function isShiftType(activity) {
@@ -48,15 +54,30 @@ let selectedHourForModal = null; // Initialize for hourly view
               SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
           });
 
-         // Priority: higher = more "interesting" for day-level display
-         function activityPriority(activity) {
-             const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
+          function activityPriority(activity) {
+             const p = { 'D': 8, 'S': 7, 'OnCall': 6, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0, 'Development': 8, 'Support': 7 };
              return p[activity] !== undefined ? p[activity] : 1;
          }
 
           // Given an array of hourly entries for a day, return the one with highest priority activity
           function getDominantEntry(entries) {
               if (!entries || entries.length === 0) return null;
+              // Group by activity and count hours
+              const counts = {};
+              entries.forEach(e => {
+                  counts[e.activity] = (counts[e.activity] || 0) + 1;
+              });
+
+              // Check if any activity spans 24 hours (for our new shift patterns)
+              for (const [activity, count] of Object.entries(counts)) {
+                  if (isShiftType(activity)) {
+                      // If it's a shift type, it might be grouped (count 1) or hourly (count 24)
+                      if (count === 24 || entries.some(e => e.hourRange === '0-23' && e.activity === activity)) {
+                          return Object.assign({}, entries[0], { activity: activity });
+                      }
+                  }
+              }
+
               return entries.reduce((best, e) => {
                   return activityPriority(e.activity) > activityPriority(best.activity) ? e : best;
               });
@@ -65,9 +86,21 @@ let selectedHourForModal = null; // Initialize for hourly view
           // Check if 24 hourly entries exactly match a known shift pattern
           function detectShiftPattern(entries) {
               if (!entries || entries.length === 0) return null;
+              
+              // NEW: If backend already provided a shift pattern name for 0-23
+              const groupedPattern = entries.find(e => e.hourRange === '0-23' && isShiftType(e.activity));
+              if (groupedPattern) return groupedPattern.activity;
+
               const hourMap = new Array(24).fill('Off');
               entries.forEach(e => {
-                  if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
+                  if (e.hourRange !== undefined) {
+                      const range = e.hourRange.split('-');
+                      const start = parseInt(range[0]);
+                      const end = range.length > 1 ? parseInt(range[1]) : start;
+                      for (let h = start; h <= end; h++) {
+                          if (h >= 0 && h < 24) hourMap[h] = e.activity;
+                      }
+                  } else if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
                       hourMap[e.hourOfDay] = e.activity;
                   }
               });
@@ -89,29 +122,35 @@ let selectedHourForModal = null; // Initialize for hourly view
               return getDominantEntry(entries);
           }
 
-         // Expand a shift type and save all 24 hours in a single batched request
+         // Expand a shift type and save it to backend as a single activity
          function expandAndSaveShift(dateStr, shiftType, notes) {
-             const pattern = SHIFT_PATTERNS[shiftType];
-             if (!pattern) return Promise.resolve();
-
-             // Build batched hours array
-             const hours = pattern.map((hourActivity, hour) => ({
-                 hour: hour,
-                 activity: hourActivity
-             }));
-
-             // Send single request with all 24 hours
+             // Send single request with shift name
              return fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify({
                      date: dateStr,
-                     hours: hours,
+                     activity: shiftType,
                      notes: notes || ''
                  })
              }).then(r => r.json()).then(dayData => {
                 // Update local schedule data with fetched day
                 const list = Array.isArray(dayData) ? dayData : [dayData];
+                
+                // Important: Unpack grouped data into hourly map for this day first
+                list.forEach(entry => {
+                    if (entry.hourRange !== undefined) {
+                        const range = entry.hourRange.split('-');
+                        const start = parseInt(range[0]);
+                        const end = range.length > 1 ? parseInt(range[1]) : start;
+                        for (let h = start; h <= end; h++) {
+                            window.scheduleData[`${entry.date}-${h}`] = entry;
+                        }
+                    } else if (entry.hourOfDay !== undefined) {
+                        window.scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
+                    }
+                });
+
                 window.scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
 
                  pendingSaves++;
@@ -207,10 +246,18 @@ let selectedHourForModal = null; // Initialize for hourly view
                     // Group entries by date, store per-hour AND dominant per-day
                     const byDate = {};
                     data.forEach(entry => {
-                        // Store per-hour key for hourly view
-                        if (entry.hourOfDay !== undefined) {
+                        // Store grouped entries into hourly map
+                        if (entry.hourRange !== undefined) {
+                            const range = entry.hourRange.split('-');
+                            const start = parseInt(range[0]);
+                            const end = range.length > 1 ? parseInt(range[1]) : start;
+                            for (let h = start; h <= end; h++) {
+                                window.scheduleData[`${entry.date}-${h}`] = entry;
+                            }
+                        } else if (entry.hourOfDay !== undefined) {
                             window.scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
                         }
+
                         // Group for dominant computation
                         if (!byDate[entry.date]) byDate[entry.date] = [];
                         byDate[entry.date].push(entry);
@@ -309,8 +356,10 @@ let selectedHourForModal = null; // Initialize for hourly view
                   case 'ShiftD': return 'shiftd';
                   case 'ShiftE': return 'shifte';
                   case 'Off': return 'off';
-                  case 'V': case 'Vacation': return 'v';
+                  case 'Vacation': return 'v';
                   case 'H': case 'Holiday': return 'h';
+                  case 'Development': return 'd';
+                  case 'Support': return 's';
                   default: {
                       // OC combo: OC_ShiftX, ShiftX_OC, OC_ShiftX_OC
                       const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
@@ -336,8 +385,10 @@ let selectedHourForModal = null; // Initialize for hourly view
                   case 'ShiftD': return 'D';
                   case 'ShiftE': return 'E';
                   case 'Off': return 'Off';
-                  case 'V': case 'Vacation': return 'V';
-                  case 'H': case 'Holiday': return 'H';
+                  case 'Vacation': return 'V';
+                  case 'Holiday': return 'H';
+                  case 'Development': return 'D';
+                  case 'Support': return 'S';
                   default: {
                       // OC combo display: ◀A, A▶, ◀A▶
                       const ocPre  = /^OC_(Shift[A-E])$/.exec(activity);
@@ -362,9 +413,18 @@ let selectedHourForModal = null; // Initialize for hourly view
                     window.scheduleData = {};
                     const byDate = {};
                     data.forEach(entry => {
-                        if (entry.hourOfDay !== undefined) {
+                        // Store grouped entries into hourly map
+                        if (entry.hourRange !== undefined) {
+                            const range = entry.hourRange.split('-');
+                            const start = parseInt(range[0]);
+                            const end = range.length > 1 ? parseInt(range[1]) : start;
+                            for (let h = start; h <= end; h++) {
+                                window.scheduleData[`${entry.date}-${h}`] = entry;
+                            }
+                        } else if (entry.hourOfDay !== undefined) {
                             window.scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
                         }
+
                         if (!byDate[entry.date]) byDate[entry.date] = [];
                         byDate[entry.date].push(entry);
                     });
@@ -560,21 +620,16 @@ let selectedHourForModal = null; // Initialize for hourly view
 
                if (isShiftType(activity)) {
                    // For shift types, batch all 5 days with single request per day
-                   const pattern = SHIFT_PATTERNS[activity];
                    const promises = [];
 
                    // Save current day
-                   const hours = pattern.map((hourActivity, hour) => ({
-                       hour: hour,
-                       activity: hourActivity
-                   }));
                    promises.push(
                        fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
                            method: 'POST',
                            headers: { 'Content-Type': 'application/json' },
                            body: JSON.stringify({
                                date: selectedDateForModal,
-                               hours: hours,
+                               activity: activity,
                                notes: notes || ''
                            })
                        }).then(r => r.json())
@@ -591,7 +646,7 @@ let selectedHourForModal = null; // Initialize for hourly view
                                headers: { 'Content-Type': 'application/json' },
                                body: JSON.stringify({
                                    date: nextDateStr,
-                                   hours: hours,
+                                   activity: activity,
                                    notes: notes || ''
                                })
                            }).then(r => r.json())

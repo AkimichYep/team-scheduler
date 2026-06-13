@@ -160,29 +160,33 @@
             if (!groupedEntries || !Array.isArray(groupedEntries)) return expanded;
 
             groupedEntries.forEach(entry => {
-                if (!entry || !entry.hourRange) return; // Skip invalid entries
+                if (!entry) return;
+                
+                if (entry.hourRange) {
+                    // Parse hourRange: "0" or "0-3" or "10-23"
+                    const parts = entry.hourRange.split('-');
+                    const startHour = parseInt(parts[0]);
+                    const endHour = parts.length > 1 ? parseInt(parts[1]) : startHour;
 
-                // Parse hourRange: "0" or "0-3" or "10-23"
-                const parts = entry.hourRange.split('-');
-                const startHour = parseInt(parts[0]);
-                const endHour = parts.length > 1 ? parseInt(parts[1]) : startHour;
+                    // Validate hours
+                    if (isNaN(startHour) || isNaN(endHour) || startHour < 0 || endHour > 23 || startHour > endHour) {
+                        console.warn('Invalid hourRange:', entry.hourRange);
+                        return;
+                    }
 
-                // Validate hours
-                if (isNaN(startHour) || isNaN(endHour) || startHour < 0 || endHour > 23 || startHour > endHour) {
-                    console.warn('Invalid hourRange:', entry.hourRange);
-                    return;
-                }
-
-                for (let hour = startHour; hour <= endHour; hour++) {
-                    expanded.push({
-                        date: entry.date,
-                        hourOfDay: hour,
-                        activity: entry.activity || 'Off',
-                        isOnCall: entry.isOnCall || false,
-                        onCallMorning: entry.onCallMorning || false,
-                        onCallNight: entry.onCallNight || false,
-                        notes: entry.notes || ''
-                    });
+                    for (let hour = startHour; hour <= endHour; hour++) {
+                        expanded.push({
+                            date: entry.date,
+                            hourOfDay: hour,
+                            activity: entry.activity || 'Off',
+                            isOnCall: entry.isOnCall || false,
+                            onCallMorning: entry.onCallMorning || false,
+                            onCallNight: entry.onCallNight || false,
+                            notes: entry.notes || ''
+                        });
+                    }
+                } else if (entry.hourOfDay !== undefined) {
+                    expanded.push(entry);
                 }
             });
             return expanded;
@@ -198,16 +202,23 @@
             'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
             'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
             'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+            'D': new Array(24).fill('D'),
+            'S': new Array(24).fill('S'),
+            'OnCall': new Array(24).fill('OnCall'),
+            'Leave': new Array(24).fill('Leave'),
+            'H': new Array(24).fill('Holiday'),
+            'V': new Array(24).fill('Vacation')
         };
-        // Auto-generate OC combo patterns
+        // Auto-generate OC combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
         ;['ShiftA','ShiftB','ShiftC','ShiftD','ShiftE'].forEach(function(shift) {
             const base = SHIFT_PATTERNS[shift];
-            let s = 0; while (s < 24 && base[s] === 'Off') s++;
-            let e = 23; while (e >= 0 && base[e] === 'Off') e--;
-            SHIFT_PATTERNS['OC_' + shift]         = base.map(function(a,i){ return i < s ? 'OnCall' : a; });
-            SHIFT_PATTERNS[shift + '_OC']         = base.map(function(a,i){ return i > e ? 'OnCall' : a; });
-            SHIFT_PATTERNS['OC_' + shift + '_OC'] = base.map(function(a,i){ return (i < s || i > e) ? 'OnCall' : a; });
+            // OnCall at start: hours 0-1 (2 hours)
+            SHIFT_PATTERNS['OC_' + shift]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
+            // OnCall at end: hours 19-23 (5 hours)
+            SHIFT_PATTERNS[shift + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
+            // OnCall at both: hours 0-1 and 19-23
+            SHIFT_PATTERNS['OC_' + shift + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
         });
 
         function detectShiftPattern(entries) {
