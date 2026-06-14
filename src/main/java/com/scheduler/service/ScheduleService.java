@@ -1,5 +1,6 @@
 package com.scheduler.service;
 
+import com.scheduler.constants.ShiftPatterns;
 import com.scheduler.model.ScheduleEntry;
 import com.scheduler.model.User;
 import com.scheduler.repository.ScheduleEntryRepository;
@@ -36,18 +37,20 @@ public class ScheduleService {
         // Initialize default entries for all hours of days that don't have entries
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             final LocalDate currentDate = date;
-            for (int hour = 0; hour < 24; hour++) {
-                final int h = hour;
-                if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
-                    String activity = isWeekend(currentDate) ? "Off" : "D";
-                    ScheduleEntry entry = ScheduleEntry.builder()
-                            .user(user)
-                            .date(currentDate)
-                            .hourOfDay(hour)
-                            .activity(activity)
-                            .notes("")
-                            .build();
-                    entries.add(entry);
+            if (isWeekend(currentDate) || entries.stream().anyMatch(e -> e.getDate().equals(currentDate))) {
+                for (int hour = 0; hour < 24; hour++) {
+                    final int h = hour;
+                    if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
+                        String activity = "Off";
+                        ScheduleEntry entry = ScheduleEntry.builder()
+                                .user(user)
+                                .date(currentDate)
+                                .hourOfDay(hour)
+                                .activity(activity)
+                                .notes("")
+                                .build();
+                        entries.add(entry);
+                    }
                 }
             }
         }
@@ -69,16 +72,9 @@ public class ScheduleService {
         // Initialize default entries for days that don't have entries
         for (LocalDate d = startOfWeek; !d.isAfter(endOfWeek); d = d.plusDays(1)) {
             final LocalDate currentDate = d;
-            if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate))) {
-                User user = userRepository.findById(userId).orElseThrow();
-                String activity = isWeekend(currentDate) ? "Off" : "D";
-                ScheduleEntry entry = ScheduleEntry.builder()
-                        .user(user)
-                        .date(currentDate)
-                        .activity(activity)
-                        .notes("")
-                        .build();
-                entries.add(entry);
+            if (entries.stream().anyMatch(e -> e.getDate().equals(currentDate))) {
+                // If the day has ANY entry, ensure we have a full day entry (or at least don't leave it empty if needed)
+                // but mostly we care about full 24h expansion which is done in getScheduleForDayAllHours
             }
         }
         
@@ -87,18 +83,7 @@ public class ScheduleService {
     }
 
     public Optional<ScheduleEntry> getScheduleForDay(Long userId, LocalDate date) {
-        Optional<ScheduleEntry> entry = scheduleEntryRepository.findByUserIdAndDate(userId, date);
-        if (entry.isEmpty()) {
-            User user = userRepository.findById(userId).orElseThrow();
-            String activity = isWeekend(date) ? "Off" : "D";
-            return Optional.of(ScheduleEntry.builder()
-                    .user(user)
-                    .date(date)
-                    .activity(activity)
-                    .notes("")
-                    .build());
-        }
-        return entry;
+        return scheduleEntryRepository.findByUserIdAndDate(userId, date);
     }
 
     // Get all 24 hours for a specific day
@@ -110,7 +95,7 @@ public class ScheduleService {
         for (int hour = 0; hour < 24; hour++) {
             final int h = hour;
             if (entries.stream().noneMatch(e -> e.getHourOfDay() == h)) {
-                String activity = isWeekend(date) ? "Off" : "D";
+                String activity = isWeekend(date) ? "Off" : "None";
                 ScheduleEntry entry = ScheduleEntry.builder()
                         .user(user)
                         .date(date)
@@ -160,18 +145,20 @@ public class ScheduleService {
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             final LocalDate currentDate = date;
-            for (int hour = 0; hour < 24; hour++) {
-                final int h = hour;
-                if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
-                    String activity = isWeekend(currentDate) ? "Off" : "D";
-                    ScheduleEntry entry = ScheduleEntry.builder()
-                            .user(user)
-                            .date(currentDate)
-                            .hourOfDay(hour)
-                            .activity(activity)
-                            .notes("")
-                            .build();
-                    entries.add(entry);
+            if (entries.stream().anyMatch(e -> e.getDate().equals(currentDate))) {
+                for (int hour = 0; hour < 24; hour++) {
+                    final int h = hour;
+                    if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
+                        String activity = "Off";
+                        ScheduleEntry entry = ScheduleEntry.builder()
+                                .user(user)
+                                .date(currentDate)
+                                .hourOfDay(hour)
+                                .activity(activity)
+                                .notes("")
+                                .build();
+                        entries.add(entry);
+                    }
                 }
             }
         }
@@ -179,6 +166,16 @@ public class ScheduleService {
 
     public ScheduleEntry updateScheduleEntry(Long userId, LocalDate date, String activity, Boolean isOnCall, Boolean onCallMorning, Boolean onCallNight, String notes) {
         User user = userRepository.findById(userId).orElseThrow();
+
+        // Check if it's a known shift pattern
+        if (ShiftPatterns.PATTERNS.containsKey(activity)) {
+            List<String> pattern = ShiftPatterns.PATTERNS.get(activity);
+            ScheduleEntry lastUpdated = null;
+            for (int hour = 0; hour < 24; hour++) {
+                lastUpdated = updateScheduleEntry(userId, date, hour, pattern.get(hour), false, false, false, hour == 0 ? notes : "");
+            }
+            return lastUpdated;
+        }
 
         // When no hour is specified, update ALL 24 hours for that day
         ScheduleEntry lastUpdated = null;
@@ -253,18 +250,20 @@ public class ScheduleService {
         // Initialize default entries for all hours of days that don't have entries
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             final LocalDate currentDate = date;
-            for (int hour = 0; hour < 24; hour++) {
-                final int h = hour;
-                if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
-                    String activity = isWeekend(currentDate) ? "Off" : "D";
-                    ScheduleEntry entry = ScheduleEntry.builder()
-                            .user(user)
-                            .date(currentDate)
-                            .hourOfDay(hour)
-                            .activity(activity)
-                            .notes("")
-                            .build();
-                    entries.add(entry);
+            if (isWeekend(currentDate) || entries.stream().anyMatch(e -> e.getDate().equals(currentDate))) {
+                for (int hour = 0; hour < 24; hour++) {
+                    final int h = hour;
+                    if (entries.stream().noneMatch(e -> e.getDate().equals(currentDate) && e.getHourOfDay() == h)) {
+                        String activity = "Off";
+                        ScheduleEntry entry = ScheduleEntry.builder()
+                                .user(user)
+                                .date(currentDate)
+                                .hourOfDay(hour)
+                                .activity(activity)
+                                .notes("")
+                                .build();
+                        entries.add(entry);
+                    }
                 }
             }
         }

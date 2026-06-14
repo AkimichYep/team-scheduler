@@ -155,21 +155,25 @@
         function expandGroupedEntries(groupedEntries) {
             const expanded = [];
             groupedEntries.forEach(entry => {
-                // Parse hourRange: "0" or "0-3" or "10-23"
-                const [startStr, endStr] = entry.hourRange.split('-');
-                const startHour = parseInt(startStr);
-                const endHour = endStr ? parseInt(endStr) : startHour;
+                if (entry.hourRange) {
+                    // Parse hourRange: "0" or "0-3" or "10-23"
+                    const [startStr, endStr] = entry.hourRange.split('-');
+                    const startHour = parseInt(startStr);
+                    const endHour = endStr ? parseInt(endStr) : startHour;
 
-                for (let hour = startHour; hour <= endHour; hour++) {
-                    expanded.push({
-                        date: entry.date,
-                        hourOfDay: hour,
-                        activity: entry.activity,
-                        isOnCall: entry.isOnCall,
-                        onCallMorning: entry.onCallMorning,
-                        onCallNight: entry.onCallNight,
-                        notes: entry.notes
-                    });
+                    for (let hour = startHour; hour <= endHour; hour++) {
+                        expanded.push({
+                            date: entry.date,
+                            hourOfDay: hour,
+                            activity: entry.activity,
+                            isOnCall: entry.isOnCall,
+                            onCallMorning: entry.onCallMorning,
+                            onCallNight: entry.onCallNight,
+                            notes: entry.notes
+                        });
+                    }
+                } else {
+                    expanded.push(entry);
                 }
             });
             return expanded;
@@ -177,19 +181,58 @@
 
         // Shift patterns: index = hour (0-23), value = actual activity
         const SHIFT_PATTERNS = {
-            'ShiftA': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftB': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftC': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftD': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-            'ShiftE': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off']
+            'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
+            'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
+            'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
+            'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+            'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
+            'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
+            'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
+            'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
+            'D': new Array(24).fill('D'),
+            'S': new Array(24).fill('S'),
+            'OnCall': new Array(24).fill('OnCall'),
+            'Leave': new Array(24).fill('Leave'),
+            'H': new Array(24).fill('H'),
+            'V': new Array(24).fill('V'),
+            'Off': new Array(24).fill('Off')
         };
+        // Auto-generate OC combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
+        Object.keys(SHIFT_PATTERNS).forEach(function(key) {
+            if (key.startsWith('Shift')) {
+                const base = SHIFT_PATTERNS[key];
+                // OnCall at start: hours 0-1 (2 hours)
+                SHIFT_PATTERNS['OC_' + key]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
+                // OnCall at end: hours 19-23 (5 hours)
+                SHIFT_PATTERNS[key + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
+                // OnCall at both: hours 0-1 and 19-23
+                SHIFT_PATTERNS['OC_' + key + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
+            }
+        });
+
+        function activityPriority(activity) {
+            const p = { 'D': 10, 'S': 9, 'OnCall': 8, 'Development': 10, 'Support': 9, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
+            return p[activity] !== undefined ? p[activity] : 1;
+        }
 
         // Resolve actual D/S/Off for a given activity + hour
         function resolveHourlyActivity(activity, hour) {
-            if (SHIFT_PATTERNS[activity]) {
-                return SHIFT_PATTERNS[activity][hour] || 'Off';
+            let normalizedActivity = activity;
+            if (activity === 'Development') normalizedActivity = 'D';
+            if (activity === 'Support') normalizedActivity = 'S';
+            if (activity === 'OnCall') normalizedActivity = 'OC';
+
+            if (SHIFT_PATTERNS[normalizedActivity]) {
+                return SHIFT_PATTERNS[normalizedActivity][hour] || 'Off';
             }
-            return activity || 'Off';
+            return normalizedActivity || 'Off';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -400,6 +443,20 @@
                 });
         }
 
+        function getActivityDisplay(activity) {
+            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'ShiftA_M': 'A', 'ShiftB_M': 'B', 'ShiftC_M': 'C', 'ShiftD_M': 'D', 'ShiftE_M': 'E', 'ShiftA_S': 'A', 'ShiftB_S': 'B', 'ShiftC_S': 'C', 'ShiftD_S': 'D', 'ShiftE_S': 'E', 'ShiftA_D': 'A', 'ShiftB_D': 'B', 'ShiftC_D': 'C', 'ShiftD_D': 'D', 'ShiftE_D': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H', 'ShiftA_M_OC': 'A >', 'ShiftB_M_OC': 'B >', 'ShiftC_M_OC': 'C >', 'ShiftD_M_OC': 'D >', 'ShiftE_M_OC': 'E >', 'ShiftA_S_OC': 'A >', 'ShiftB_S_OC': 'B >', 'ShiftC_S_OC': 'C >', 'ShiftD_S_OC': 'D >', 'ShiftE_S_OC': 'E >', 'ShiftA_D_OC': 'A >', 'ShiftB_D_OC': 'B >', 'ShiftC_D_OC': 'C >', 'ShiftD_D_OC': 'D >', 'ShiftE_D_OC': 'E >', 'OC_ShiftA_M': '< A', 'OC_ShiftB_M': '< B', 'OC_ShiftC_M': '< C', 'OC_ShiftD_M': '< D', 'OC_ShiftE_M': '< E', 'OC_ShiftA_S': '< A', 'OC_ShiftB_S': '< B', 'OC_ShiftC_S': '< C', 'OC_ShiftD_S': '< D', 'OC_ShiftE_S': '< E', 'OC_ShiftA_D': '< A', 'OC_ShiftB_D': '< B', 'OC_ShiftC_D': '< C', 'OC_ShiftD_D': '< D', 'OC_ShiftE_D': '< E', 'OC_ShiftA_M_OC': '< A >', 'OC_ShiftB_M_OC': '< B >', 'OC_ShiftC_M_OC': '< C >', 'OC_ShiftD_M_OC': '< D >', 'OC_ShiftE_M_OC': '< E >', 'OC_ShiftA_S_OC': '< A >', 'OC_ShiftB_S_OC': '< B >', 'OC_ShiftC_S_OC': '< C >', 'OC_ShiftD_S_OC': '< D >', 'OC_ShiftE_S_OC': '< E >', 'OC_ShiftA_D_OC': '< A >', 'OC_ShiftB_D_OC': '< B >', 'OC_ShiftC_D_OC': '< C >', 'OC_ShiftD_D_OC': '< D >', 'OC_ShiftE_D_OC': '< E >' };
+            if (map[activity] !== undefined) return map[activity];
+            if (!activity) return '-';
+            // OC combo display: < A, A >, < A >
+            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
+            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
+            if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
+            return activity;
+        }
+
         function renderSummaryByDay(weekStart) {
             const table = document.getElementById('summaryTable');
             let html = '';
@@ -446,7 +503,7 @@
                             const hourValue = e.hourOfDay !== undefined ? e.hourOfDay : e.hour;
                             return hourValue === hour;
                         });
-                        const rawActivity = entry ? entry.activity : 'Off';
+                        const rawActivity = entry ? entry.activity : null;
                         const activity = resolveHourlyActivity(rawActivity, hour);
                         const activityClass = activity.toLowerCase();
 

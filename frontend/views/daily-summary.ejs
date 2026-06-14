@@ -317,10 +317,29 @@
         };
 
         function resolveHourlyActivity(activity, hour) {
-            if (SHIFT_PATTERNS[activity]) {
-                return SHIFT_PATTERNS[activity][hour] || 'Off';
+            let normalizedActivity = activity;
+            if (activity === 'Development') normalizedActivity = 'D';
+            if (activity === 'Support') normalizedActivity = 'S';
+            if (activity === 'OnCall') normalizedActivity = 'OC';
+
+            if (SHIFT_PATTERNS[normalizedActivity]) {
+                return SHIFT_PATTERNS[normalizedActivity][hour] || 'Off';
             }
-            return activity || 'Off';
+            return normalizedActivity || 'Off';
+        }
+
+        function getActivityDisplay(activity) {
+            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'ShiftA_M': 'A', 'ShiftB_M': 'B', 'ShiftC_M': 'C', 'ShiftD_M': 'D', 'ShiftE_M': 'E', 'ShiftA_S': 'A', 'ShiftB_S': 'B', 'ShiftC_S': 'C', 'ShiftD_S': 'D', 'ShiftE_S': 'E', 'ShiftA_D': 'A', 'ShiftB_D': 'B', 'ShiftC_D': 'C', 'ShiftD_D': 'D', 'ShiftE_D': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H', 'ShiftA_M_OC': 'A >', 'ShiftB_M_OC': 'B >', 'ShiftC_M_OC': 'C >', 'ShiftD_M_OC': 'D >', 'ShiftE_M_OC': 'E >', 'ShiftA_S_OC': 'A >', 'ShiftB_S_OC': 'B >', 'ShiftC_S_OC': 'C >', 'ShiftD_S_OC': 'D >', 'ShiftE_S_OC': 'E >', 'ShiftA_D_OC': 'A >', 'ShiftB_D_OC': 'B >', 'ShiftC_D_OC': 'C >', 'ShiftD_D_OC': 'D >', 'ShiftE_D_OC': 'E >', 'OC_ShiftA_M': '< A', 'OC_ShiftB_M': '< B', 'OC_ShiftC_M': '< C', 'OC_ShiftD_M': '< D', 'OC_ShiftE_M': '< E', 'OC_ShiftA_S': '< A', 'OC_ShiftB_S': '< B', 'OC_ShiftC_S': '< C', 'OC_ShiftD_S': '< D', 'OC_ShiftE_S': '< E', 'OC_ShiftA_D': '< A', 'OC_ShiftB_D': '< B', 'OC_ShiftC_D': '< C', 'OC_ShiftD_D': '< D', 'OC_ShiftE_D': '< E', 'OC_ShiftA_M_OC': '< A >', 'OC_ShiftB_M_OC': '< B >', 'OC_ShiftC_M_OC': '< C >', 'OC_ShiftD_M_OC': '< D >', 'OC_ShiftE_M_OC': '< E >', 'OC_ShiftA_S_OC': '< A >', 'OC_ShiftB_S_OC': '< B >', 'OC_ShiftC_S_OC': '< C >', 'OC_ShiftD_S_OC': '< D >', 'OC_ShiftE_S_OC': '< E >', 'OC_ShiftA_D_OC': '< A >', 'OC_ShiftB_D_OC': '< B >', 'OC_ShiftC_D_OC': '< C >', 'OC_ShiftD_D_OC': '< D >', 'OC_ShiftE_D_OC': '< E >' };
+            if (map[activity] !== undefined) return map[activity];
+            if (!activity) return '-';
+            // OC combo display: < A, A >, < A >
+            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
+            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
+            if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
+            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
+            if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
+            return activity;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -458,7 +477,7 @@
                 sortedDates.forEach(date => {
                     const dayEntries = weekData[date] || [];
                     const entry = dayEntries.find(e => e.hourOfDay === hour);
-                    const rawActivity = entry ? entry.activity : 'Off';
+                    const rawActivity = entry ? entry.activity : null;
                     const activity = resolveHourlyActivity(rawActivity, hour);
                     const activityClass = activity.toLowerCase();
                     html += `<td class="activity-cell ${activityClass}">${activity}</td>`;

@@ -1,0 +1,73 @@
+<div id="editModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Edit Activity</span>
+            <span id="headerDate" style="font-size: 0.8em; color: #666; font-weight: normal;"></span>
+        </div>
+        <div class="modal-body">
+             <div class="form-group" style="display: none;">
+                  <input type="text" id="modalDate" readonly>
+             </div>
+             <div class="form-group">
+                  <label><strong>📅 Basic Activities (24 Hours):</strong></label>
+                  <div class="activity-buttons-container" style="grid-template-columns: repeat(7, 1fr);">
+                      <button type="button" class="activity-btn d active" onclick="selectShift('D')" title="Development (24h)">D</button>
+                      <button type="button" class="activity-btn s" onclick="selectShift('S')" title="Support (24h)">S</button>
+                      <button type="button" class="activity-btn oncall" onclick="selectShift('OnCall')" title="OnCall (24h)">OnCall</button>
+                      <button type="button" class="activity-btn leave" onclick="selectShift('Leave')" title="Leave (24h)">Leave</button>
+                      <button type="button" class="activity-btn v" onclick="selectShift('V')" title="Vacation (24h)">V</button>
+                      <button type="button" class="activity-btn h" onclick="selectShift('H')" title="Holiday (24h)">H</button>
+                      <button type="button" class="activity-btn off" onclick="selectActivityType('Off')" title="Off (24h)">Off</button>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 8px;">
+                      <label style="font-weight: bold; margin: 0;">📊 Shift Patterns (Select one):</label>
+                  </div>
+                  
+                  <div id="shiftColumnsContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                      <div id="colMixed">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Mixed (S+D)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                      <div id="colSupport">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Support (S)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                      <div id="colDev">
+                          <div style="font-size: 0.8em; font-weight: bold; text-align: center; margin-bottom: 4px; color: #555;">Dev (D)</div>
+                          <div class="shift-col-rows" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                      </div>
+                  </div>
+
+                  <div id="shiftPreview" style="font-size: 0.8em; color: #666; margin-bottom: 12px; min-height: 1.2em; font-style: italic; display: none;">
+                      Select a shift to see hours.
+                  </div>
+
+                  <label style="display:block; margin-bottom: 12px; font-weight: bold;">🔔 Add OnCall (Increases Total Hours):</label>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0;">
+                      <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                          <input type="checkbox" id="ocBefore" onchange="updateShiftSelection()" style="width: 18px; height: 18px; cursor: pointer;">
+                          <span title="+2 hours at start of day">At Start (+2h)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                          <input type="checkbox" id="ocAfter" onchange="updateShiftSelection()" style="width: 18px; height: 18px; cursor: pointer;">
+                          <span title="+5 hours at end of day">At End (+5h)</span>
+                      </label>
+                  </div>
+
+                  <input type="hidden" id="modalActivity" value="D">
+                  <input type="hidden" id="selectedShift" value="">
+                  <input type="hidden" id="selectedVariant" value="">
+              </div>
+              <div class="form-group">
+                  <label><strong>📝 Notes (optional):</strong></label>
+                  <textarea id="modalNotes" class="notes-input" rows="2" placeholder="Add any notes about this activity..."></textarea>
+              </div>
+          </div>
+          <div class="modal-buttons">
+              <button class="modal-btn modal-fill-btn" onclick="fillNext5Days()" style="font-weight: bold; flex: 1;">⏭️ Apply to Next 5 Days</button>
+              <button class="modal-btn modal-save-btn" onclick="saveModalChanges()">Save</button>
+              <button class="modal-btn modal-cancel-btn" onclick="closeModal()">Cancel</button>
+          </div>
+    </div>
+</div>
