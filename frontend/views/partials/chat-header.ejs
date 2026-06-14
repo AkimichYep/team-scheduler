@@ -1,0 +1,606 @@
+<!-- AI Chat Header Panel - Collapsible -->
+<div id="chatHeaderPanel" class="chat-header-panel">
+    <!-- Chat Header/Toggle Bar -->
+    <div class="chat-header-bar" onclick="toggleChatHeaderPanel()">
+        <div class="chat-header-content">
+            <span class="chat-icon">💬</span>
+            <span class="chat-title">AI Assistant</span>
+            <span class="chat-status" id="chatStatus">Ready</span>
+        </div>
+        <span class="chat-toggle-icon" id="chatToggleIcon">▼</span>
+    </div>
+
+    <!-- Chat Content Panel (Collapsible) -->
+    <div class="chat-panel-content" id="chatPanelContent">
+        <!-- Conversations List -->
+        <div id="chatHeaderConversations" class="chat-header-conversations">
+            <div class="conversations-header">
+                <h6>Conversations</h6>
+                <button class="btn btn-sm btn-primary" onclick="startNewChatHeader()" title="New chat">+</button>
+            </div>
+            <div id="chatHeaderConversationsList" class="conversations-list-container">
+                <p class="text-muted small">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div id="chatHeaderMessagesArea" class="chat-header-messages-area" style="display: none;">
+            <div class="messages-header">
+                <button class="btn btn-sm btn-link" onclick="showChatHeaderConversations()" title="Back to conversations">← Back</button>
+                <span id="chatHeaderTitle" class="messages-title">Chat</span>
+            </div>
+            <div id="chatHeaderMessages" class="chat-header-messages">
+                <!-- Messages displayed here -->
+            </div>
+            <div class="chat-header-input-area">
+                <input type="text" id="chatHeaderInput" class="form-control form-control-sm"
+                       placeholder="Ask about this page..." maxlength="500">
+                <button class="btn btn-sm btn-primary" onclick="sendChatHeaderMessage()" title="Send (Enter)">Send</button>
+            </div>
+        </div>
+
+        <!-- New Chat Modal -->
+        <div id="chatHeaderModal" class="chat-header-modal" style="display: none;">
+            <div class="modal-content">
+                <h6>New Conversation</h6>
+                <input type="text" id="chatHeaderNewTitle" placeholder="Title..." class="form-control form-control-sm mb-2">
+                <button class="btn btn-sm btn-primary w-100" onclick="createNewChatHeaderConfirm()">Create</button>
+                <button class="btn btn-sm btn-secondary w-100 mt-2" onclick="closeNewChatHeader()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chat Header Panel */
+.chat-header-panel {
+    background: white;
+    border-bottom: 2px solid #007bff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 999;
+    position: relative;
+}
+
+.chat-header-bar {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s;
+}
+
+.chat-header-bar:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+    padding: 12px 20px;
+}
+
+.chat-header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.chat-icon {
+    font-size: 18px;
+}
+
+.chat-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
+
+.chat-status {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-left: auto;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+}
+
+.chat-toggle-icon {
+    font-size: 12px;
+    transition: transform 0.3s;
+    margin-left: 12px;
+}
+
+.chat-header-panel.collapsed .chat-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Chat Panel Content */
+.chat-panel-content {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    max-height: 400px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+
+.chat-header-panel.collapsed .chat-panel-content {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* Conversations List */
+.chat-header-conversations {
+    padding: 12px 20px;
+}
+
+.conversations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.conversations-header h6 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+}
+
+.conversations-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.conversation-item-header {
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item-header:hover {
+    background: #e7f3ff;
+    border-color: #007bff;
+}
+
+.conversation-item-header.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Messages Area */
+.chat-header-messages-area {
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.messages-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.messages-header .btn-link {
+    padding: 0;
+    font-size: 12px;
+}
+
+.messages-title {
+    flex: 1;
+}
+
+.chat-header-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    min-height: 60px;
+}
+
+.chat-header-message {
+    display: flex;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.chat-header-message.user {
+    justify-content: flex-end;
+}
+
+.chat-header-message.assistant {
+    justify-content: flex-start;
+}
+
+.message-bubble-header {
+    max-width: 80%;
+    padding: 6px 10px;
+    border-radius: 6px;
+    word-wrap: break-word;
+}
+
+.message-bubble-header.user {
+    background: #007bff;
+    color: white;
+}
+
+.message-bubble-header.assistant {
+    background: #e9ecef;
+    color: #333;
+}
+
+.chat-header-input-area {
+    display: flex;
+    gap: 6px;
+}
+
+.chat-header-input-area input {
+    flex: 1;
+    font-size: 11px;
+}
+
+.chat-header-input-area .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+/* Modal */
+.chat-header-modal {
+    background: rgba(0,0,0,0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.chat-header-modal .modal-content {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    min-width: 300px;
+}
+
+.chat-header-modal h6 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-panel-content {
+        max-height: 300px;
+    }
+
+    .chat-header-messages {
+        max-height: 150px;
+    }
+
+    .chat-header-content {
+        gap: 8px;
+    }
+
+    .message-bubble-header {
+        max-width: 90%;
+    }
+}
+</style>
+
+<script>
+// Chat Header State
+let chatHeaderState = {
+    currentConversation: null,
+    currentUser: <%= userId %>,
+    isCollapsed: true,
+    pageContent: '',
+    showConversationList: true
+};
+
+console.log('[CHAT HEADER] Script loaded, userId:', <%= userId %>);
+
+// Initialize when DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[CHAT HEADER] Initializing');
+    initializeChatHeader();
+});
+
+function initializeChatHeader() {
+    console.log('[CHAT HEADER] Initializing chat header');
+
+    // Capture page content
+    capturePageContentHeader();
+
+    // Load conversations
+    loadChatHeaderConversations();
+
+    // Setup input listener
+    const input = document.getElementById('chatHeaderInput');
+    if (input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatHeaderMessage();
+            }
+        });
+    }
+}
+
+function capturePageContentHeader() {
+    const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
+    const textContent = mainContent.innerText || mainContent.textContent;
+    const pageTitle = document.title || 'Page';
+
+    let fullContext = `Page: ${pageTitle}\n`;
+
+    // Try to extract schedule data
+    if (pageTitle.toLowerCase().includes('schedule')) {
+        const scheduleData = extractScheduleDataHeader();
+        if (scheduleData) {
+            fullContext += `\n=== SCHEDULE DATA ===\n${scheduleData}\n`;
+        }
+    }
+
+    fullContext += `\n=== PAGE CONTENT ===\n${textContent.substring(0, 1500)}`;
+
+    chatHeaderState.pageContent = fullContext;
+    console.log('[CHAT HEADER] Page content captured, length:', fullContext.length);
+}
+
+function extractScheduleDataHeader() {
+    try {
+        const tables = document.querySelectorAll('table, .schedule-table, [class*="schedule"]');
+        let data = '';
+
+        tables.forEach((table, idx) => {
+            if (idx < 2) {
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row) => {
+                    const cells = row.querySelectorAll('td, th');
+                    const rowData = Array.from(cells)
+                        .map(cell => cell.textContent.trim())
+                        .filter(text => text.length > 0)
+                        .join(' | ');
+                    if (rowData && rowData.length > 5) {
+                        data += rowData + '\n';
+                    }
+                });
+            }
+        });
+
+        return data || '';
+    } catch (e) {
+        console.warn('[CHAT HEADER] Could not extract schedule data:', e);
+        return '';
+    }
+}
+
+function toggleChatHeaderPanel() {
+    chatHeaderState.isCollapsed = !chatHeaderState.isCollapsed;
+    const panel = document.getElementById('chatHeaderPanel');
+
+    if (chatHeaderState.isCollapsed) {
+        panel.classList.add('collapsed');
+    } else {
+        panel.classList.remove('collapsed');
+        // Refresh content when expanding
+        capturePageContentHeader();
+        if (!chatHeaderState.showConversationList) {
+            showChatHeaderConversations();
+        }
+    }
+}
+
+function loadChatHeaderConversations() {
+    fetch(`/api/proxy/chat/conversations`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(conversations => {
+            displayChatHeaderConversations(conversations);
+        })
+        .catch(error => {
+            console.error('[CHAT HEADER] Error loading conversations:', error);
+            document.getElementById('chatHeaderConversationsList').innerHTML =
+                '<p class="text-danger small">Failed to load</p>';
+        });
+}
+
+function displayChatHeaderConversations(conversations) {
+    const container = document.getElementById('chatHeaderConversationsList');
+
+    if (!conversations || conversations.length === 0) {
+        container.innerHTML = '<p class="text-muted small">No conversations. Create one!</p>';
+        return;
+    }
+
+    container.innerHTML = conversations.map(conv => `
+        <div class="conversation-item-header ${chatHeaderState.currentConversation?.id === conv.id ? 'active' : ''}"
+             onclick="selectChatHeaderConversation(${conv.id})">
+            ${conv.title} (${conv.message_count || 0})
+        </div>
+    `).join('');
+}
+
+function selectChatHeaderConversation(conversationId) {
+    fetch(`/api/proxy/chat/conversations/${conversationId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(conversation => {
+            chatHeaderState.currentConversation = conversation;
+            showChatHeaderMessages();
+            loadChatHeaderMessages();
+            loadChatHeaderConversations();
+        })
+        .catch(error => {
+            console.error('[CHAT HEADER] Error selecting conversation:', error);
+        });
+}
+
+function showChatHeaderConversations() {
+    chatHeaderState.showConversationList = true;
+    document.getElementById('chatHeaderConversations').style.display = 'block';
+    document.getElementById('chatHeaderMessagesArea').style.display = 'none';
+}
+
+function showChatHeaderMessages() {
+    chatHeaderState.showConversationList = false;
+    document.getElementById('chatHeaderConversations').style.display = 'none';
+    document.getElementById('chatHeaderMessagesArea').style.display = 'flex';
+    if (chatHeaderState.currentConversation) {
+        document.getElementById('chatHeaderTitle').textContent = chatHeaderState.currentConversation.title;
+    }
+}
+
+function loadChatHeaderMessages() {
+    if (!chatHeaderState.currentConversation) return;
+
+    fetch(`/api/proxy/chat/conversations/${chatHeaderState.currentConversation.id}/messages`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(messages => {
+            displayChatHeaderMessages(messages);
+        })
+        .catch(error => {
+            console.error('[CHAT HEADER] Error loading messages:', error);
+        });
+}
+
+function displayChatHeaderMessages(messages) {
+    const container = document.getElementById('chatHeaderMessages');
+    container.innerHTML = messages.map(msg => `
+        <div class="chat-header-message ${msg.role.toLowerCase()}">
+            <div class="message-bubble-header ${msg.role.toLowerCase()}">
+                ${escapeHtmlHeader(msg.content)}
+            </div>
+        </div>
+    `).join('');
+
+    // Scroll to bottom
+    container.parentElement.scrollTop = container.parentElement.scrollHeight;
+}
+
+function sendChatHeaderMessage() {
+    const input = document.getElementById('chatHeaderInput');
+    const message = input.value.trim();
+
+    if (!message || !chatHeaderState.currentConversation) {
+        return;
+    }
+
+    input.value = '';
+    input.disabled = true;
+
+    // Refresh page content before sending
+    capturePageContentHeader();
+
+    fetch(`/api/proxy/chat/messages`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            conversationId: chatHeaderState.currentConversation.id,
+            content: message,
+            context: chatHeaderState.pageContent
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(response => {
+        loadChatHeaderMessages();
+    })
+    .catch(error => {
+        console.error('[CHAT HEADER] Error sending message:', error);
+        alert('Failed to send message');
+    })
+    .finally(() => {
+        input.disabled = false;
+        input.focus();
+    });
+}
+
+function startNewChatHeader() {
+    document.getElementById('chatHeaderModal').style.display = 'flex';
+}
+
+function closeNewChatHeader() {
+    document.getElementById('chatHeaderModal').style.display = 'none';
+    document.getElementById('chatHeaderNewTitle').value = '';
+}
+
+function createNewChatHeaderConfirm() {
+    const title = document.getElementById('chatHeaderNewTitle').value.trim();
+
+    if (!title) {
+        alert('Please enter a title');
+        return;
+    }
+
+    fetch(`/api/proxy/chat/conversations`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            title: title,
+            context: 'embedded'
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(conversation => {
+        chatHeaderState.currentConversation = conversation;
+        closeNewChatHeader();
+        showChatHeaderMessages();
+        loadChatHeaderConversations();
+    })
+    .catch(error => {
+        console.error('[CHAT HEADER] Error creating conversation:', error);
+        alert('Failed to create conversation');
+    });
+}
+
+function escapeHtmlHeader(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+</script>
+

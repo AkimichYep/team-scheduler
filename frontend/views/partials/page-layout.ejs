@@ -5,6 +5,9 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+    <!-- AI Chat Header Panel (Collapsible at Top) -->
+    <%- include('chat-header', { userId: (typeof currentUser !== 'undefined' && currentUser?.id) ? currentUser.id : 1 }) %>
+
     <%- include('header', { activePage: activePage }) %>
 
     <div class="container">

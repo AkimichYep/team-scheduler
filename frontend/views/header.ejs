@@ -1,5 +1,63 @@
 <head>
     <link rel="stylesheet" href="/css/style.css">
+    <script>
+        console.log('[HEADER] Loading header stub for chat widget');
+
+        // Chat widget wrapper - defined early, implementation added later by chat-widget.ejs
+        window._chatWidgetImpl = null;
+        window._chatWidgetDebugInfo = {
+            headerLoaded: true,
+            implLoaded: false,
+            retryCount: 0,
+            lastRetry: null
+        };
+
+        // Define stub that will be replaced by actual implementation
+        window.openChatWidget = function() {
+            window._chatWidgetDebugInfo.retryCount++;
+            window._chatWidgetDebugInfo.lastRetry = new Date();
+
+            console.log('[CHAT WIDGET] openChatWidget called, retry count:', window._chatWidgetDebugInfo.retryCount);
+            console.log('[CHAT WIDGET] Implementation loaded:', window._chatWidgetDebugInfo.implLoaded);
+
+            if (typeof window._chatWidgetImpl === 'function') {
+                window._chatWidgetDebugInfo.implLoaded = true;
+                console.log('[CHAT WIDGET] Calling implementation');
+                window._chatWidgetImpl();
+            } else {
+                console.warn('[CHAT WIDGET] Waiting for implementation to load...');
+                console.log('[CHAT WIDGET] Available globals:', {
+                    chatWidgetState: typeof window.chatWidgetState,
+                    initializeChatWidget: typeof window.initializeChatWidget,
+                    chatWidgetScript: document.querySelector('script[data-chat-widget]') ? 'found' : 'not found'
+                });
+
+                // Keep trying with exponential backoff
+                const maxRetries = 20;
+
+                if (window._chatWidgetDebugInfo.retryCount < maxRetries) {
+                    const delay = Math.min(150 * Math.pow(1.3, window._chatWidgetDebugInfo.retryCount), 5000);
+                    console.log('[CHAT WIDGET] Retrying in', delay, 'ms');
+                    setTimeout(() => {
+                        window.openChatWidget();
+                    }, delay);
+                } else {
+                    console.error('[CHAT WIDGET] Failed to load after', maxRetries, 'retries');
+                    alert('Chat widget failed to load. Please refresh the page.');
+                }
+            }
+        };
+
+        // Also expose other functions early with same pattern
+        window._toggleChatImpl = null;
+        window.toggleChat = function() {
+            if (typeof window._toggleChatImpl === 'function') {
+                return window._toggleChatImpl.apply(this, arguments);
+            }
+        };
+
+        console.log('[HEADER] Chat widget stubs loaded');
+    </script>
 </head>
 <header class="main-header">
     <div class="header-container">
@@ -18,7 +76,7 @@
                 <a href="/" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'members') ? 'active' : '' %>">Team Members</a>
                 <a href="/scheduler" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'scheduler') ? 'active' : '' %>">My Scheduler</a>
                 <a href="/summary" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'summary') ? 'active' : '' %>">Team Summary</a>
-                <a href="/chat" class="nav-btn <%= (typeof activePage !== 'undefined' && activePage === 'chat') ? 'active' : '' %>">💬 Chat</a>
+                <button class="nav-btn" onclick="window.openChatWidget()" title="Open chat widget on this page">💬 Chat</button>
             </div>
             <a href="/logout" class="btn btn-danger btn-logout">Logout</a>
         </nav>
@@ -106,6 +164,22 @@
     color: var(--primary-color);
     background-color: #f0f7ff;
     font-weight: bold;
+}
+
+/* Style for chat button */
+.nav-links button.nav-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.nav-links button.nav-btn:hover {
+    color: var(--primary-color);
+    background-color: #f0f7ff;
 }
 
 .btn-logout {

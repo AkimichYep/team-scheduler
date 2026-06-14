@@ -189,34 +189,151 @@ public class ChatService {
     }
 
     /**
-     * Builds a context-aware prompt that includes schedule information
+     * Builds a context-aware prompt that includes schedule information and page content
      */
     private String buildContextAwarePrompt(Long userId, String userMessage, String context) {
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append("You are an expert team scheduling assistant. ");
-        prompt.append("Help users with their scheduling questions, provide recommendations based on their data, ");
-        prompt.append("and offer insights into workload distribution and team optimization.\n\n");
+        prompt.append("You are an expert team scheduling assistant for a company.\n");
+        prompt.append("You help users with scheduling questions, provide specific recommendations, ");
+        prompt.append("and offer insights into workload distribution and team optimization.\n");
+        prompt.append("Always be helpful, specific, and reference actual data when available.\n\n");
 
-        // Add scheduling context if requested
-        if (context != null && context.contains("schedule")) {
+        // Check if this is a schedule-specific question
+        boolean isScheduleQuestion = isScheduleRelatedQuestion(userMessage);
+        
+        if (isScheduleQuestion) {
+            prompt.append("=== SCHEDULE QUESTION DETECTED ===\n");
+            prompt.append("User is asking about: schedule, shifts, who works, or similar.\n");
             try {
-                // Get user's latest schedule summary
-                long scheduleCount = scheduleService.getAllScheduleEntries().size();
-                prompt.append("Current Schedule Context:\n");
-                prompt.append("- User has ").append(scheduleCount).append(" schedule entries\n");
-                prompt.append("- You should reference their schedule data when relevant\n\n");
+                // Get schedule count ONLY - don't expose raw objects with passwords
+                java.util.List<?> allEntries = scheduleService.getAllScheduleEntries();
+                if (allEntries != null && !allEntries.isEmpty()) {
+                    prompt.append("System has ").append(allEntries.size()).append(" total schedule entries.\n");
+                    //prompt.append("System has information about ").append(allEntries.subList(0, 10)).append(" total schedules for users.\n");
+                    prompt.append("Schedule data is available in the system.\n");
+                } else {
+                    prompt.append("No schedule entries found in system.\n");
+                }
             } catch (Exception e) {
-                log.warn("Could not load schedule context", e);
+                log.warn("Could not load schedule data", e);
+                prompt.append("Could not load schedule statistics.\n");
+            }
+            prompt.append("Provide specific details if visible on page. If data is limited, suggest checking the scheduler page.\n\n");
+        }
+
+        // Parse and add page/schedule context if provided (SANITIZED)
+        if (context != null && !context.isEmpty()) {
+            String sanitizedContext = sanitizeContext(context);
+
+            prompt.append("=== CURRENT PAGE CONTEXT ===\n");
+            
+            // Check if this is schedule data
+            if (sanitizedContext.contains("Page: ") || sanitizedContext.contains("SCHEDULE DATA") || sanitizedContext.contains("Schedule")) {
+                prompt.append("The user is viewing a SCHEDULE-related page.\n");
+                
+                // Extract and highlight schedule data
+                if (sanitizedContext.contains("=== SCHEDULE DATA ===")) {
+                    String[] parts = sanitizedContext.split("=== SCHEDULE DATA ===");
+                    if (parts.length > 1) {
+                        String scheduleData = parts[1].split("=== PAGE CONTENT ===")[0].trim();
+                        prompt.append("Schedule Information Available:\n");
+                        prompt.append(scheduleData).append("\n\n");
+                    }
+                } else {
+                    // If schedule question but limited context
+                    prompt.append("Limited schedule context available.\n");
+                    prompt.append("Visible content:\n");
+                    prompt.append(sanitizedContext.substring(0, Math.min(500, sanitizedContext.length()))).append("\n\n");
+                }
+            } else if (isScheduleQuestion) {
+                // Schedule question but on non-schedule page
+                prompt.append("User is asking about schedule but currently on a different page.\n");
+                prompt.append("Visible page content:\n");
+                prompt.append(sanitizedContext.substring(0, Math.min(300, sanitizedContext.length()))).append("\n\n");
+            } else {
+                // General context
+                prompt.append(sanitizedContext.substring(0, Math.min(600, sanitizedContext.length()))).append("\n\n");
             }
         }
 
-        prompt.append("User's Question/Request:\n");
+        // Add instructions
+        prompt.append("=== INSTRUCTIONS ===\n");
+        if (isScheduleQuestion) {
+            prompt.append("1. PRIORITIZE giving specific names and times if visible on page\n");
+            prompt.append("2. If on scheduler page: Reference the specific shifts and team members shown\n");
+            prompt.append("3. If not on scheduler: Suggest viewing the Scheduler page for details\n");
+            prompt.append("4. Use system statistics (call total count) but note that specific details need the scheduler page\n");
+            prompt.append("5. Be direct and practical - give names, times, and roles when possible\n");
+        } else {
+            prompt.append("1. Reference page content when available\n");
+            prompt.append("2. Be specific and practical\n");
+            prompt.append("3. Use data from current page\n");
+        }
+        prompt.append("\n");
+
+        prompt.append("=== USER QUESTION ===\n");
         prompt.append(userMessage).append("\n\n");
-        prompt.append("Please provide a helpful, specific response. If asking about schedules, ");
-        prompt.append("consider best practices for team scheduling and work-life balance.");
+        
+        if (isScheduleQuestion) {
+            prompt.append("Respond with specific names, times, and details if available. ");
+            prompt.append("If data is limited, acknowledge what you can see and suggest checking the scheduler for complete information.");
+        } else {
+            prompt.append("Please provide a specific, helpful response based on the context above.");
+        }
 
         return prompt.toString();
+    }
+
+    /**
+     * Sanitizes context to remove sensitive information before sharing with AI
+     */
+    private String sanitizeContext(String context) {
+        if (context == null || context.isEmpty()) {
+            return "";
+        }
+
+        String sanitized = context;
+
+        // Remove sensitive patterns
+        // Remove any password fields
+        sanitized = sanitized.replaceAll("(?i)(password|pwd|pass)\\s*[=:]\\s*[\\w\\W]*?(?=\\n|\\||$)", "[REDACTED]");
+
+        // Remove API keys
+        sanitized = sanitized.replaceAll("(?i)(api[_-]?key|apikey|token)\\s*[=:]\\s*[\\w\\W]*?(?=\\n|\\||$)", "[REDACTED]");
+
+        // Remove email addresses (optional - depending on privacy policy)
+        // sanitized = sanitized.replaceAll("[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,}", "[USER_EMAIL]");
+
+        // Remove any sequences that look like tokens
+        sanitized = sanitized.replaceAll("(?i)(bearer|basic)\\s+[\\w\\-\\.]+", "[AUTH_TOKEN]");
+
+        // Limit context length to prevent excessive data
+        int maxLength = 3000;
+        if (sanitized.length() > maxLength) {
+            sanitized = sanitized.substring(0, maxLength) + "\n[... context truncated ...]";
+        }
+
+        return sanitized;
+    }
+
+    /**
+     * Detects if user message is asking about schedule/shifts
+     */
+    private boolean isScheduleRelatedQuestion(String message) {
+        if (message == null) return false;
+        String lower = message.toLowerCase();
+        return lower.contains("tomorrow") || 
+               lower.contains("today") ||
+               lower.contains("schedule") || 
+               lower.contains("shift") || 
+               lower.contains("work") ||
+               lower.contains("who works") ||
+               lower.contains("team") ||
+               lower.contains("hour") ||
+               lower.contains("employee") ||
+               lower.contains("staff") ||
+               lower.contains("coverage");
     }
 
     /**

@@ -1,0 +1,728 @@
+<!-- Embedded Chat Widget -->
+<div id="chatWidget" class="chat-widget">
+    <!-- Chat Header -->
+    <div class="chat-header" onclick="toggleChat()">
+        <span class="chat-title">💬 Assistant</span>
+        <span class="chat-toggle" id="chatToggle">−</span>
+    </div>
+
+    <!-- Chat Body -->
+    <div class="chat-body" id="chatBody">
+        <!-- Conversations List -->
+        <div id="conversationsList" class="conversations-list">
+            <div class="conversations-header">
+                <h6>Conversations</h6>
+                <button class="btn btn-sm btn-primary" onclick="startNewChatWidget()">+</button>
+            </div>
+            <div id="conversationsListContainer" class="overflow-auto" style="max-height: 200px;">
+                <p class="text-muted small">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="chat-area" style="display: none;">
+            <div class="chat-messages" id="chatMessagesContainer">
+                <!-- Messages here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatWidgetInput" class="form-control form-control-sm"
+                       placeholder="Ask about this page..." maxlength="500">
+            </div>
+        </div>
+
+        <!-- New Chat Modal (Simple) -->
+        <div id="chatModalSimple" class="chat-modal" style="display: none;">
+            <div class="chat-modal-content">
+                <h6>New Conversation</h6>
+                <input type="text" id="chatWidgetTitle" placeholder="Title..." class="form-control form-control-sm mb-2">
+                <button class="btn btn-sm btn-primary w-100" onclick="createNewChatWidgetConfirm()">Create</button>
+                <button class="btn btn-sm btn-secondary w-100 mt-2" onclick="closeNewChatWidget()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+    z-index: 1000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+}
+
+.chat-header:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+}
+
+.chat-title {
+    font-size: 14px;
+}
+
+.chat-toggle {
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    min-width: 24px;
+    text-align: center;
+}
+
+.chat-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.conversations-list {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.conversations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.conversations-header h6 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.conversations-header .btn {
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.conversation-item-widget {
+    cursor: pointer;
+    padding: 6px 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item-widget:hover {
+    background: #e0e0e0;
+}
+
+.conversation-item-widget.active {
+    background: #007bff;
+    color: white;
+}
+
+.chat-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-message-widget {
+    display: flex;
+    margin-bottom: 4px;
+    font-size: 12px;
+    animation: slideIn 0.3s ease-in-out;
+}
+
+.chat-message-widget.user {
+    justify-content: flex-end;
+}
+
+.chat-message-widget.assistant {
+    justify-content: flex-start;
+}
+
+.message-bubble-widget {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.message-bubble-widget.user {
+    background: #007bff;
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.message-bubble-widget.assistant {
+    background: #f0f0f0;
+    color: #333;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-input-area {
+    padding: 8px 12px;
+    border-top: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.chat-input-area input {
+    font-size: 12px;
+}
+
+.chat-modal {
+    background: rgba(0,0,0,0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 2000;
+}
+
+.chat-modal-content {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+.chat-modal-content h6 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.chat-modal-content input {
+    font-size: 12px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-widget.collapsed {
+    max-height: 50px;
+}
+
+.chat-widget.collapsed .chat-body {
+    display: none;
+}
+
+@media (max-width: 576px) {
+    .chat-widget {
+        width: calc(100vw - 20px);
+        right: 10px;
+        bottom: 10px;
+        max-height: 400px;
+    }
+
+    .message-bubble-widget {
+        max-width: 90%;
+    }
+}
+</style>
+
+<script data-chat-widget="true">
+// Chat Widget State
+let chatWidgetState = {
+    currentConversation: null,
+    currentUser: <%= userId %>,
+    isCollapsed: false,
+    pageContent: ''
+};
+
+console.log('[WIDGET SCRIPT] Chat widget script starting, userId:', <%= userId %>);
+
+// Check if header stubs are loaded
+if (window._chatWidgetDebugInfo) {
+    window._chatWidgetDebugInfo.scriptExecuting = true;
+    console.log('[WIDGET SCRIPT] Header stubs detected');
+}
+
+// Define the implementation
+const openChatWidgetImpl = function() {
+    console.log('[WIDGET] Opening chat widget from header button');
+
+    // Ensure widget is initialized
+    if (!document.getElementById('chatWidget')) {
+        console.warn('[WIDGET] Widget not found in DOM');
+        return;
+    }
+
+    // Capture current page context
+    if (typeof capturePageContent === 'function') {
+        capturePageContent();
+        console.log('[WIDGET] Captured page content:', chatWidgetState.pageContent.substring(0, 100));
+    }
+
+    // Expand widget if collapsed
+    const widget = document.getElementById('chatWidget');
+    if (chatWidgetState.isCollapsed) {
+        chatWidgetState.isCollapsed = false;
+        widget.classList.remove('collapsed');
+        const toggle = document.getElementById('chatToggle');
+        if (toggle) toggle.textContent = '−';
+    }
+
+    // Scroll to widget
+    try {
+        widget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+        console.warn('[WIDGET] Could not scroll to widget', e);
+    }
+
+    // Focus on input if conversation is open, otherwise focus on conversations list
+    if (chatWidgetState.currentConversation) {
+        const input = document.getElementById('chatWidgetInput');
+        if (input) input.focus();
+    } else {
+        // Load conversations if not loaded
+        if (typeof loadChatWidgetConversations === 'function') {
+            loadChatWidgetConversations();
+        }
+    }
+
+    console.log('[WIDGET] Chat widget opened');
+};
+
+// Assign to header stub so button can call it
+window._chatWidgetImpl = openChatWidgetImpl;
+// Also make available directly for backwards compatibility
+window.openChatWidget = openChatWidgetImpl;
+
+console.log('[WIDGET SCRIPT] Implementation assigned to window._chatWidgetImpl');
+if (window._chatWidgetDebugInfo) {
+    window._chatWidgetDebugInfo.implLoaded = true;
+    console.log('[WIDGET SCRIPT] Marked as loaded in debug info');
+}
+
+// ... existing code ...
+
+// Initialize chat widget on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[WIDGET] DOMContentLoaded - initializing chat widget');
+    initializeChatWidget();
+
+    // Make important functions globally accessible
+    window.toggleChat = toggleChat;
+    window.loadChatWidgetConversations = loadChatWidgetConversations;
+    window.selectChatWidgetConversation = selectChatWidgetConversation;
+    window.sendChatWidgetMessage = sendChatWidgetMessage;
+    window.startNewChatWidget = startNewChatWidget;
+    window.capturePageContent = capturePageContent;
+});
+
+function initializeChatWidget() {
+    console.log('[WIDGET] Initializing chat widget for user:', chatWidgetState.currentUser);
+
+    // Capture page content
+    capturePageContent();
+
+    // Load conversations
+    loadChatWidgetConversations();
+
+    // Setup input listener
+    document.getElementById('chatWidgetInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatWidgetMessage();
+        }
+    });
+}
+
+function capturePageContent() {
+    // Get all text content from the page (excluding header/footer)
+    const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
+    const textContent = mainContent.innerText || mainContent.textContent;
+
+    // Get page title
+    const pageTitle = document.title || 'Page';
+
+    // Try to extract structured schedule data if on scheduler page
+    let scheduleData = '';
+    if (pageTitle.toLowerCase().includes('schedule') || pageTitle.toLowerCase().includes('scheduler')) {
+        scheduleData = extractScheduleData();
+    }
+
+    // Combine for context
+    let fullContext = `Page: ${pageTitle}\n`;
+
+    if (scheduleData) {
+        fullContext += `\n=== SCHEDULE DATA ===\n${scheduleData}\n`;
+    }
+
+    fullContext += `\n=== PAGE CONTENT ===\n${textContent.substring(0, 2000)}`;
+
+    chatWidgetState.pageContent = fullContext;
+    console.log('[WIDGET] Context captured, length:', fullContext.length);
+}
+
+function extractScheduleData() {
+    try {
+        // Get today and tomorrow dates
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayStr = formatDateForDisplay(today);
+        const tomorrowStr = formatDateForDisplay(tomorrow);
+
+        let data = `Today's Date: ${todayStr}\nTomorrow's Date: ${tomorrowStr}\n\n`;
+
+        // Look for schedule table/data in the page
+        const tables = document.querySelectorAll('table, .schedule-table, [class*="schedule"], .calendar, [class*="calendar"]');
+        let tableData = '';
+
+        tables.forEach((table, idx) => {
+            if (idx < 3) { // Check up to 3 tables
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, rowIdx) => {
+                    const cells = row.querySelectorAll('td, th');
+                    const rowData = Array.from(cells)
+                        .map(cell => cell.textContent.trim())
+                        .filter(text => text.length > 0)
+                        .join(' | ');
+
+                    if (rowData && rowData.length > 5) {
+                        tableData += rowData + '\n';
+                    }
+                });
+            }
+        });
+
+        if (tableData) {
+            data += 'Schedule Table Data:\n' + tableData;
+        }
+
+        // Try to extract from schedule grid/calendar
+        const scheduleGrids = document.querySelectorAll('[class*="grid"], [class*="calendar"], .schedule-view');
+        scheduleGrids.forEach((grid, idx) => {
+            if (idx < 2) {
+                const entries = grid.querySelectorAll('[class*="entry"], [class*="shift"], [class*="event"], [data-date]');
+                let gridData = 'Calendar/Grid Entries:\n';
+                let foundData = false;
+
+                entries.forEach((entry, eIdx) => {
+                    if (eIdx < 30) { // Limit to 30 entries
+                        const dateAttr = entry.getAttribute('data-date');
+                        const text = entry.textContent.trim();
+
+                        // Check if entry is for tomorrow
+                        if (text && text.length > 2) {
+                            if (dateAttr && (dateAttr.includes(tomorrow.getDate().toString().padStart(2, '0')))) {
+                                gridData += `[TOMORROW] ${text}\n`;
+                                foundData = true;
+                            } else if (!dateAttr) {
+                                // If no date attribute, include but mark as visible
+                                gridData += `- ${text.substring(0, 80)}\n`;
+                                foundData = true;
+                            }
+                        }
+                    }
+                });
+
+                if (foundData) {
+                    data += '\n' + gridData;
+                }
+            }
+        });
+
+        // Try to extract specific user/shift data
+        const userRows = document.querySelectorAll('[data-user], [class*="user"], [class*="person"], .team-member');
+        let userScheduleData = '';
+        userRows.forEach((row, idx) => {
+            if (idx < 20) {
+                const text = row.textContent.trim();
+                const nextShift = row.getAttribute('data-shift') || '';
+                if (text && text.length > 2) {
+                    userScheduleData += `• ${text}${nextShift ? ' - ' + nextShift : ''}\n`;
+                }
+            }
+        });
+
+        if (userScheduleData) {
+            data += '\nTeam Member Schedules:\n' + userScheduleData;
+        }
+
+        if (data.length > 100) {
+            console.log('[WIDGET] Extracted schedule data, length:', data.length);
+            return data;
+        }
+    } catch (e) {
+        console.warn('[WIDGET] Error extracting schedule data:', e);
+    }
+    return '';
+}
+
+function formatDateForDisplay(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return `${days[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function toggleChat() {
+    chatWidgetState.isCollapsed = !chatWidgetState.isCollapsed;
+    const widget = document.getElementById('chatWidget');
+    const toggle = document.getElementById('chatToggle');
+
+    if (chatWidgetState.isCollapsed) {
+        widget.classList.add('collapsed');
+        toggle.textContent = '+';
+    } else {
+        widget.classList.remove('collapsed');
+        toggle.textContent = '−';
+    }
+}
+
+// Assign to header stub
+window._toggleChatImpl = toggleChat;
+
+
+function loadChatWidgetConversations() {
+    fetch(`/api/proxy/chat/conversations`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(conversations => {
+            displayChatWidgetConversations(conversations);
+        })
+        .catch(error => {
+            console.error('[WIDGET] Error loading conversations:', error);
+            document.getElementById('conversationsListContainer').innerHTML =
+                '<p class="text-danger small">Failed to load</p>';
+        });
+}
+
+function displayChatWidgetConversations(conversations) {
+    const container = document.getElementById('conversationsListContainer');
+
+    if (!conversations || conversations.length === 0) {
+        container.innerHTML = '<p class="text-muted small">No conversations. Create one!</p>';
+        return;
+    }
+
+    container.innerHTML = conversations.map(conv => `
+        <div class="conversation-item-widget ${chatWidgetState.currentConversation?.id === conv.id ? 'active' : ''}"
+             onclick="selectChatWidgetConversation(${conv.id})">
+            ${conv.title}
+        </div>
+    `).join('');
+}
+
+function selectChatWidgetConversation(conversationId) {
+    fetch(`/api/proxy/chat/conversations/${conversationId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(conversation => {
+            chatWidgetState.currentConversation = conversation;
+            showChatWidgetArea();
+            loadChatWidgetMessages();
+            loadChatWidgetConversations();
+
+            // Important: Make sure page context is still available in the widget
+            // Re-capture to ensure fresh context
+            capturePageContent();
+        })
+        .catch(error => {
+            console.error('[WIDGET] Error selecting conversation:', error);
+            alert('Failed to load conversation');
+        });
+}
+
+function showChatWidgetArea() {
+    document.getElementById('conversationsList').style.display = 'none';
+    document.getElementById('chatArea').style.display = 'flex';
+}
+
+function loadChatWidgetMessages() {
+    if (!chatWidgetState.currentConversation) return;
+
+    fetch(`/api/proxy/chat/conversations/${chatWidgetState.currentConversation.id}/messages`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(messages => {
+            displayChatWidgetMessages(messages);
+        })
+        .catch(error => {
+            console.error('[WIDGET] Error loading messages:', error);
+        });
+}
+
+function displayChatWidgetMessages(messages) {
+    const container = document.getElementById('chatMessagesContainer');
+    container.innerHTML = messages.map(msg => `
+        <div class="chat-message-widget ${msg.role.toLowerCase()}">
+            <div class="message-bubble-widget ${msg.role.toLowerCase()}">
+                ${escapeHtml(msg.content)}
+            </div>
+        </div>
+    `).join('');
+
+    // Scroll to bottom
+    container.parentElement.scrollTop = container.parentElement.scrollHeight;
+}
+
+function sendChatWidgetMessage() {
+    const input = document.getElementById('chatWidgetInput');
+    const message = input.value.trim();
+
+    if (!message || !chatWidgetState.currentConversation) {
+        return;
+    }
+
+    input.value = '';
+    input.disabled = true;
+
+    // IMPORTANT: Always refresh page content before sending - ensures AI sees current page
+    capturePageContent();
+    let contextForMessage = chatWidgetState.pageContent;
+
+    // Enhance context if asking about schedule-related topics
+    if (message.toLowerCase().includes('tomorrow') ||
+        message.toLowerCase().includes('schedule') ||
+        message.toLowerCase().includes('shift') ||
+        message.toLowerCase().includes('work')) {
+        console.log('[WIDGET] Schedule question detected, using page context with freshly captured data');
+    }
+
+    fetch(`/api/proxy/chat/messages`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            conversationId: chatWidgetState.currentConversation.id,
+            content: message,
+            context: contextForMessage  // Always include current page context
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(response => {
+        console.log('[WIDGET] Message sent successfully with context:',  contextForMessage.substring(0, 100));
+        loadChatWidgetMessages();
+    })
+    .catch(error => {
+        console.error('[WIDGET] Error sending message:', error);
+        alert('Failed to send message');
+    })
+    .finally(() => {
+        input.disabled = false;
+        input.focus();
+    });
+}
+
+function startNewChatWidget() {
+    document.getElementById('chatModalSimple').style.display = 'flex';
+}
+
+function closeNewChatWidget() {
+    document.getElementById('chatModalSimple').style.display = 'none';
+    document.getElementById('chatWidgetTitle').value = '';
+}
+
+function createNewChatWidgetConfirm() {
+    const title = document.getElementById('chatWidgetTitle').value.trim();
+
+    if (!title) {
+        alert('Please enter a title');
+        return;
+    }
+
+    fetch(`/api/proxy/chat/conversations`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            title: title,
+            context: 'embedded'
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(conversation => {
+        chatWidgetState.currentConversation = conversation;
+        closeNewChatWidget();
+        showChatWidgetArea();
+        loadChatWidgetConversations();
+    })
+    .catch(error => {
+        console.error('[WIDGET] Error creating conversation:', error);
+        alert('Failed to create conversation');
+    });
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// Script execution complete
+console.log('[WIDGET SCRIPT] Chat widget script fully loaded and ready');
+if (window._chatWidgetDebugInfo) {
+    window._chatWidgetDebugInfo.scriptComplete = true;
+    console.log('[WIDGET SCRIPT] Debug info:', window._chatWidgetDebugInfo);
+}
+</script>
+
