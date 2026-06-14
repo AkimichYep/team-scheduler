@@ -271,12 +271,12 @@
 // Chat Widget State
 let chatWidgetState = {
     currentConversation: null,
-    currentUser: <%= userId %>,
-    isCollapsed: false,
+    currentUser: '<%= userId %>',
+    isCollapsed: true,
     pageContent: ''
 };
 
-console.log('[WIDGET SCRIPT] Chat widget script starting, userId:', <%= userId %>);
+console.log('[WIDGET SCRIPT] Chat widget script starting, userId:', '<%= userId %>');
 
 // Check if header stubs are loaded
 if (window._chatWidgetDebugInfo) {
@@ -348,6 +348,22 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[WIDGET] DOMContentLoaded - initializing chat widget');
     initializeChatWidget();
 
+    // Add a "Use current page" indicator
+    const inputArea = document.querySelector('.chat-input-area');
+    if (inputArea) {
+        const contextIndicator = document.createElement('div');
+        contextIndicator.id = 'contextIndicator';
+        contextIndicator.style.cssText = 'font-size: 10px; color: #28a745; margin-bottom: 4px; display: none;';
+        contextIndicator.innerHTML = '✓ Page context included';
+        inputArea.insertBefore(contextIndicator, inputArea.firstChild);
+    }
+
+    document.getElementById('chatWidgetInput').addEventListener('focus', function() {
+        capturePageContent();
+        const indicator = document.getElementById('contextIndicator');
+        if (indicator) indicator.style.display = 'block';
+    });
+
     // Make important functions globally accessible
     window.toggleChat = toggleChat;
     window.loadChatWidgetConversations = loadChatWidgetConversations;
@@ -376,26 +392,36 @@ function initializeChatWidget() {
 
 function capturePageContent() {
     // Get all text content from the page (excluding header/footer)
-    const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
-    const textContent = mainContent.innerText || mainContent.textContent;
+    const mainContent = document.querySelector('main, .container, .main-content, .card-body') || document.body;
+    let textContent = mainContent.innerText || mainContent.textContent || "";
+    
+    // Clean up text content
+    textContent = textContent.replace(/\s+/g, ' ').trim();
+
+    // Limit length to avoid huge context
+    if (textContent.length > 4000) {
+        textContent = textContent.substring(0, 4000) + "... [truncated]";
+    }
 
     // Get page title
     const pageTitle = document.title || 'Page';
 
     // Try to extract structured schedule data if on scheduler page
     let scheduleData = '';
-    if (pageTitle.toLowerCase().includes('schedule') || pageTitle.toLowerCase().includes('scheduler')) {
+    if (pageTitle.toLowerCase().includes('schedule') || 
+        pageTitle.toLowerCase().includes('summary') || 
+        window.location.pathname.includes('schedule')) {
         scheduleData = extractScheduleData();
     }
 
     // Combine for context
-    let fullContext = `Page: ${pageTitle}\n`;
+    let fullContext = `Page: ${pageTitle}\nPath: ${window.location.pathname}\n`;
 
     if (scheduleData) {
         fullContext += `\n=== SCHEDULE DATA ===\n${scheduleData}\n`;
     }
 
-    fullContext += `\n=== PAGE CONTENT ===\n${textContent.substring(0, 2000)}`;
+    fullContext += `\n=== PAGE CONTENT ===\n${textContent}`;
 
     chatWidgetState.pageContent = fullContext;
     console.log('[WIDGET] Context captured, length:', fullContext.length);

@@ -41,6 +41,7 @@ app.post('/login', async (req, res) => {
         if (user) {
             req.session.user = { username, password };
             req.session.currentUser = user;
+            req.session.userId = user.id; // Store userId in session
             req.session.displayLastAccessTime = user.lastAccessTime || null;
             
             await api.updateAccessTime(username, { username, password }).catch(() => {});
@@ -56,6 +57,12 @@ app.post('/login', async (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
+});
+
+app.use((req, res, next) => {
+    res.locals.userId = req.session.userId || null;
+    res.locals.currentUser = req.session.currentUser || null;
+    next();
 });
 
 // --- Main Views ---
