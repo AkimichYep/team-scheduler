@@ -24,187 +24,119 @@ let selectedHourForModal = null; // Initialize for hourly view
          const TOAST_DEBOUNCE_DELAY = 5000; // Wait 5 seconds to aggregate multiple saves
          const TOAST_DISPLAY_DELAY = 7000; // Display toast for 7 seconds
 
-         // Shift patterns: maps shift type -> array of 24 activities (index = hour)
-         const SHIFT_PATTERNS = {
-             'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-             'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-             'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
-             'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-             'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-             'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
-             'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-             'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-             'D': new Array(24).fill('D'),
-             'S': new Array(24).fill('S'),
-             'OnCall': new Array(24).fill('OnCall'),
-             'Leave': new Array(24).fill('Leave'),
-             'H': new Array(24).fill('H'),
-             'V': new Array(24).fill('V'),
-             'Off': new Array(24).fill('Off')
-         };
+// SHIFT_PATTERNS and related utilities (activityPriority, getDominantActivity, etc.)
+// are now loaded from shift-patterns.js which is loaded before this file
 
-         // Resolve actual activity for a given shift type + hour
-         function resolveHourlyActivity(activity, hour) {
-             if (SHIFT_PATTERNS[activity]) {
-                 return SHIFT_PATTERNS[activity][hour] || 'Off';
-             }
-             return activity || 'Off';
-         }
+// Given an array of hourly entries for a day, return the one with highest priority activity
+function getDominantEntry(entries) {
+    if (!entries || entries.length === 0) return null;
+    // Group by activity and count hours
+    const counts = {};
+    entries.forEach(e => {
+        counts[e.activity] = (counts[e.activity] || 0) + 1;
+    });
 
-         // Generate OnCall combinations for all patterns
-         Object.keys(SHIFT_PATTERNS).forEach(key => {
-             if (key.startsWith('Shift')) {
-                 const base = SHIFT_PATTERNS[key];
-                 SHIFT_PATTERNS['OC_' + key] = base.map((a, i) => i < 2 ? 'OnCall' : a);
-                 SHIFT_PATTERNS[key + '_OC'] = base.map((a, i) => i >= 19 ? 'OnCall' : a);
-                 SHIFT_PATTERNS['OC_' + key + '_OC'] = base.map((a, i) => (i < 2 || i >= 19) ? 'OnCall' : a);
-             }
-         });
-
-          function isShiftType(activity) {
-              return activity in SHIFT_PATTERNS;
-          }
-
-
-          function activityPriority(activity) {
-             const p = { 'D': 10, 'S': 9, 'OnCall': 8, 'Development': 10, 'Support': 9, 'ShiftA': 5, 'ShiftB': 5, 'ShiftC': 5, 'ShiftD': 5, 'ShiftE': 5, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
-             return p[activity] !== undefined ? p[activity] : 1;
-         }
-
-         function getDominantActivity(entries) {
-            if (!entries || entries.length === 0) return 'Off';
-            
-            // Normalize activities for priority calculation
-            const normalizedEntries = entries.map(e => {
-                let act = e.activity;
-                if (act === 'Development') act = 'D';
-                if (act === 'Support') act = 'S';
-                if (act === 'OnCall') act = 'OC';
-                return { ...e, activity: act };
-            });
-
-            return normalizedEntries.reduce((best, e) => {
-                return activityPriority(e.activity) > activityPriority(best) ? e.activity : best;
-            }, 'Off');
+    // Check if any activity spans 24 hours (for our new shift patterns)
+    for (const [activity, count] of Object.entries(counts)) {
+        if (isShiftType(activity)) {
+            // If it's a shift type, it might be grouped (count 1) or hourly (count 24)
+            if (count === 24 || entries.some(e => e.hourRange === '0-23' && e.activity === activity)) {
+                return Object.assign({}, entries[0], { activity: activity });
+            }
         }
+    }
 
-          // Given an array of hourly entries for a day, return the one with highest priority activity
-          function getDominantEntry(entries) {
-              if (!entries || entries.length === 0) return null;
-              // Group by activity and count hours
-              const counts = {};
-              entries.forEach(e => {
-                  counts[e.activity] = (counts[e.activity] || 0) + 1;
-              });
+    return entries.reduce((best, e) => {
+        return activityPriority(e.activity) > activityPriority(best.activity) ? e : best;
+    });
+}
 
-              // Check if any activity spans 24 hours (for our new shift patterns)
-              for (const [activity, count] of Object.entries(counts)) {
-                  if (isShiftType(activity)) {
-                      // If it's a shift type, it might be grouped (count 1) or hourly (count 24)
-                      if (count === 24 || entries.some(e => e.hourRange === '0-23' && e.activity === activity)) {
-                          return Object.assign({}, entries[0], { activity: activity });
-                      }
-                  }
-              }
+// Check if 24 hourly entries exactly match a known shift pattern
+function detectShiftPattern(entries) {
+    if (!entries || entries.length === 0) return null;
 
-              return entries.reduce((best, e) => {
-                  return activityPriority(e.activity) > activityPriority(best.activity) ? e : best;
-              });
-          }
+    // NEW: If backend already provided a shift pattern name for 0-23
+    const groupedPattern = entries.find(e => e.hourRange === '0-23' && isShiftType(e.activity));
+    if (groupedPattern) return groupedPattern.activity;
 
-          // Check if 24 hourly entries exactly match a known shift pattern
-          function detectShiftPattern(entries) {
-              if (!entries || entries.length === 0) return null;
-              
-              // NEW: If backend already provided a shift pattern name for 0-23
-              const groupedPattern = entries.find(e => e.hourRange === '0-23' && isShiftType(e.activity));
-              if (groupedPattern) return groupedPattern.activity;
+    const hourMap = new Array(24).fill('Off');
+    entries.forEach(e => {
+        if (e.hourRange !== undefined) {
+            const range = e.hourRange.split('-');
+            const start = parseInt(range[0]);
+            const end = range.length > 1 ? parseInt(range[1]) : start;
+            for (let h = start; h <= end; h++) {
+                if (h >= 0 && h < 24) hourMap[h] = e.activity;
+            }
+        } else if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
+            hourMap[e.hourOfDay] = e.activity;
+        }
+    });
+    for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
+        if (pattern.every((act, i) => act === hourMap[i])) {
+            return shiftName;
+        }
+    }
+    return null;
+}
 
-              const hourMap = new Array(24).fill('Off');
-              entries.forEach(e => {
-                  if (e.hourRange !== undefined) {
-                      const range = e.hourRange.split('-');
-                      const start = parseInt(range[0]);
-                      const end = range.length > 1 ? parseInt(range[1]) : start;
-                      for (let h = start; h <= end; h++) {
-                          if (h >= 0 && h < 24) hourMap[h] = e.activity;
-                      }
-                  } else if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
-                      hourMap[e.hourOfDay] = e.activity;
-                  }
-              });
-              for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
-                  if (pattern.every((act, i) => act === hourMap[i])) {
-                      return shiftName;
-                  }
-              }
-              return null;
-          }
+// Get the best single-activity label for a day: prefers recognized shift pattern, then dominant entry
+function getDisplayEntryForDay(entries) {
+    if (!entries || entries.length === 0) return null;
+    const shiftName = detectShiftPattern(entries);
+    if (shiftName) {
+        return Object.assign({}, entries[0], { activity: shiftName });
+    }
+    return getDominantEntry(entries);
+}
 
-          // Get the best single-activity label for a day: prefers recognized shift pattern, then dominant entry
-          function getDisplayEntryForDay(entries) {
-              if (!entries || entries.length === 0) return null;
-              const shiftName = detectShiftPattern(entries);
-              if (shiftName) {
-                  return Object.assign({}, entries[0], { activity: shiftName });
-              }
-              return getDominantEntry(entries);
-          }
+// Expand a shift type and save it to backend as a single activity
+function expandAndSaveShift(dateStr, shiftType, notes) {
+    // Send single request with shift name
+    return fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            date: dateStr,
+            activity: shiftType,
+            notes: notes || ''
+        })
+    }).then(r => r.json()).then(dayData => {
+        // Update local schedule data with fetched day
+        const list = Array.isArray(dayData) ? dayData : [dayData];
 
-         // Expand a shift type and save it to backend as a single activity
-         function expandAndSaveShift(dateStr, shiftType, notes) {
-             // Send single request with shift name
-             return fetch(`/api/proxy/schedule/${CURRENT_USER_ID}`, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({
-                     date: dateStr,
-                     activity: shiftType,
-                     notes: notes || ''
-                 })
-             }).then(r => r.json()).then(dayData => {
-                // Update local schedule data with fetched day
-                const list = Array.isArray(dayData) ? dayData : [dayData];
-                
-                // Important: Unpack grouped data into hourly map for this day first
-                list.forEach(entry => {
-                    if (entry.hourRange !== undefined) {
-                        const range = entry.hourRange.split('-');
-                        const start = parseInt(range[0]);
-                        const end = range.length > 1 ? parseInt(range[1]) : start;
-                        for (let h = start; h <= end; h++) {
-                            window.scheduleData[`${entry.date}-${h}`] = entry;
-                        }
-                    } else if (entry.hourOfDay !== undefined) {
-                        window.scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
-                    }
-                });
+        // Important: Unpack grouped data into hourly map for this day first
+        list.forEach(entry => {
+            if (entry.hourRange !== undefined) {
+                const range = entry.hourRange.split('-');
+                const start = parseInt(range[0]);
+                const end = range.length > 1 ? parseInt(range[1]) : start;
+                for (let h = start; h <= end; h++) {
+                    window.scheduleData[`${entry.date}-${h}`] = entry;
+                }
+            } else if (entry.hourOfDay !== undefined) {
+                window.scheduleData[`${entry.date}-${entry.hourOfDay}`] = entry;
+            }
+        });
 
-                window.scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
+        window.scheduleData[dateStr] = getDisplayEntryForDay(list) || list[0];
 
-                 pendingSaves++;
-                 if (toastTimeout) clearTimeout(toastTimeout);
-                 toastTimeout = setTimeout(() => {
-                     if (pendingSaves > 0) {
-                         showToast(`Shift ${shiftType.replace('Shift','')} saved for ${dateStr}`);
-                         pendingSaves = 0;
-                     }
-                 }, TOAST_DEBOUNCE_DELAY);
+         pendingSaves++;
+         if (toastTimeout) clearTimeout(toastTimeout);
+         toastTimeout = setTimeout(() => {
+             if (pendingSaves > 0) {
+                 showToast(`Shift ${shiftType.replace('Shift','')} saved for ${dateStr}`);
+                 pendingSaves = 0;
+             }
+         }, TOAST_DEBOUNCE_DELAY);
 
-                 // Re-render only the current view
-                 refreshCurrentView();
-             }).catch(err => {
-                 console.error('Error saving shift:', err);
-                 showToast('Error saving shift!', 'error');
-             });
-         }
+         // Re-render only the current view
+         refreshCurrentView();
+     }).catch(err => {
+         console.error('Error saving shift:', err);
+         showToast('Error saving shift!', 'error');
+     });
+ }
 
         // Initialize on page load
         document.addEventListener('keydown', function(event) {
@@ -1162,4 +1094,8 @@ let selectedHourForModal = null; // Initialize for hourly view
          };
 
     
+
+
+
+
 

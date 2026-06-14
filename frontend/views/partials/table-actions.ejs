@@ -1,0 +1,30 @@
+<div class="row-actions">
+    <% if (locals.editUrl) { %>
+        <a href="<%= editUrl %>" class="btn-icon edit-btn" title="Edit">✏️</a>
+    <% } %>
+    <% if (locals.deleteId) { %>
+        <button class="btn-icon delete-btn" onclick="<%= deleteFunction %>('<%= deleteId %>')" title="Delete">🗑️</button>
+    <% } %>
+    <% if (locals.toggleId) { %>
+        <button class="btn-icon toggle-btn" onclick="<%= toggleFunction %>('<%= toggleId %>')" title="<%= toggleTitle || 'Toggle' %>">🔄</button>
+    <% } %>
+</div>
+
+<style>
+    .row-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+    .btn-icon:hover {
+        transform: scale(1.2);
+    }
+</style>
+

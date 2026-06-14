@@ -51,12 +51,6 @@
     </div>
 
     <style>
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
         .status-btn {
             border: none;
             padding: 4px 12px;
@@ -69,34 +63,7 @@
         .status-btn.active { background-color: #e8f5e9; color: #2e7d32; }
         .status-btn.inactive { background-color: #ffebee; color: #c62828; }
         .status-btn:hover { opacity: 0.8; }
-        
-        .row-actions { display: flex; gap: 10px; }
-        .btn-icon {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            text-decoration: none;
-            transition: transform 0.2s;
-        }
-        .btn-icon:hover { transform: scale(1.2); }
     </style>
-
-    <script>
-        function deleteRole(id) {
-            if(confirm('Are you sure you want to delete this role? This action cannot be undone and may fail if the role is still in use.')) {
-                fetch(`/proxy/roles/delete/${id}`, { method: 'DELETE' })
-                .then(response => response.ok ? location.reload() : alert("Failed to delete role. It may still be in use."))
-                .catch(error => console.error("Error:", error));
-            }
-        }
-
-        function toggleRole(id) {
-            fetch(`/proxy/roles/toggle/${id}`, { method: 'PUT' })
-            .then(response => response.ok ? location.reload() : alert("Failed to toggle role status."))
-            .catch(error => console.error("Error:", error));
-        }
-    </script>
 </body>
 </html>
 

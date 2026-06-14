@@ -1,6 +1,9 @@
 <html>
 <head>
     <title>Team Summary by Day - Team Scheduler</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shift-patterns.js"></script>
+    <script src="/js/common-utils.js"></script>
 </head>
 <body>
     <%- include('header', { activePage: 'summary' }) %>
@@ -179,61 +182,7 @@
             return expanded;
         }
 
-        // Shift patterns: index = hour (0-23), value = actual activity
-        const SHIFT_PATTERNS = {
-            'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-            'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
-            'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-            'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-            'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-            'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-            'D': new Array(24).fill('D'),
-            'S': new Array(24).fill('S'),
-            'OnCall': new Array(24).fill('OnCall'),
-            'Leave': new Array(24).fill('Leave'),
-            'H': new Array(24).fill('H'),
-            'V': new Array(24).fill('V'),
-            'Off': new Array(24).fill('Off')
-        };
-        // Auto-generate OC combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
-        Object.keys(SHIFT_PATTERNS).forEach(function(key) {
-            if (key.startsWith('Shift')) {
-                const base = SHIFT_PATTERNS[key];
-                // OnCall at start: hours 0-1 (2 hours)
-                SHIFT_PATTERNS['OC_' + key]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
-                // OnCall at end: hours 19-23 (5 hours)
-                SHIFT_PATTERNS[key + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
-                // OnCall at both: hours 0-1 and 19-23
-                SHIFT_PATTERNS['OC_' + key + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
-            }
-        });
-
-        function activityPriority(activity) {
-            const p = { 'D': 10, 'S': 9, 'OnCall': 8, 'Development': 10, 'Support': 9, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
-            return p[activity] !== undefined ? p[activity] : 1;
-        }
-
-        // Resolve actual D/S/Off for a given activity + hour
-        function resolveHourlyActivity(activity, hour) {
-            let normalizedActivity = activity;
-            if (activity === 'Development') normalizedActivity = 'D';
-            if (activity === 'Support') normalizedActivity = 'S';
-            if (activity === 'OnCall') normalizedActivity = 'OC';
-
-            if (SHIFT_PATTERNS[normalizedActivity]) {
-                return SHIFT_PATTERNS[normalizedActivity][hour] || 'Off';
-            }
-            return normalizedActivity || 'Off';
-        }
+        // SHIFT_PATTERNS and related functions are now loaded from shift-patterns.js
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date('2026-06-09');

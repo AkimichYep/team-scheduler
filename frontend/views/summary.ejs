@@ -1,6 +1,9 @@
 <html>
 <head>
     <title>Team Summary - Team Scheduler</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shift-patterns.js"></script>
+    <script src="/js/common-utils.js"></script>
 </head>
 <body>
     <%- include('header', { activePage: 'summary' }) %>
@@ -192,173 +195,10 @@
             return expanded;
         }
 
-        function activityPriority(activity) {
-            const p = { 'D': 10, 'S': 9, 'OnCall': 8, 'Development': 10, 'Support': 9, 'Leave': 4, 'V': 3, 'Vacation': 3, 'H': 2, 'Holiday': 2, 'Off': 0 };
-            return p[activity] !== undefined ? p[activity] : 1;
-        }
+        // SHIFT_PATTERNS and shift pattern utilities are now loaded from shift-patterns.js
 
-        const SHIFT_PATTERNS = {
-            'ShiftA_M': ['Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftB_M': ['Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftC_M': ['Off','Off','Off','Off','Off','Off','Off','S','S','S','S','S','D','D','D','D','Off','Off','Off','Off','Off','Off','Off','Off'],
-            'ShiftD_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','Off','S','S','S','S','D','D','D','D','S','Off','Off','Off','Off','Off'],
-            'ShiftE_M': ['Off','Off','Off','Off','Off','Off','Off','Off','Off','D','D','D','D','S','S','S','S','S','Off','Off','Off','Off','Off','Off'],
-            'ShiftA_S': ["Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftB_S': ["Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftC_S': ["Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftD_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-            'ShiftE_S': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","S","S","S","S","S","S","S","S","S","Off","Off","Off","Off","Off"],
-            'ShiftA_D': ["Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftB_D': ["Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftC_D': ["Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off","Off","Off","Off"],
-            'ShiftD_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-            'ShiftE_D': ["Off","Off","Off","Off","Off","Off","Off","Off","Off","Off","D","D","D","D","D","D","D","D","D","Off","Off","Off","Off","Off"],
-            'D': new Array(24).fill('D'),
-            'S': new Array(24).fill('S'),
-            'OnCall': new Array(24).fill('OnCall'),
-            'Leave': new Array(24).fill('Leave'),
-            'H': new Array(24).fill('H'),
-            'V': new Array(24).fill('V'),
-            'Off': new Array(24).fill('Off')
-        };
-        // Auto-generate OC combo patterns: 2 hours at start (0-1), 5 hours at end (19-23)
-        Object.keys(SHIFT_PATTERNS).forEach(function(key) {
-            if (key.startsWith('Shift')) {
-                const base = SHIFT_PATTERNS[key];
-                // OnCall at start: hours 0-1 (2 hours)
-                SHIFT_PATTERNS['OC_' + key]           = base.map(function(a,i){ return i < 2 ? 'OnCall' : a; });
-                // OnCall at end: hours 19-23 (5 hours)
-                SHIFT_PATTERNS[key + '_OC']           = base.map(function(a,i){ return i >= 19 ? 'OnCall' : a; });
-                // OnCall at both: hours 0-1 and 19-23
-                SHIFT_PATTERNS['OC_' + key + '_OC']   = base.map(function(a,i){ return (i < 2 || i >= 19) ? 'OnCall' : a; });
-            }
-        });
-
-        function detectShiftPattern(entries) {
-            if (!entries || entries.length === 0) return null;
-
-            // Build hourMap with S/D/Off/OnCall values
-            const hourMap = new Array(24).fill('Off');
-            let onCallHours = [];
-
-            entries.forEach(e => {
-                if (e.hourOfDay !== undefined && e.hourOfDay >= 0 && e.hourOfDay < 24) {
-                    let act = e.activity;
-                    if (act === 'Development' || act === 'D') act = 'D';
-                    else if (act === 'Support' || act === 'S') act = 'S';
-                    else if (act === 'OnCall' || act === 'OC') act = 'OnCall';
-                    
-                    hourMap[e.hourOfDay] = act;
-                    if (act === 'OnCall') {
-                        onCallHours.push(e.hourOfDay);
-                    }
-                }
-            });
-
-            // First, try to match exact S/D/Off patterns (without OnCall)
-            // by temporarily replacing OnCall hours with Off
-            const hourMapForMatching = hourMap.slice();
-            for (let i = 0; i < 24; i++) {
-                if (hourMapForMatching[i] === 'OnCall') {
-                    hourMapForMatching[i] = 'Off';
-                }
-            }
-
-            // Only check base patterns (ShiftA-E), not OC combinations
-            for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
-                if (!/^Shift[A-E](_[MSD])?$/.test(shiftName)) continue;
-
-                if (pattern.every((act, i) => {
-                    // Match if both are Off, or both are OnCall, or both are same activity
-                    return act === hourMap[i];
-                })) {
-                    return shiftName;
-                }
-            }
-
-            // If no exact match, try base pattern matching (allowing for OnCall additions)
-            let matchedShiftName = null;
-            for (const [shiftName, pattern] of Object.entries(SHIFT_PATTERNS)) {
-                // Only check base patterns (ShiftA-E), not OC combinations
-                if (!/^Shift[A-E](_[MSD])?$/.test(shiftName)) continue;
-
-                if (pattern.every((act, i) => act === hourMapForMatching[i])) {
-                    matchedShiftName = shiftName;
-                    break;
-                }
-            }
-
-            // If we found a matching base pattern, check for OnCall and add markers
-            if (matchedShiftName && onCallHours.length > 0) {
-                // Find the shift boundaries in the base pattern
-                const basePattern = SHIFT_PATTERNS[matchedShiftName];
-                let shiftStart = -1, shiftEnd = -1;
-                for (let i = 0; i < 24; i++) {
-                    if (basePattern[i] !== 'Off') {
-                        if (shiftStart === -1) shiftStart = i;
-                        shiftEnd = i;
-                    }
-                }
-
-                // Check if OnCall is before, after, or both
-                const minOnCall = Math.min(...onCallHours);
-                const maxOnCall = Math.max(...onCallHours);
-                const onCallBefore = minOnCall < shiftStart;
-                const onCallAfter = maxOnCall > shiftEnd;
-
-                if (onCallBefore && onCallAfter) return 'OC_' + matchedShiftName + '_OC';
-                if (onCallBefore) return 'OC_' + matchedShiftName;
-                if (onCallAfter) return matchedShiftName + '_OC';
-            }
-
-            return matchedShiftName;
-        }
-
-        function getActivityClass(activity) {
-            const map = { 'D': 'd', 'S': 's', 'OnCall': 'oncall', 'Leave': 'leave', 'ShiftA': 'shifta', 'ShiftB': 'shiftb', 'ShiftC': 'shiftc', 'ShiftD': 'shiftd', 'ShiftE': 'shifte', 'ShiftA_M': 'shifta', 'ShiftB_M': 'shiftb', 'ShiftC_M': 'shiftc', 'ShiftD_M': 'shiftd', 'ShiftE_M': 'shifte', 'ShiftA_S': 'shifta', 'ShiftB_S': 'shiftb', 'ShiftC_S': 'shiftc', 'ShiftD_S': 'shiftd', 'ShiftE_S': 'shifte', 'ShiftA_D': 'shifta', 'ShiftB_D': 'shiftb', 'ShiftC_D': 'shiftc', 'ShiftD_D': 'shiftd', 'ShiftE_D': 'shifte', 'Off': 'off', 'V': 'v', 'Vacation': 'v', 'H': 'h', 'Holiday': 'h' };
-            if (map[activity] !== undefined) return map[activity];
-            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
-            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-            if (ocPre)  return getActivityClass(ocPre[1])  + ' oc-pre';
-            if (ocSuf)  return getActivityClass(ocSuf[1])  + ' oc-suf';
-            if (ocBoth) return getActivityClass(ocBoth[1]) + ' oc-both';
-            return 'off';
-        }
-
-        function getActivityDisplay(activity) {
-            const map = { 'D': 'D', 'S': 'S', 'OnCall': 'OC', 'Leave': 'L', 'ShiftA': 'A', 'ShiftB': 'B', 'ShiftC': 'C', 'ShiftD': 'D', 'ShiftE': 'E', 'ShiftA_M': 'A', 'ShiftB_M': 'B', 'ShiftC_M': 'C', 'ShiftD_M': 'D', 'ShiftE_M': 'E', 'ShiftA_S': 'A', 'ShiftB_S': 'B', 'ShiftC_S': 'C', 'ShiftD_S': 'D', 'ShiftE_S': 'E', 'ShiftA_D': 'A', 'ShiftB_D': 'B', 'ShiftC_D': 'C', 'ShiftD_D': 'D', 'ShiftE_D': 'E', 'Off': 'Off', 'V': 'V', 'Vacation': 'V', 'H': 'H', 'Holiday': 'H', 'ShiftA_M_OC': 'A >', 'ShiftB_M_OC': 'B >', 'ShiftC_M_OC': 'C >', 'ShiftD_M_OC': 'D >', 'ShiftE_M_OC': 'E >', 'ShiftA_S_OC': 'A >', 'ShiftB_S_OC': 'B >', 'ShiftC_S_OC': 'C >', 'ShiftD_S_OC': 'D >', 'ShiftE_S_OC': 'E >', 'ShiftA_D_OC': 'A >', 'ShiftB_D_OC': 'B >', 'ShiftC_D_OC': 'C >', 'ShiftD_D_OC': 'D >', 'ShiftE_D_OC': 'E >', 'OC_ShiftA_M': '< A', 'OC_ShiftB_M': '< B', 'OC_ShiftC_M': '< C', 'OC_ShiftD_M': '< D', 'OC_ShiftE_M': '< E', 'OC_ShiftA_S': '< A', 'OC_ShiftB_S': '< B', 'OC_ShiftC_S': '< C', 'OC_ShiftD_S': '< D', 'OC_ShiftE_S': '< E', 'OC_ShiftA_D': '< A', 'OC_ShiftB_D': '< B', 'OC_ShiftC_D': '< C', 'OC_ShiftD_D': '< D', 'OC_ShiftE_D': '< E', 'OC_ShiftA_M_OC': '< A >', 'OC_ShiftB_M_OC': '< B >', 'OC_ShiftC_M_OC': '< C >', 'OC_ShiftD_M_OC': '< D >', 'OC_ShiftE_M_OC': '< E >', 'OC_ShiftA_S_OC': '< A >', 'OC_ShiftB_S_OC': '< B >', 'OC_ShiftC_S_OC': '< C >', 'OC_ShiftD_S_OC': '< D >', 'OC_ShiftE_S_OC': '< E >', 'OC_ShiftA_D_OC': '< A >', 'OC_ShiftB_D_OC': '< B >', 'OC_ShiftC_D_OC': '< C >', 'OC_ShiftD_D_OC': '< D >', 'OC_ShiftE_D_OC': '< E >' };
-            if (map[activity] !== undefined) return map[activity];
-            if (!activity) return '-';
-            // OC combo display: < A, A >, < A >
-            const ocPre  = /^OC_(Shift[A-E](_[MSD])?)$/.exec(activity);
-            const ocSuf  = /^(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-            const ocBoth = /^OC_(Shift[A-E](_[MSD])?)_OC$/.exec(activity);
-            if (ocPre)  return '< ' + getActivityDisplay(ocPre[1]);
-            if (ocSuf)  return getActivityDisplay(ocSuf[1]) + ' >';
-            if (ocBoth) return '< ' + getActivityDisplay(ocBoth[1]) + ' >';
-            return activity;
-        }
-
-        function getDominantActivity(entries) {
-            if (!entries || entries.length === 0) return null;
-            const shiftName = detectShiftPattern(entries);
-            if (shiftName) return shiftName;
-            
-            // Normalize activities for priority calculation
-            const normalizedEntries = entries.map(e => {
-                let act = e.activity;
-                if (act === 'Development') act = 'D';
-                if (act === 'Support') act = 'S';
-                if (act === 'OnCall') act = 'OC';
-                return { ...e, activity: act };
-            });
-
-            return normalizedEntries.reduce((best, e) => {
-                if (!best) return e.activity;
-                return activityPriority(e.activity) > activityPriority(best) ? e.activity : best;
-            }, null);
-        }
+        // getActivityClass, getActivityDisplay, and getDominantActivity
+        // are now loaded from shift-patterns.js
 
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date('2026-06-09');
@@ -684,25 +524,8 @@
             errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
         }
 
-        function showToast(message, type = 'success') {
-            const existingToast = document.querySelector('.toast-notification');
-            if (existingToast) {
-                existingToast.classList.add('hide');
-                setTimeout(() => existingToast.remove(), 300);
-            }
-
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.textContent = message;
-            if (type === 'error') {
-                toast.style.backgroundColor = '#f44336';
-            }
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.add('hide');
-                setTimeout(() => toast.remove(), 300);
-            }, 7000);
+        function showLoading(show = true) {
+            document.getElementById('loadingContainer').style.display = show ? 'block' : 'none';
         }
     </script>
 </body>

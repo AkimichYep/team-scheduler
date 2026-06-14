@@ -1,0 +1,33 @@
+<header class="page-header">
+    <h1><%= title %></h1>
+    <% if (locals.buttons && buttons.length > 0) { %>
+        <div class="action-buttons">
+            <% buttons.forEach(btn => { %>
+                <a href="<%= btn.href %>" class="btn <%= btn.class || 'btn-primary' %>">
+                    <%= btn.label %>
+                </a>
+            <% }) %>
+        </div>
+    <% } else if (locals.backButton) { %>
+        <a href="<%= backButton.href %>" class="btn <%= backButton.class || 'btn-primary' %>">
+            <%= backButton.label || 'Back' %>
+        </a>
+    <% } %>
+</header>
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+    .page-header h1 {
+        margin: 0;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+</style>
+
