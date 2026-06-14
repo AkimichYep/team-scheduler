@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Chat - Team Scheduler</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('header', { activePage: 'chat' }) %>
+
+    <div class="container-fluid mt-4" style="max-width: 1400px; height: calc(100vh - 200px);">
+        <div class="row h-100">
+            <!-- Conversations Sidebar -->
+            <div class="col-md-3 border-end" style="max-height: 85vh; overflow-y: auto;">
+                <div class="mb-3">
+                    <h5>Conversations</h5>
+                    <button class="btn btn-primary btn-sm w-100" id="newConversationBtn">
+                        + New Chat
+                    </button>
+                </div>
+
+                <div id="conversationsList" class="list-group">
+                    <!-- Conversations will be loaded here -->
+                    <p class="text-muted small">Loading conversations...</p>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="col-md-9 d-flex flex-column" style="max-height: 85vh;">
+                <div id="chatContainer" class="flex-grow-1 overflow-auto p-3 border-bottom"
+                     style="background-color: #f8f9fa; display: none;">
+                    <div id="messagesContainer">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="flex-grow-1 d-flex align-items-center justify-content-center p-3">
+                    <div class="text-center text-muted">
+                        <h4>Welcome to Schedule Assistant Chat</h4>
+                        <p>Select a conversation or create a new one to get started</p>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 border-top" id="inputArea" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="messageInput"
+                               placeholder="Type your message..." maxlength="1000">
+                        <button class="btn btn-primary" id="sendBtn" type="button">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        💡 Ask about your schedule, team distribution, or get recommendations!
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Conversation Modal -->
+    <div class="modal fade" id="newConversationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Start New Conversation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="conversationTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="conversationTitle"
+                               placeholder="e.g., Schedule Review, Team Questions">
+                    </div>
+                    <div class="mb-3">
+                        <label for="conversationContext" class="form-label">Topic</label>
+                        <select class="form-select" id="conversationContext">
+                            <option value="general">General Chat</option>
+                            <option value="schedule">Schedule Discussion</option>
+                            <option value="team">Team Optimization</option>
+                            <option value="planning">Shift Planning</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="createConversationBtn">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <style>
+        .chat-message {
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        .chat-message.user {
+            text-align: right;
+        }
+
+        .chat-message.assistant {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            max-width: 75%;
+            word-wrap: break-word;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user .message-bubble {
+            background-color: #007bff;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+
+        .assistant .message-bubble {
+            background-color: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        .conversation-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .conversation-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .conversation-item.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #messagesContainer {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+
+    <script>
+        const API_BASE = `/api/proxy/chat`;
+
+        let currentUser = null;
+        let currentConversation = null;
+        let stompClient = null;
+        let isConnected = false;
+
+        // Initialize chat on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChat();
+        });
+
+        function initializeChat() {
+            // Get current user from page context
+            currentUser = {
+                id: <%= userId %>
+            };
+            setupEventListeners();
+            loadConversations();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('newConversationBtn').addEventListener('click', showNewConversationModal);
+            document.getElementById('createConversationBtn').addEventListener('click', createNewConversation);
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+
+        function showNewConversationModal() {
+            const modal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+            modal.show();
+        }
+
+        function createNewConversation() {
+            const title = document.getElementById('conversationTitle').value.trim();
+            const context = document.getElementById('conversationContext').value;
+
+            if (!title) {
+                alert('Please enter a title for the conversation');
+                return;
+            }
+
+            fetch(`${API_BASE}/conversations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: title,
+                    context: context
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(conversation => {
+                currentConversation = conversation;
+                bootstrap.Modal.getInstance(document.getElementById('newConversationModal')).hide();
+                document.getElementById('conversationTitle').value = '';
+                showChat();
+                loadConversations();
+            })
+            .catch(error => {
+                console.error('Error creating conversation:', error);
+                alert('Failed to create conversation: ' + error.message);
+            });
+        }
+
+        function loadConversations() {
+            fetch(`${API_BASE}/conversations`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(conversations => {
+                    displayConversations(conversations);
+                })
+                .catch(error => {
+                    console.error('Error loading conversations:', error);
+                });
+        }
+
+        function displayConversations(conversations) {
+            const listContainer = document.getElementById('conversationsList');
+
+            if (!conversations || conversations.length === 0) {
+                listContainer.innerHTML = '<p class="text-muted small">No conversations yet.<br>Create one to get started!</p>';
+                return;
+            }
+
+            listContainer.innerHTML = conversations.map(conv => `
+                <div class="conversation-item list-group-item py-2 px-3 ${currentConversation?.id === conv.id ? 'active' : ''}"
+                     onclick="selectConversation(${conv.id})">
+                    <div class="d-flex justify-content-between">
+                        <strong class="small">${conv.title}</strong>
+                        <span class="badge bg-secondary small">${conv.message_count || 0}</span>
+                    </div>
+                    <small class="text-muted d-block text-truncate">${conv.context || 'general'}</small>
+                </div>
+            `).join('');
+        }
+
+        function selectConversation(conversationId) {
+            fetch(`${API_BASE}/conversations/${conversationId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(conversation => {
+                    currentConversation = conversation;
+                    showChat();
+                    loadMessages();
+                    loadConversations();
+                })
+                .catch(error => {
+                    console.error('Error loading conversation:', error);
+                    alert('Failed to load conversation');
+                });
+        }
+
+        function loadMessages() {
+            if (!currentConversation) return;
+
+            fetch(`${API_BASE}/conversations/${currentConversation.id}/messages`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(messages => {
+                    displayMessages(messages);
+                })
+                .catch(error => {
+                    console.error('Error loading messages:', error);
+                });
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = messages.map(msg => `
+                <div class="chat-message ${msg.role.toLowerCase()}">
+                    <div class="message-bubble">
+                        ${escapeHtml(msg.content)}
+                    </div>
+                    <div class="message-time">${formatTime(msg.created_at)}</div>
+                </div>
+            `).join('');
+
+            // Scroll to bottom
+            container.parentElement.scrollTop = container.parentElement.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message || !currentConversation) {
+                return;
+            }
+
+            input.value = '';
+            input.disabled = true;
+
+            fetch(`${API_BASE}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    conversationId: currentConversation.id,
+                    content: message,
+                    context: currentConversation.context
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(response => {
+                loadMessages();
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                alert('Failed to send message: ' + error.message);
+            })
+            .finally(() => {
+                input.disabled = false;
+                input.focus();
+            });
+        }
+
+        function handleIncomingMessage(message) {
+            if (message.status === 'success') {
+                loadMessages();
+            }
+        }
+
+        function showChat() {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'block';
+            document.getElementById('inputArea').style.display = 'block';
+            document.getElementById('messageInput').focus();
+        }
+
+        function hideChat() {
+            document.getElementById('emptyState').style.display = 'flex';
+            document.getElementById('chatContainer').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'none';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>

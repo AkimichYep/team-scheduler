@@ -275,5 +275,13 @@ public class ScheduleService {
         });
         return entries;
     }
+
+    /**
+     * Gets all schedule entries in the system
+     * Used by ChatService to provide context about scheduling
+     */
+    public List<ScheduleEntry> getAllScheduleEntries() {
+        return scheduleEntryRepository.findAll();
+    }
 }
 

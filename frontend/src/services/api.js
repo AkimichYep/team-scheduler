@@ -198,6 +198,62 @@ const api = {
             ids.forEach(id => query.append('userIds', id));
         }
         return axios.get(`${SPRING_API}/schedule/team/summary-by-day/${year}/${month}?${query.toString()}`, { auth });
+    },
+
+    // ============ CHAT API ============
+
+    /**
+     * Creates a new chat conversation
+     */
+    createChatConversation(userId, title, context, auth) {
+        const params = new URLSearchParams({ userId, title, context });
+        return axios.post(`${SPRING_API}/chat/conversations?${params.toString()}`, {}, { auth });
+    },
+
+    /**
+     * Gets all conversations for a user
+     */
+    getChatConversations(userId, auth) {
+        return axios.get(`${SPRING_API}/chat/conversations?userId=${userId}`, { auth });
+    },
+
+    /**
+     * Gets a specific conversation
+     */
+    getChatConversation(conversationId, auth) {
+        return axios.get(`${SPRING_API}/chat/conversations/${conversationId}`, { auth });
+    },
+
+    /**
+     * Gets conversation message history
+     */
+    getChatMessages(conversationId, auth) {
+        return axios.get(`${SPRING_API}/chat/conversations/${conversationId}/messages`, { auth });
+    },
+
+    /**
+     * Sends a message and gets AI response
+     */
+    sendChatMessage(userId, conversationId, content, context, auth) {
+        return axios.post(`${SPRING_API}/chat/messages?userId=${userId}`, {
+            conversation_id: conversationId,
+            content: content,
+            context: context
+        }, { auth });
+    },
+
+    /**
+     * Archives a conversation
+     */
+    archiveChatConversation(conversationId, auth) {
+        return axios.post(`${SPRING_API}/chat/conversations/${conversationId}/archive`, {}, { auth });
+    },
+
+    /**
+     * Chat health check
+     */
+    checkChatHealth() {
+        return axios.get(`${SPRING_API}/chat/health`);
     }
 };
 

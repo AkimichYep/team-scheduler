@@ -261,6 +261,16 @@ app.get('/summary-by-day', isAuthenticated, (req, res) => {
     });
 });
 
+// --- AI Chat ---
+
+app.get('/chat', isAuthenticated, (req, res) => {
+    res.render('chat', {
+        currentUser: req.session.currentUser,
+        lastAccessTime: getDisplayAccessTime(req),
+        userId: req.session.currentUser.id
+    });
+});
+
 // --- Scheduler & Team API Proxy ---
 
 app.get('/api/proxy/schedule/team/summary-by-day/:year/:month', isAuthenticated, async (req, res) => {
@@ -460,6 +470,106 @@ app.post('/api/proxy/templates/oncall/remove/:userId', isAuthenticated, async (r
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: "Failed to remove OnCall" });
+    }
+});
+
+// --- Chat API Proxy ---
+
+app.post('/api/proxy/chat/conversations', isAuthenticated, async (req, res) => {
+    try {
+        const { title, context } = req.body;
+        console.log('[CHAT] Creating conversation:', { title, context, userId: req.session.currentUser.id });
+        console.log('[CHAT] Using auth:', req.session.user);
+        const response = await api.createChatConversation(req.session.currentUser.id, title, context, req.session.user);
+        console.log('[CHAT] Response:', response.status, response.data);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error creating conversation:');
+        console.error('  Status:', error.response?.status);
+        console.error('  Data:', error.response?.data);
+        console.error('  Message:', error.message);
+        res.status(500).json({
+            error: "Failed to create conversation",
+            details: error.response?.data || error.message,
+            backendStatus: error.response?.status
+        });
+    }
+});
+
+app.get('/api/proxy/chat/conversations', isAuthenticated, async (req, res) => {
+    try {
+        const userId = req.query.userId || req.session.currentUser.id;
+        console.log('[CHAT] Getting conversations for user:', userId);
+        const response = await api.getChatConversations(userId, req.session.user);
+        console.log('[CHAT] Response:', response.status, 'conversations:', response.data?.length);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error getting conversations:');
+        console.error('  Status:', error.response?.status);
+        console.error('  Data:', error.response?.data);
+        console.error('  Message:', error.message);
+        res.status(500).json({
+            error: "Failed to get conversations",
+            details: error.response?.data || error.message,
+            backendStatus: error.response?.status
+        });
+    }
+});
+
+app.get('/api/proxy/chat/conversations/:conversationId', isAuthenticated, async (req, res) => {
+    try {
+        console.log('[CHAT] Getting conversation:', req.params.conversationId);
+        const response = await api.getChatConversation(req.params.conversationId, req.session.user);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error getting conversation:', error.message);
+        res.status(500).json({
+            error: "Failed to get conversation",
+            details: error.response?.data || error.message
+        });
+    }
+});
+
+app.get('/api/proxy/chat/conversations/:conversationId/messages', isAuthenticated, async (req, res) => {
+    try {
+        console.log('[CHAT] Getting messages for conversation:', req.params.conversationId);
+        const response = await api.getChatMessages(req.params.conversationId, req.session.user);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error getting messages:', error.message);
+        res.status(500).json({
+            error: "Failed to get messages",
+            details: error.response?.data || error.message
+        });
+    }
+});
+
+app.post('/api/proxy/chat/messages', isAuthenticated, async (req, res) => {
+    try {
+        const { conversationId, content, context } = req.body;
+        console.log('[CHAT] Sending message:', { conversationId, content: content.substring(0, 50) + '...' });
+        const response = await api.sendChatMessage(req.session.currentUser.id, conversationId, content, context, req.session.user);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error sending message:', error.message);
+        res.status(500).json({
+            error: "Failed to send message",
+            details: error.response?.data || error.message
+        });
+    }
+});
+
+app.post('/api/proxy/chat/conversations/:conversationId/archive', isAuthenticated, async (req, res) => {
+    try {
+        console.log('[CHAT] Archiving conversation:', req.params.conversationId);
+        const response = await api.archiveChatConversation(req.params.conversationId, req.session.user);
+        res.json(response.data);
+    } catch (error) {
+        console.error('[CHAT] Error archiving conversation:', error.message);
+        res.status(500).json({
+            error: "Failed to archive conversation",
+            details: error.response?.data || error.message
+        });
     }
 });
 
